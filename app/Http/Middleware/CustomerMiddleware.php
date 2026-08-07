@@ -12,7 +12,7 @@ class CustomerMiddleware
     {
         if (! $request->user() || $request->user()->role !== 'user') {
             return response()->json([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => 'Akses ditolak. Hanya customer yang diizinkan.',
             ], 403);
         }

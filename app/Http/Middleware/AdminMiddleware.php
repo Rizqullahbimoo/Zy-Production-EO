@@ -12,7 +12,7 @@ class AdminMiddleware
     {
         if (! $request->user() || $request->user()->role !== 'admin') {
             return response()->json([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => 'Akses ditolak. Hanya admin yang diizinkan.',
             ], 403);
         }
