@@ -1,0 +1,135 @@
+/* ==========================================================================
+   InputField Component Styles — ZY Production
+   ========================================================================== */
+
+.zy-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  width: 100%;
+}
+
+/* Label */
+.zy-field-label {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-label);
+  letter-spacing: 0.025em;
+  user-select: none;
+}
+
+.zy-field-label .zy-field-required {
+  color: var(--color-primary);
+  margin-left: 3px;
+}
+
+/* Input Wrapper (for icon support) */
+.zy-field-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* The actual <input> element */
+.zy-field-input {
+  width: 100%;
+  padding: 12px 14px;
+  background-color: var(--color-bg-input);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-base);
+  color: var(--color-text-main);
+  outline: none;
+  transition: border-color var(--transition-base),
+              box-shadow var(--transition-base),
+              background-color var(--transition-base);
+}
+
+.zy-field-input::placeholder {
+  color: var(--color-gray-muted);
+  font-weight: 400;
+}
+
+.zy-field-input:hover:not(:disabled) {
+  border-color: var(--color-gray-dark);
+}
+
+.zy-field-input:focus {
+  border-color: var(--color-border-focus);
+  box-shadow: 0 0 0 3px var(--color-primary-muted);
+}
+
+/* Left icon inside input */
+.zy-field-input.has-icon-left {
+  padding-left: 42px;
+}
+
+/* Right icon (e.g. password toggle) */
+.zy-field-input.has-icon-right {
+  padding-right: 42px;
+}
+
+/* Icon positions */
+.zy-field-icon {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  color: var(--color-gray-muted);
+  pointer-events: none;
+  transition: color var(--transition-fast);
+}
+
+.zy-field-icon-left {
+  left: 14px;
+}
+
+.zy-field-icon-right {
+  right: 14px;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.zy-field-icon-right:hover {
+  color: var(--color-text-main);
+}
+
+/* When focused, left icon changes color */
+.zy-field-wrapper:focus-within .zy-field-icon-left {
+  color: var(--color-primary);
+}
+
+/* Error state */
+.zy-field-input.error {
+  border-color: var(--color-danger);
+  background-color: var(--color-danger-bg);
+}
+
+.zy-field-input.error:focus {
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.zy-field-error-msg {
+  font-size: var(--font-size-xs);
+  color: var(--color-danger);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+  animation: slideInError 0.2s ease-out;
+}
+
+/* Disabled state */
+.zy-field-input:disabled {
+  background-color: var(--color-gray);
+  color: var(--color-gray-text);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+@keyframes slideInError {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

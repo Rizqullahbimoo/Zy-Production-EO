@@ -1,0 +1,293 @@
+/* ==========================================================================
+   RegisterForm Component Styles — ZY Production
+   Inherits all CSS variables from global.css
+   ========================================================================== */
+
+/* Card shell — reuses login-card base concept */
+.register-card {
+  background-color: var(--color-bg-card);
+  border-radius: var(--border-radius-xl);
+  box-shadow: var(--shadow-lg);
+  padding: var(--spacing-xl);
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  animation: cardAppear 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  border: 1px solid var(--color-gray);
+}
+
+/* Card header */
+.register-card-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+  text-align: center;
+}
+
+/* Brand badge — same style as login */
+.register-brand-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--color-black);
+  color: var(--color-white);
+  padding: 8px 18px;
+  border-radius: var(--border-radius-full);
+  font-weight: 700;
+  font-size: var(--font-size-sm);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.register-brand-badge-icon {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  object-fit: cover;
+}
+
+/* Heading */
+.register-heading {
+  font-size: var(--font-size-3xl);
+  font-weight: 800;
+  color: var(--color-text-main);
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+.register-heading span {
+  color: var(--color-primary);
+}
+
+.register-subheading {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  max-width: 320px;
+  line-height: 1.5;
+}
+
+/* Step indicator */
+.register-step-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+.register-step-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--color-gray);
+  transition: all 0.3s ease;
+}
+
+.register-step-dot.active {
+  background-color: var(--color-primary);
+  width: 20px;
+  border-radius: 4px;
+}
+
+/* Fields group */
+.register-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+/* Two-column row for name + phone */
+.register-fields-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-sm);
+}
+
+@media (max-width: 480px) {
+  .register-fields-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Password strength meter */
+.register-strength-bar {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.register-strength-track {
+  height: 4px;
+  background-color: var(--color-gray);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.register-strength-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.register-strength-label {
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+}
+
+/* Strength colors */
+.strength-weak   .register-strength-fill { width: 33%; background-color: #EF4444; }
+.strength-medium .register-strength-fill { width: 66%; background-color: #F59E0B; }
+.strength-strong .register-strength-fill { width: 100%; background-color: #10B981; }
+.strength-weak   .register-strength-label { color: #EF4444; }
+.strength-medium .register-strength-label { color: #F59E0B; }
+.strength-strong .register-strength-label { color: #10B981; }
+
+/* Password hint checklist */
+.register-password-hints {
+  list-style: none;
+  padding: 0;
+  margin: 4px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.register-password-hint {
+  font-size: var(--font-size-xs);
+  color: var(--color-gray-muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: color 0.2s;
+}
+
+.register-password-hint.met {
+  color: #10B981;
+}
+
+.register-hint-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: currentColor;
+}
+
+/* Submit button */
+.register-btn-submit {
+  width: 100%;
+  padding: 14px var(--spacing-md);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover));
+  color: var(--color-black);
+  border: none;
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-primary);
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+.register-btn-submit:hover:not(:disabled) {
+  box-shadow: 0 6px 24px var(--color-primary-shadow);
+  transform: translateY(-1px);
+}
+
+.register-btn-submit:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.register-btn-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.register-btn-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  border-top-color: var(--color-black);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+
+/* Alert (error/success inside card) */
+.register-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-sm);
+  animation: slideInError 0.25s ease-out;
+}
+
+.register-alert.error {
+  background-color: var(--color-danger-bg);
+  border: 1px solid var(--color-danger-border);
+  color: var(--color-danger);
+}
+
+.register-alert.success {
+  background-color: var(--color-success-bg);
+  border: 1px solid #BBF7D0;
+  color: var(--color-success);
+}
+
+/* Footer note */
+.register-footer-note {
+  text-align: center;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  padding-top: 4px;
+}
+
+.register-footer-note a,
+.register-footer-note button.link {
+  font-weight: 600;
+  color: var(--color-primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: inherit;
+  font-family: inherit;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.register-footer-note button.link:hover {
+  color: var(--color-primary-hover);
+}
+
+/* Animations */
+@keyframes cardAppear {
+  from { opacity: 0; transform: translateY(24px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%       { transform: scale(1.4); opacity: 0.7; }
+}
+
+@keyframes slideInError {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
