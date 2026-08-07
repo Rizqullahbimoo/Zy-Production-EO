@@ -24,17 +24,17 @@ class RequestCustomController extends Controller
                 // Hapus awalan 'REQ-' jika dimasukkan user untuk mencari id_request secara numerik
                 $numericSearch = preg_replace('/^req-/i', '', trim($search));
                 $numericSearch = ltrim($numericSearch, '0');
-                
+
                 if (is_numeric($numericSearch) && $numericSearch !== '') {
                     $q->where('id_request', $numericSearch);
                 }
-                
+
                 $q->orWhereHas('user', function ($uq) use ($search) {
                     $uq->where('nama', 'like', "%{$search}%");
                 })
-                ->orWhereHas('kategoriEvent', function ($kq) use ($search) {
-                    $kq->where('nama_kategori', 'like', "%{$search}%");
-                });
+                    ->orWhereHas('kategoriEvent', function ($kq) use ($search) {
+                        $kq->where('nama_kategori', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -46,7 +46,7 @@ class RequestCustomController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'data'   => $requests,
+            'data' => $requests,
         ]);
     }
 
@@ -63,16 +63,16 @@ class RequestCustomController extends Controller
             'dokumenMou',
         ])->find($id);
 
-        if (!$customRequest) {
+        if (! $customRequest) {
             return response()->json([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => 'Request tidak ditemukan.',
             ], 404);
         }
 
         return response()->json([
             'status' => 'success',
-            'data'   => $customRequest,
+            'data' => $customRequest,
         ]);
     }
 
@@ -87,9 +87,9 @@ class RequestCustomController extends Controller
 
         $customRequest = RequestCustomPaket::find($id);
 
-        if (!$customRequest) {
+        if (! $customRequest) {
             return response()->json([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => 'Request tidak ditemukan.',
             ], 404);
         }
@@ -99,9 +99,9 @@ class RequestCustomController extends Controller
         ]);
 
         return response()->json([
-            'status'  => 'success',
+            'status' => 'success',
             'message' => 'Status request berhasil diperbarui.',
-            'data'    => $customRequest,
+            'data' => $customRequest,
         ]);
     }
 }

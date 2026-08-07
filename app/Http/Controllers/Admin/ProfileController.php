@@ -20,17 +20,17 @@ class ProfileController extends Controller
         $user = $request->user();
 
         $request->validate([
-            'nama'     => 'required|string|max:255',
-            'email'    => [
+            'nama' => 'required|string|max:255',
+            'email' => [
                 'required',
                 'string',
                 'email',
                 'max:255',
                 Rule::unique('users', 'email')->ignore($user->id_user, 'id_user'),
             ],
-            'no_hp'    => 'required|string|max:15',
+            'no_hp' => 'required|string|max:15',
             'password' => 'nullable|string|min:8|confirmed',
-            'foto'     => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
         ], [
             'nama.required' => 'Nama lengkap wajib diisi.',
             'email.required' => 'Email wajib diisi.',
@@ -63,15 +63,15 @@ class ProfileController extends Controller
         $user->save();
 
         return response()->json([
-            'status'  => 'success',
+            'status' => 'success',
             'message' => 'Profil berhasil diperbarui.',
-            'data'    => [
+            'data' => [
                 'id_user' => $user->id_user,
-                'nama'    => $user->nama,
-                'email'   => $user->email,
-                'no_hp'   => $user->no_hp,
-                'role'    => $user->role,
-                'foto'    => $user->foto,
+                'nama' => $user->nama,
+                'email' => $user->email,
+                'no_hp' => $user->no_hp,
+                'role' => $user->role,
+                'foto' => $user->foto,
             ],
         ]);
     }

@@ -20,7 +20,7 @@ class InvoiceController extends Controller
 
         $pdf = Pdf::loadView('customer.invoice.pdf', [
             'data' => $pemesanan,
-            'jenis' => 'paket'
+            'jenis' => 'paket',
         ]);
 
         return $pdf->download("Invoice_{$pemesanan->kode_pemesanan}.pdf");
@@ -36,7 +36,7 @@ class InvoiceController extends Controller
 
         $pdf = Pdf::loadView('customer.invoice.pdf', [
             'data' => $penawaran,
-            'jenis' => 'custom'
+            'jenis' => 'custom',
         ]);
 
         return $pdf->download("Invoice_Custom_REQ_{$penawaran->id_request}.pdf");

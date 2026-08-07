@@ -23,7 +23,7 @@ class PaketLayananController extends Controller
 
         if (! $kat) {
             return response()->json([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => 'Kategori tidak ditemukan.',
             ], 404);
         }
@@ -35,9 +35,9 @@ class PaketLayananController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'data'   => [
+            'data' => [
                 'kategori' => [
-                    'id_kategori'   => $kat->id_kategori,
+                    'id_kategori' => $kat->id_kategori,
                     'nama_kategori' => $kat->nama_kategori,
                 ],
                 'paket' => $paket,
@@ -55,7 +55,7 @@ class PaketLayananController extends Controller
 
         if (! $kat) {
             return response()->json([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => 'Kategori tidak ditemukan.',
             ], 404);
         }
@@ -66,18 +66,18 @@ class PaketLayananController extends Controller
         }
 
         $paket = PaketLayanan::create([
-            'id_kategori'  => $kategori,
-            'nama_paket'   => $request->nama_paket,
-            'deskripsi'    => $request->deskripsi,
-            'harga'        => $request->harga,
-            'foto'         => $fotoPath,
+            'id_kategori' => $kategori,
+            'nama_paket' => $request->nama_paket,
+            'deskripsi' => $request->deskripsi,
+            'harga' => $request->harga,
+            'foto' => $fotoPath,
             'status_paket' => $request->status_paket ?? 'aktif',
         ]);
 
         return response()->json([
-            'status'  => 'success',
+            'status' => 'success',
             'message' => 'Paket layanan berhasil ditambahkan.',
-            'data'    => $this->formatPaket($paket->load('kategoriEvent')),
+            'data' => $this->formatPaket($paket->load('kategoriEvent')),
         ], 201);
     }
 
@@ -93,21 +93,21 @@ class PaketLayananController extends Controller
 
         if (! $p) {
             return response()->json([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => 'Paket tidak ditemukan.',
             ], 404);
         }
 
         return response()->json([
             'status' => 'success',
-            'data'   => array_merge($this->formatPaket($p), [
+            'data' => array_merge($this->formatPaket($p), [
                 'fasilitas' => $p->detailPaket->map(fn ($d) => [
                     'id_detail_paket' => $d->id_detail_paket,
-                    'id_fasilitas'    => $d->fasilitasLayanan->id_fasilitas,
-                    'nama_fasilitas'  => $d->fasilitasLayanan->nama_fasilitas,
-                    'deskripsi'       => $d->fasilitasLayanan->deskripsi,
-                    'qty'             => $d->qty,
-                    'keterangan'      => $d->keterangan,
+                    'id_fasilitas' => $d->fasilitasLayanan->id_fasilitas,
+                    'nama_fasilitas' => $d->fasilitasLayanan->nama_fasilitas,
+                    'deskripsi' => $d->fasilitasLayanan->deskripsi,
+                    'qty' => $d->qty,
+                    'keterangan' => $d->keterangan,
                 ]),
             ]),
         ]);
@@ -123,15 +123,15 @@ class PaketLayananController extends Controller
 
         if (! $p) {
             return response()->json([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => 'Paket tidak ditemukan.',
             ], 404);
         }
 
         $data = [
-            'nama_paket'   => $request->nama_paket,
-            'deskripsi'    => $request->deskripsi,
-            'harga'        => $request->harga,
+            'nama_paket' => $request->nama_paket,
+            'deskripsi' => $request->deskripsi,
+            'harga' => $request->harga,
             'status_paket' => $request->status_paket ?? $p->status_paket,
         ];
 
@@ -145,9 +145,9 @@ class PaketLayananController extends Controller
         $p->update($data);
 
         return response()->json([
-            'status'  => 'success',
+            'status' => 'success',
             'message' => 'Paket layanan berhasil diperbarui.',
-            'data'    => $this->formatPaket($p->fresh()->load('kategoriEvent')),
+            'data' => $this->formatPaket($p->fresh()->load('kategoriEvent')),
         ]);
     }
 
@@ -161,27 +161,27 @@ class PaketLayananController extends Controller
 
         if (! $p) {
             return response()->json([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => 'Paket tidak ditemukan.',
             ], 404);
         }
 
         $validated = $request->validate([
-            'fasilitas'                => ['nullable', 'array'],
+            'fasilitas' => ['nullable', 'array'],
             'fasilitas.*.id_fasilitas' => ['required', 'integer', 'exists:fasilitas_layanan,id_fasilitas'],
-            'fasilitas.*.qty'          => ['nullable', 'integer', 'min:1'],
-            'fasilitas.*.keterangan'   => ['nullable', 'string'],
+            'fasilitas.*.qty' => ['nullable', 'integer', 'min:1'],
+            'fasilitas.*.keterangan' => ['nullable', 'string'],
         ]);
 
         DetailPaket::where('id_paket', $paket)->delete();
 
         $rows = collect($validated['fasilitas'] ?? [])->map(fn ($f) => [
-            'id_paket'     => $paket,
+            'id_paket' => $paket,
             'id_fasilitas' => $f['id_fasilitas'],
-            'qty'          => $f['qty'] ?? 1,
-            'keterangan'   => $f['keterangan'] ?? null,
-            'created_at'   => now(),
-            'updated_at'   => now(),
+            'qty' => $f['qty'] ?? 1,
+            'keterangan' => $f['keterangan'] ?? null,
+            'created_at' => now(),
+            'updated_at' => now(),
         ])->all();
 
         if (! empty($rows)) {
@@ -191,16 +191,16 @@ class PaketLayananController extends Controller
         $p->load('detailPaket.fasilitasLayanan');
 
         return response()->json([
-            'status'  => 'success',
+            'status' => 'success',
             'message' => 'Fasilitas paket berhasil diperbarui.',
-            'data'    => [
+            'data' => [
                 'fasilitas' => $p->detailPaket->map(fn ($d) => [
                     'id_detail_paket' => $d->id_detail_paket,
-                    'id_fasilitas'    => $d->fasilitasLayanan->id_fasilitas,
-                    'nama_fasilitas'  => $d->fasilitasLayanan->nama_fasilitas,
-                    'deskripsi'       => $d->fasilitasLayanan->deskripsi,
-                    'qty'             => $d->qty,
-                    'keterangan'      => $d->keterangan,
+                    'id_fasilitas' => $d->fasilitasLayanan->id_fasilitas,
+                    'nama_fasilitas' => $d->fasilitasLayanan->nama_fasilitas,
+                    'deskripsi' => $d->fasilitasLayanan->deskripsi,
+                    'qty' => $d->qty,
+                    'keterangan' => $d->keterangan,
                 ]),
             ],
         ]);
@@ -216,14 +216,14 @@ class PaketLayananController extends Controller
 
         if (! $p) {
             return response()->json([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => 'Paket tidak ditemukan.',
             ], 404);
         }
 
         if ($p->pemesanan()->exists()) {
             return response()->json([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => 'Paket tidak bisa dihapus karena sudah memiliki data pemesanan.',
             ], 409);
         }
@@ -235,7 +235,7 @@ class PaketLayananController extends Controller
         $p->delete();
 
         return response()->json([
-            'status'  => 'success',
+            'status' => 'success',
             'message' => 'Paket layanan berhasil dihapus.',
         ]);
     }
@@ -243,19 +243,19 @@ class PaketLayananController extends Controller
     private function formatPaket(PaketLayanan $paket): array
     {
         return [
-            'id_paket'     => $paket->id_paket,
-            'id_kategori'  => $paket->id_kategori,
-            'nama_paket'   => $paket->nama_paket,
-            'deskripsi'    => $paket->deskripsi,
-            'harga'        => $paket->harga,
-            'foto'         => $paket->foto ? asset('storage/' . $paket->foto) : null,
+            'id_paket' => $paket->id_paket,
+            'id_kategori' => $paket->id_kategori,
+            'nama_paket' => $paket->nama_paket,
+            'deskripsi' => $paket->deskripsi,
+            'harga' => $paket->harga,
+            'foto' => $paket->foto ? asset('storage/'.$paket->foto) : null,
             'status_paket' => $paket->status_paket,
-            'kategori'     => $paket->relationLoaded('kategoriEvent') && $paket->kategoriEvent ? [
-                'id_kategori'   => $paket->kategoriEvent->id_kategori,
+            'kategori' => $paket->relationLoaded('kategoriEvent') && $paket->kategoriEvent ? [
+                'id_kategori' => $paket->kategoriEvent->id_kategori,
                 'nama_kategori' => $paket->kategoriEvent->nama_kategori,
             ] : null,
-            'created_at'   => $paket->created_at,
-            'updated_at'   => $paket->updated_at,
+            'created_at' => $paket->created_at,
+            'updated_at' => $paket->updated_at,
         ];
     }
 }

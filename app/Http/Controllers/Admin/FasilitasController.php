@@ -6,13 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\FasilitasRequest;
 use App\Models\FasilitasLayanan;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class FasilitasController extends Controller
 {
     /**
      * Daftar semua fasilitas.
      */
-    public function index(\Illuminate\Http\Request $request): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $query = FasilitasLayanan::query();
         if ($request->has('id_kategori')) {
@@ -22,7 +23,7 @@ class FasilitasController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'data'   => $fasilitas,
+            'data' => $fasilitas,
         ]);
     }
 
@@ -33,14 +34,14 @@ class FasilitasController extends Controller
     {
         $fasilitas = FasilitasLayanan::create([
             'nama_fasilitas' => $request->nama_fasilitas,
-            'deskripsi'      => $request->deskripsi,
-            'id_kategori'    => $request->id_kategori,
+            'deskripsi' => $request->deskripsi,
+            'id_kategori' => $request->id_kategori,
         ]);
 
         return response()->json([
-            'status'  => 'success',
+            'status' => 'success',
             'message' => 'Fasilitas berhasil ditambahkan.',
-            'data'    => $fasilitas,
+            'data' => $fasilitas,
         ], 201);
     }
 
@@ -51,16 +52,16 @@ class FasilitasController extends Controller
     {
         $fasilitas = FasilitasLayanan::find($id);
 
-        if (!$fasilitas) {
+        if (! $fasilitas) {
             return response()->json([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => 'Fasilitas tidak ditemukan.',
             ], 404);
         }
 
         return response()->json([
             'status' => 'success',
-            'data'   => $fasilitas,
+            'data' => $fasilitas,
         ]);
     }
 
@@ -71,23 +72,23 @@ class FasilitasController extends Controller
     {
         $fasilitas = FasilitasLayanan::find($id);
 
-        if (!$fasilitas) {
+        if (! $fasilitas) {
             return response()->json([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => 'Fasilitas tidak ditemukan.',
             ], 404);
         }
 
         $fasilitas->update([
             'nama_fasilitas' => $request->nama_fasilitas,
-            'deskripsi'      => $request->deskripsi,
-            'id_kategori'    => $request->id_kategori,
+            'deskripsi' => $request->deskripsi,
+            'id_kategori' => $request->id_kategori,
         ]);
 
         return response()->json([
-            'status'  => 'success',
+            'status' => 'success',
             'message' => 'Fasilitas berhasil diperbarui.',
-            'data'    => $fasilitas,
+            'data' => $fasilitas,
         ]);
     }
 
@@ -98,9 +99,9 @@ class FasilitasController extends Controller
     {
         $fasilitas = FasilitasLayanan::find($id);
 
-        if (!$fasilitas) {
+        if (! $fasilitas) {
             return response()->json([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => 'Fasilitas tidak ditemukan.',
             ], 404);
         }
@@ -108,7 +109,7 @@ class FasilitasController extends Controller
         // Cek apakah dipakai di paket layanan atau request custom
         if ($fasilitas->detailPaket()->exists() || $fasilitas->detailRequestCustom()->exists()) {
             return response()->json([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => 'Fasilitas tidak bisa dihapus karena sedang digunakan oleh paket atau request custom.',
             ], 409);
         }
@@ -116,7 +117,7 @@ class FasilitasController extends Controller
         $fasilitas->delete();
 
         return response()->json([
-            'status'  => 'success',
+            'status' => 'success',
             'message' => 'Fasilitas berhasil dihapus.',
         ]);
     }

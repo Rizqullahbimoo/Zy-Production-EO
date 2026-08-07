@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-
 use App\Models\PesanKontak;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class PesanKontakController extends Controller
@@ -30,7 +29,7 @@ class PesanKontakController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Pesan berhasil dikirim',
-            'data' => $pesan
+            'data' => $pesan,
         ]);
     }
 
@@ -38,9 +37,10 @@ class PesanKontakController extends Controller
     public function indexAdmin()
     {
         $pesan = PesanKontak::orderBy('created_at', 'desc')->get();
+
         return response()->json([
             'status' => 'success',
-            'data' => $pesan
+            'data' => $pesan,
         ]);
     }
 
@@ -48,19 +48,19 @@ class PesanKontakController extends Controller
     public function replyAdmin(Request $request, $id)
     {
         $request->validate([
-            'balasan_admin' => 'required|string'
+            'balasan_admin' => 'required|string',
         ]);
 
         $pesan = PesanKontak::findOrFail($id);
         $pesan->update([
             'balasan_admin' => $request->balasan_admin,
-            'status' => 'dibalas'
+            'status' => 'dibalas',
         ]);
 
         return response()->json([
             'status' => 'success',
             'message' => 'Balasan berhasil dikirim',
-            'data' => $pesan
+            'data' => $pesan,
         ]);
     }
 
@@ -71,10 +71,10 @@ class PesanKontakController extends Controller
         $pesan = PesanKontak::where('user_id', $userId)
             ->orderBy('created_at', 'desc')
             ->get();
-            
+
         return response()->json([
             'status' => 'success',
-            'data' => $pesan
+            'data' => $pesan,
         ]);
     }
 }

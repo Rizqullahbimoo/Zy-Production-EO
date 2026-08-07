@@ -18,7 +18,7 @@ class UlasanController extends Controller
             ->latest()
             ->take(6)
             ->get();
-            
+
         return response()->json(['status' => 'success', 'data' => $ulasan]);
     }
 
@@ -27,12 +27,12 @@ class UlasanController extends Controller
     {
         $request->validate([
             'id_pemesanan' => 'nullable|exists:pemesanan,id_pemesanan',
-            'id_request'   => 'nullable|exists:request_custom_paket,id_request',
-            'rating'       => 'required|integer|min:1|max:5',
-            'komentar'     => 'nullable|string',
+            'id_request' => 'nullable|exists:request_custom_paket,id_request',
+            'rating' => 'required|integer|min:1|max:5',
+            'komentar' => 'nullable|string',
         ]);
 
-        if (!$request->id_pemesanan && !$request->id_request) {
+        if (! $request->id_pemesanan && ! $request->id_request) {
             return response()->json(['message' => 'ID Pemesanan atau Request harus diisi'], 400);
         }
 
@@ -52,11 +52,11 @@ class UlasanController extends Controller
         }
 
         $ulasan = Ulasan::create([
-            'id_user'      => Auth::id(),
+            'id_user' => Auth::id(),
             'id_pemesanan' => $request->id_pemesanan,
-            'id_request'   => $request->id_request,
-            'rating'       => $request->rating,
-            'komentar'     => $request->komentar,
+            'id_request' => $request->id_request,
+            'rating' => $request->rating,
+            'komentar' => $request->komentar,
         ]);
 
         return response()->json(['status' => 'success', 'message' => 'Ulasan berhasil disimpan', 'data' => $ulasan]);

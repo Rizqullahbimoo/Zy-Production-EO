@@ -20,25 +20,25 @@ class AuthController extends Controller
     public function register(RegisterRequest $request): JsonResponse
     {
         $user = User::create([
-            'nama'     => $request->nama,
-            'email'    => $request->email,
+            'nama' => $request->nama,
+            'email' => $request->email,
             'password' => Hash::make($request->password),
-            'no_hp'    => $request->no_hp,
-            'role'     => 'user',
+            'no_hp' => $request->no_hp,
+            'role' => 'user',
         ]);
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
-            'status'  => 'success',
+            'status' => 'success',
             'message' => 'Registrasi berhasil.',
-            'data'    => [
-                'user'  => [
+            'data' => [
+                'user' => [
                     'id_user' => $user->id_user,
-                    'nama'    => $user->nama,
-                    'email'   => $user->email,
-                    'no_hp'   => $user->no_hp,
-                    'role'    => $user->role,
+                    'nama' => $user->nama,
+                    'email' => $user->email,
+                    'no_hp' => $user->no_hp,
+                    'role' => $user->role,
                 ],
                 'token' => $token,
                 'token_type' => 'Bearer',
@@ -54,7 +54,7 @@ class AuthController extends Controller
     {
         if (! Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
             return response()->json([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => 'Email atau password salah.',
             ], 401);
         }
@@ -66,20 +66,20 @@ class AuthController extends Controller
         $user->tokens()->delete();
 
         $tokenName = $user->role === 'admin' ? 'admin_token' : 'user_token';
-        $token     = $user->createToken($tokenName)->plainTextToken;
+        $token = $user->createToken($tokenName)->plainTextToken;
 
         return response()->json([
-            'status'  => 'success',
+            'status' => 'success',
             'message' => 'Login berhasil.',
-            'data'    => [
-                'user'  => [
+            'data' => [
+                'user' => [
                     'id_user' => $user->id_user,
-                    'nama'    => $user->nama,
-                    'email'   => $user->email,
-                    'no_hp'   => $user->no_hp,
-                    'role'    => $user->role,
+                    'nama' => $user->nama,
+                    'email' => $user->email,
+                    'no_hp' => $user->no_hp,
+                    'role' => $user->role,
                 ],
-                'token'      => $token,
+                'token' => $token,
                 'token_type' => 'Bearer',
             ],
         ]);
@@ -94,7 +94,7 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         return response()->json([
-            'status'  => 'success',
+            'status' => 'success',
             'message' => 'Logout berhasil.',
         ]);
     }
@@ -109,12 +109,12 @@ class AuthController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'data'   => [
+            'data' => [
                 'id_user' => $user->id_user,
-                'nama'    => $user->nama,
-                'email'   => $user->email,
-                'no_hp'   => $user->no_hp,
-                'role'    => $user->role,
+                'nama' => $user->nama,
+                'email' => $user->email,
+                'no_hp' => $user->no_hp,
+                'role' => $user->role,
             ],
         ]);
     }

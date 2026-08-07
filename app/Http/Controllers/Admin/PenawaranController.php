@@ -4,12 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\PenawaranRequest;
+use App\Mail\PenawaranBaruMail;
 use App\Models\PenawaranCustom;
 use App\Models\RequestCustomPaket;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\PenawaranBaruMail;
 
 class PenawaranController extends Controller
 {
@@ -20,9 +20,9 @@ class PenawaranController extends Controller
     {
         $customRequest = RequestCustomPaket::find($id_request);
 
-        if (!$customRequest) {
+        if (! $customRequest) {
             return response()->json([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => 'Request custom tidak ditemukan.',
             ], 404);
         }
@@ -31,12 +31,12 @@ class PenawaranController extends Controller
             DB::beginTransaction();
 
             $penawaran = PenawaranCustom::create([
-                'id_request'        => $id_request,
+                'id_request' => $id_request,
                 'tanggal_penawaran' => now(),
-                'total_penawaran'   => $request->total_penawaran,
-                'dp_awal'           => $request->dp_awal,
-                'status_penawaran'  => 'menunggu',
-                'catatan_admin'     => $request->catatan_admin,
+                'total_penawaran' => $request->total_penawaran,
+                'dp_awal' => $request->dp_awal,
+                'status_penawaran' => 'menunggu',
+                'catatan_admin' => $request->catatan_admin,
             ]);
 
             // Update status request menjadi 'ditawarkan'
@@ -47,19 +47,23 @@ class PenawaranController extends Controller
             DB::commit();
 
             // Send Email Notification
-            try { Mail::to($customRequest->user->email)->send(new PenawaranBaruMail($penawaran)); } catch (\Exception $e) {}
+            try {
+                Mail::to($customRequest->user->email)->send(new PenawaranBaruMail($penawaran));
+            } catch (\Exception $e) {
+            }
 
             return response()->json([
-                'status'  => 'success',
+                'status' => 'success',
                 'message' => 'Penawaran harga berhasil dikirim ke customer.',
-                'data'    => $penawaran,
+                'data' => $penawaran,
             ], 201);
 
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json([
-                'status'  => 'error',
-                'message' => 'Gagal membuat penawaran: ' . $e->getMessage(),
+                'status' => 'error',
+                'message' => 'Gagal membuat penawaran: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -71,9 +75,9 @@ class PenawaranController extends Controller
     {
         $penawaran = PenawaranCustom::find($id_penawaran);
 
-        if (!$penawaran) {
+        if (! $penawaran) {
             return response()->json([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => 'Penawaran tidak ditemukan.',
             ], 404);
         }
@@ -81,7 +85,7 @@ class PenawaranController extends Controller
         $penawaran->delete();
 
         return response()->json([
-            'status'  => 'success',
+            'status' => 'success',
             'message' => 'Penawaran berhasil dihapus.',
         ]);
     }

@@ -23,7 +23,7 @@ class GaleriController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'data'   => $galeri,
+            'data' => $galeri,
         ]);
     }
 
@@ -36,17 +36,17 @@ class GaleriController extends Controller
         $path = $request->file('foto')->store('galeri', 'public');
 
         $galeri = Galeri::create([
-            'judul'     => $request->judul,
+            'judul' => $request->judul,
             'deskripsi' => $request->deskripsi,
-            'foto'      => $path,
-            'urutan'    => $request->urutan ?? 0,
-            'tanggal'   => $request->tanggal,
+            'foto' => $path,
+            'urutan' => $request->urutan ?? 0,
+            'tanggal' => $request->tanggal,
         ]);
 
         return response()->json([
-            'status'  => 'success',
+            'status' => 'success',
             'message' => 'Galeri berhasil ditambahkan.',
-            'data'    => $this->formatGaleri($galeri),
+            'data' => $this->formatGaleri($galeri),
         ], 201);
     }
 
@@ -60,14 +60,14 @@ class GaleriController extends Controller
 
         if (! $galeri) {
             return response()->json([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => 'Galeri tidak ditemukan.',
             ], 404);
         }
 
         return response()->json([
             'status' => 'success',
-            'data'   => $this->formatGaleri($galeri),
+            'data' => $this->formatGaleri($galeri),
         ]);
     }
 
@@ -81,16 +81,16 @@ class GaleriController extends Controller
 
         if (! $galeri) {
             return response()->json([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => 'Galeri tidak ditemukan.',
             ], 404);
         }
 
         $data = [
-            'judul'     => $request->judul,
+            'judul' => $request->judul,
             'deskripsi' => $request->deskripsi,
-            'urutan'    => $request->urutan ?? $galeri->urutan,
-            'tanggal'   => $request->tanggal ?? $galeri->tanggal,
+            'urutan' => $request->urutan ?? $galeri->urutan,
+            'tanggal' => $request->tanggal ?? $galeri->tanggal,
         ];
 
         if ($request->hasFile('foto')) {
@@ -102,9 +102,9 @@ class GaleriController extends Controller
         $galeri->update($data);
 
         return response()->json([
-            'status'  => 'success',
+            'status' => 'success',
             'message' => 'Galeri berhasil diperbarui.',
-            'data'    => $this->formatGaleri($galeri->fresh()),
+            'data' => $this->formatGaleri($galeri->fresh()),
         ]);
     }
 
@@ -118,7 +118,7 @@ class GaleriController extends Controller
 
         if (! $galeri) {
             return response()->json([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => 'Galeri tidak ditemukan.',
             ], 404);
         }
@@ -127,7 +127,7 @@ class GaleriController extends Controller
         $galeri->delete();
 
         return response()->json([
-            'status'  => 'success',
+            'status' => 'success',
             'message' => 'Galeri berhasil dihapus.',
         ]);
     }
@@ -135,12 +135,12 @@ class GaleriController extends Controller
     private function formatGaleri(Galeri $galeri): array
     {
         return [
-            'id_galeri'  => $galeri->id_galeri,
-            'judul'      => $galeri->judul,
-            'deskripsi'  => $galeri->deskripsi,
-            'foto'       => asset('storage/' . $galeri->foto),
-            'urutan'     => $galeri->urutan,
-            'tanggal'    => $galeri->tanggal,
+            'id_galeri' => $galeri->id_galeri,
+            'judul' => $galeri->judul,
+            'deskripsi' => $galeri->deskripsi,
+            'foto' => asset('storage/'.$galeri->foto),
+            'urutan' => $galeri->urutan,
+            'tanggal' => $galeri->tanggal,
             'created_at' => $galeri->created_at,
             'updated_at' => $galeri->updated_at,
         ];

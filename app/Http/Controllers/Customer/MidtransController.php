@@ -3,27 +3,27 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
+use App\Mail\PembayaranBerhasilMail;
 use App\Models\DokumenMou;
 use App\Models\Pemesanan;
 use App\Models\PenawaranCustom;
-use App\Models\RequestCustomPaket;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\PembayaranBerhasilMail;
 use Midtrans\Config;
-use Midtrans\Snap;
 use Midtrans\Notification;
+use Midtrans\Snap;
+use Midtrans\Transaction;
 
 class MidtransController extends Controller
 {
     public function __construct()
     {
-        Config::$serverKey    = config('services.midtrans.server_key');
-        Config::$clientKey    = config('services.midtrans.client_key');
+        Config::$serverKey = config('services.midtrans.server_key');
+        Config::$clientKey = config('services.midtrans.client_key');
         Config::$isProduction = config('services.midtrans.is_production', false);
-        Config::$isSanitized  = true;
-        Config::$is3ds        = true;
+        Config::$isSanitized = true;
+        Config::$is3ds = true;
     }
 
     /* ─────────────────────────────────────────────────────────
@@ -35,14 +35,14 @@ class MidtransController extends Controller
             ->where('id_user', $request->user()->id_user)
             ->find($id);
 
-        if (!$pemesanan) {
+        if (! $pemesanan) {
             return response()->json(['status' => 'error', 'message' => 'Pemesanan tidak ditemukan.'], 404);
         }
 
         $mou = DokumenMou::where('id_pemesanan', $pemesanan->id_pemesanan)->first();
-        if (!$mou || $mou->status_mou !== 'selesai') {
+        if (! $mou || $mou->status_mou !== 'selesai') {
             return response()->json([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => 'Dokumen MOU belum selesai. Selesaikan proses tanda tangan MOU terlebih dahulu sebelum melanjutkan pembayaran.',
             ], 422);
         }
@@ -56,30 +56,30 @@ class MidtransController extends Controller
             return response()->json(['status' => 'success', 'snap_token' => $pemesanan->snap_token, 'order_id' => $pemesanan->midtrans_order_id]);
         }
 
-        $orderId     = $pemesanan->kode_pemesanan . '-' . time();
+        $orderId = $pemesanan->kode_pemesanan.'-'.time();
         // Charge DP saja (50% dari harga paket), bukan harga penuh
-        $dpAmount    = $pemesanan->dp_amount
+        $dpAmount = $pemesanan->dp_amount
             ? (float) $pemesanan->dp_amount
             : round((float) $pemesanan->paketLayanan->harga * 0.5, 2);
         $grossAmount = $dpAmount;
-        $user        = $pemesanan->user;
+        $user = $pemesanan->user;
 
         $params = [
             'transaction_details' => [
-                'order_id'     => $orderId,
+                'order_id' => $orderId,
                 'gross_amount' => $grossAmount,
             ],
             'customer_details' => [
                 'first_name' => $user->nama,
-                'email'      => $user->email,
-                'phone'      => $user->no_hp ?? '',
+                'email' => $user->email,
+                'phone' => $user->no_hp ?? '',
             ],
             'item_details' => [
                 [
-                    'id'       => 'DP-PKT-' . $pemesanan->paketLayanan->id_paket,
-                    'price'    => $grossAmount,
+                    'id' => 'DP-PKT-'.$pemesanan->paketLayanan->id_paket,
+                    'price' => $grossAmount,
                     'quantity' => 1,
-                    'name'     => 'DP ' . substr($pemesanan->paketLayanan->nama_paket, 0, 47),
+                    'name' => 'DP '.substr($pemesanan->paketLayanan->nama_paket, 0, 47),
                 ],
             ],
         ];
@@ -89,19 +89,19 @@ class MidtransController extends Controller
 
             $pemesanan->update([
                 'midtrans_order_id' => $orderId,
-                'snap_token'        => $snapToken,
-                'payment_status'    => 'pending',
+                'snap_token' => $snapToken,
+                'payment_status' => 'pending',
             ]);
 
             return response()->json([
-                'status'     => 'success',
+                'status' => 'success',
                 'snap_token' => $snapToken,
-                'order_id'   => $orderId,
+                'order_id' => $orderId,
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                'status'  => 'error',
-                'message' => 'Gagal membuat token pembayaran: ' . $e->getMessage(),
+                'status' => 'error',
+                'message' => 'Gagal membuat token pembayaran: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -113,17 +113,17 @@ class MidtransController extends Controller
     {
         // id di sini adalah id_penawaran
         $penawaran = PenawaranCustom::with(['requestCustomPaket.user'])
-            ->whereHas('requestCustomPaket', fn($q) => $q->where('id_user', $request->user()->id_user))
+            ->whereHas('requestCustomPaket', fn ($q) => $q->where('id_user', $request->user()->id_user))
             ->find($id);
 
-        if (!$penawaran) {
+        if (! $penawaran) {
             return response()->json(['status' => 'error', 'message' => 'Penawaran tidak ditemukan.'], 404);
         }
 
         $mou = DokumenMou::where('id_request', $penawaran->requestCustomPaket->id_request)->first();
-        if (!$mou || $mou->status_mou !== 'selesai') {
+        if (! $mou || $mou->status_mou !== 'selesai') {
             return response()->json([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => 'Dokumen MOU belum selesai. Selesaikan proses tanda tangan MOU terlebih dahulu sebelum melanjutkan pembayaran.',
             ], 422);
         }
@@ -136,31 +136,31 @@ class MidtransController extends Controller
             return response()->json(['status' => 'success', 'snap_token' => $penawaran->snap_token, 'order_id' => $penawaran->midtrans_order_id]);
         }
 
-        $customReq   = $penawaran->requestCustomPaket;
-        $user        = $customReq->user;
-        $orderId     = 'CUSTOM-' . $customReq->id_request . '-PNW-' . $id . '-' . time();
+        $customReq = $penawaran->requestCustomPaket;
+        $user = $customReq->user;
+        $orderId = 'CUSTOM-'.$customReq->id_request.'-PNW-'.$id.'-'.time();
         // Charge DP saja, bukan total penawaran
-        $dpAmount    = $penawaran->dp_awal
+        $dpAmount = $penawaran->dp_awal
             ? (float) $penawaran->dp_awal
             : round((float) $penawaran->total_penawaran * 0.5, 2);
         $grossAmount = $dpAmount;
 
         $params = [
             'transaction_details' => [
-                'order_id'     => $orderId,
+                'order_id' => $orderId,
                 'gross_amount' => $grossAmount,
             ],
             'customer_details' => [
                 'first_name' => $user->nama,
-                'email'      => $user->email,
-                'phone'      => $user->no_hp ?? '',
+                'email' => $user->email,
+                'phone' => $user->no_hp ?? '',
             ],
             'item_details' => [
                 [
-                    'id'       => 'DP-CUSTOM-REQ-' . $customReq->id_request,
-                    'price'    => $grossAmount,
+                    'id' => 'DP-CUSTOM-REQ-'.$customReq->id_request,
+                    'price' => $grossAmount,
                     'quantity' => 1,
-                    'name'     => 'DP Custom Event #' . $customReq->id_request,
+                    'name' => 'DP Custom Event #'.$customReq->id_request,
                 ],
             ],
         ];
@@ -170,19 +170,19 @@ class MidtransController extends Controller
 
             $penawaran->update([
                 'midtrans_order_id' => $orderId,
-                'snap_token'        => $snapToken,
-                'payment_status'    => 'pending',
+                'snap_token' => $snapToken,
+                'payment_status' => 'pending',
             ]);
 
             return response()->json([
-                'status'     => 'success',
+                'status' => 'success',
                 'snap_token' => $snapToken,
-                'order_id'   => $orderId,
+                'order_id' => $orderId,
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                'status'  => 'error',
-                'message' => 'Gagal membuat token pembayaran: ' . $e->getMessage(),
+                'status' => 'error',
+                'message' => 'Gagal membuat token pembayaran: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -193,21 +193,21 @@ class MidtransController extends Controller
     public function notification(Request $request): JsonResponse
     {
         try {
-            $notification = new Notification();
+            $notification = new Notification;
 
-            $orderId            = $notification->order_id;
-            $transactionStatus  = $notification->transaction_status;
-            $fraudStatus        = $notification->fraud_status;
+            $orderId = $notification->order_id;
+            $transactionStatus = $notification->transaction_status;
+            $fraudStatus = $notification->fraud_status;
 
             // Tentukan payment_status kita
-            $paymentStatus = match(true) {
+            $paymentStatus = match (true) {
                 $transactionStatus === 'capture' && $fraudStatus === 'accept' => 'paid',
-                $transactionStatus === 'settlement'                            => 'paid',
-                $transactionStatus === 'pending'                               => 'pending',
-                in_array($transactionStatus, ['deny', 'cancel', 'failure'])   => 'failed',
-                $transactionStatus === 'expire'                               => 'expired',
-                $transactionStatus === 'refund'                               => 'refund',
-                default                                                        => 'pending',
+                $transactionStatus === 'settlement' => 'paid',
+                $transactionStatus === 'pending' => 'pending',
+                in_array($transactionStatus, ['deny', 'cancel', 'failure']) => 'failed',
+                $transactionStatus === 'expire' => 'expired',
+                $transactionStatus === 'refund' => 'refund',
+                default => 'pending',
             };
 
             // Update pemesanan paket bawaan
@@ -217,7 +217,10 @@ class MidtransController extends Controller
                 if ($paymentStatus === 'paid') {
                     $pemesanan->update(['status_pemesanan' => 'dikonfirmasi']);
                     // Send Email Notification
-                    try { Mail::to($pemesanan->user->email)->send(new PembayaranBerhasilMail($pemesanan, 'paket')); } catch (\Exception $e) {}
+                    try {
+                        Mail::to($pemesanan->user->email)->send(new PembayaranBerhasilMail($pemesanan, 'paket'));
+                    } catch (\Exception $e) {
+                    }
                 }
             }
 
@@ -232,7 +235,10 @@ class MidtransController extends Controller
                         $penawaran->requestCustomPaket->update(['status_request' => 'diterima']);
                     }
                     // Send Email Notification
-                    try { Mail::to($penawaran->requestCustomPaket->user->email)->send(new PembayaranBerhasilMail($penawaran, 'custom')); } catch (\Exception $e) {}
+                    try {
+                        Mail::to($penawaran->requestCustomPaket->user->email)->send(new PembayaranBerhasilMail($penawaran, 'custom'));
+                    } catch (\Exception $e) {
+                    }
                 }
             }
 
@@ -240,7 +246,7 @@ class MidtransController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => $e->getMessage(),
             ], 500);
         }
@@ -252,18 +258,18 @@ class MidtransController extends Controller
     public function syncStatus(Request $request, $orderId): JsonResponse
     {
         try {
-            $status = \Midtrans\Transaction::status($orderId);
+            $status = Transaction::status($orderId);
             $transactionStatus = $status->transaction_status;
             $fraudStatus = $status->fraud_status ?? null;
 
-            $paymentStatus = match(true) {
+            $paymentStatus = match (true) {
                 $transactionStatus === 'capture' && $fraudStatus === 'accept' => 'paid',
-                $transactionStatus === 'settlement'                            => 'paid',
-                $transactionStatus === 'pending'                               => 'pending',
-                in_array($transactionStatus, ['deny', 'cancel', 'failure'])   => 'failed',
-                $transactionStatus === 'expire'                               => 'expired',
-                $transactionStatus === 'refund'                               => 'refund',
-                default                                                        => 'pending',
+                $transactionStatus === 'settlement' => 'paid',
+                $transactionStatus === 'pending' => 'pending',
+                in_array($transactionStatus, ['deny', 'cancel', 'failure']) => 'failed',
+                $transactionStatus === 'expire' => 'expired',
+                $transactionStatus === 'refund' => 'refund',
+                default => 'pending',
             };
 
             // Update pemesanan paket bawaan
@@ -290,8 +296,8 @@ class MidtransController extends Controller
             return response()->json(['status' => 'success', 'payment_status' => $paymentStatus]);
         } catch (\Exception $e) {
             return response()->json([
-                'status'  => 'error',
-                'message' => 'Gagal sinkronisasi status: ' . $e->getMessage(),
+                'status' => 'error',
+                'message' => 'Gagal sinkronisasi status: '.$e->getMessage(),
             ], 500);
         }
     }
