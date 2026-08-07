@@ -1,13 +1,24 @@
 <?php
 
-use App\Http\Controllers\Auth\AuthController;
-use App\Http\Controllers\Guest\PaketController;
-use App\Http\Controllers\Admin\GaleriController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\FasilitasController;
+use App\Http\Controllers\Admin\GaleriController;
 use App\Http\Controllers\Admin\KategoriController;
+use App\Http\Controllers\Admin\LaporanController;
 use App\Http\Controllers\Admin\PaketLayananController;
-use App\Http\Controllers\PesanKontakController;
+use App\Http\Controllers\Admin\PemesananController;
+use App\Http\Controllers\Admin\PenawaranController;
+use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Admin\RequestCustomController;
+use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Customer\InvoiceController;
+use App\Http\Controllers\Customer\MidtransController;
+use App\Http\Controllers\Customer\PemesananCustomerController;
+use App\Http\Controllers\Customer\RequestCustomController as CustomerRequestCustomController;
+use App\Http\Controllers\Guest\PaketController;
 use App\Http\Controllers\MoUController;
+use App\Http\Controllers\PesanKontakController;
+use App\Http\Controllers\UlasanController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -22,7 +33,7 @@ Route::get('/paket', [PaketController::class, 'index']);
 Route::get('/paket/{id}', [PaketController::class, 'show']);
 Route::get('/kategori', [PaketController::class, 'kategori']);
 Route::get('/fasilitas', [PaketController::class, 'fasilitas']);
-Route::get('/ulasan', [\App\Http\Controllers\UlasanController::class, 'getTopReviews']);
+Route::get('/ulasan', [UlasanController::class, 'getTopReviews']);
 Route::get('/galeri', [GaleriController::class, 'index']);   // Publik: untuk halaman Portofolio customer
 Route::post('/pesan', [PesanKontakController::class, 'store']);
 
@@ -39,15 +50,15 @@ Route::middleware('auth:sanctum')->group(function () {
 // ─── ADMIN ─────────────────────────────────────────────────────────────────────
 Route::middleware(['auth:sanctum', 'role.admin'])->prefix('admin')->group(function () {
     // Dashboard Admin
-    Route::get('/dashboard', [\App\Http\Controllers\Admin\DashboardController::class, 'index']);
+    Route::get('/dashboard', [DashboardController::class, 'index']);
 
     // Kelola Profil Admin
-    Route::match(['put', 'post'], '/profile', [\App\Http\Controllers\Admin\ProfileController::class, 'update']);
+    Route::match(['put', 'post'], '/profile', [ProfileController::class, 'update']);
 
     // Kelola Pemesanan
-    Route::get('/pemesanan', [\App\Http\Controllers\Admin\PemesananController::class, 'index']);
-    Route::get('/pemesanan/{id}', [\App\Http\Controllers\Admin\PemesananController::class, 'show']);
-    Route::patch('/pemesanan/{id}/status', [\App\Http\Controllers\Admin\PemesananController::class, 'updateStatus']);
+    Route::get('/pemesanan', [PemesananController::class, 'index']);
+    Route::get('/pemesanan/{id}', [PemesananController::class, 'show']);
+    Route::patch('/pemesanan/{id}/status', [PemesananController::class, 'updateStatus']);
 
     // Kelola Galeri
     Route::apiResource('galeri', GaleriController::class);
@@ -63,16 +74,16 @@ Route::middleware(['auth:sanctum', 'role.admin'])->prefix('admin')->group(functi
     Route::post('/kategori/{kategori}/paket/{paket}/fasilitas', [PaketLayananController::class, 'syncFasilitas']);
 
     // Kelola Request Custom (Admin)
-    Route::get('/request-custom', [\App\Http\Controllers\Admin\RequestCustomController::class, 'index']);
-    Route::get('/request-custom/{id}', [\App\Http\Controllers\Admin\RequestCustomController::class, 'show']);
-    Route::patch('/request-custom/{id}/status', [\App\Http\Controllers\Admin\RequestCustomController::class, 'updateStatus']);
+    Route::get('/request-custom', [RequestCustomController::class, 'index']);
+    Route::get('/request-custom/{id}', [RequestCustomController::class, 'show']);
+    Route::patch('/request-custom/{id}/status', [RequestCustomController::class, 'updateStatus']);
 
     // Kelola Penawaran (Admin)
-    Route::post('/request-custom/{id}/penawaran', [\App\Http\Controllers\Admin\PenawaranController::class, 'store']);
-    Route::delete('/penawaran/{id}', [\App\Http\Controllers\Admin\PenawaranController::class, 'destroy']);
+    Route::post('/request-custom/{id}/penawaran', [PenawaranController::class, 'store']);
+    Route::delete('/penawaran/{id}', [PenawaranController::class, 'destroy']);
 
     // Laporan (Admin)
-    Route::get('/laporan', [\App\Http\Controllers\Admin\LaporanController::class, 'generateLaporan']);
+    Route::get('/laporan', [LaporanController::class, 'generateLaporan']);
 
     // Pesan Kontak (Admin)
     Route::get('/pesan', [PesanKontakController::class, 'indexAdmin']);
@@ -88,26 +99,26 @@ Route::middleware(['auth:sanctum', 'role.admin'])->prefix('admin')->group(functi
 // ─── CUSTOMER ──────────────────────────────────────────────────────────────────
 Route::middleware(['auth:sanctum', 'role.customer'])->prefix('customer')->group(function () {
     // Request Custom (Customer)
-    Route::get('/request-custom', [\App\Http\Controllers\Customer\RequestCustomController::class, 'index']);
-    Route::post('/request-custom', [\App\Http\Controllers\Customer\RequestCustomController::class, 'store']);
-    Route::get('/request-custom/{id}', [\App\Http\Controllers\Customer\RequestCustomController::class, 'show']);
+    Route::get('/request-custom', [CustomerRequestCustomController::class, 'index']);
+    Route::post('/request-custom', [CustomerRequestCustomController::class, 'store']);
+    Route::get('/request-custom/{id}', [CustomerRequestCustomController::class, 'show']);
 
     // Pemesanan Paket Bawaan (Customer)
-    Route::get('/pemesanan', [\App\Http\Controllers\Customer\PemesananCustomerController::class, 'index']);
-    Route::post('/pemesanan', [\App\Http\Controllers\Customer\PemesananCustomerController::class, 'store']);
-    Route::get('/pemesanan/{id}', [\App\Http\Controllers\Customer\PemesananCustomerController::class, 'show']);
+    Route::get('/pemesanan', [PemesananCustomerController::class, 'index']);
+    Route::post('/pemesanan', [PemesananCustomerController::class, 'store']);
+    Route::get('/pemesanan/{id}', [PemesananCustomerController::class, 'show']);
 
     // Midtrans Payment Token
-    Route::post('/payment/token-paket/{id}', [\App\Http\Controllers\Customer\MidtransController::class, 'createTokenPaket']);
-    Route::post('/payment/token-custom/{id}', [\App\Http\Controllers\Customer\MidtransController::class, 'createTokenCustom']);
-    Route::post('/payment/sync/{orderId}', [\App\Http\Controllers\Customer\MidtransController::class, 'syncStatus']);
+    Route::post('/payment/token-paket/{id}', [MidtransController::class, 'createTokenPaket']);
+    Route::post('/payment/token-custom/{id}', [MidtransController::class, 'createTokenCustom']);
+    Route::post('/payment/sync/{orderId}', [MidtransController::class, 'syncStatus']);
 
     // Invoice (Customer)
-    Route::get('/pemesanan/{id}/invoice', [\App\Http\Controllers\Customer\InvoiceController::class, 'invoicePemesanan']);
-    Route::get('/request-custom/{id}/invoice', [\App\Http\Controllers\Customer\InvoiceController::class, 'invoiceCustom']);
+    Route::get('/pemesanan/{id}/invoice', [InvoiceController::class, 'invoicePemesanan']);
+    Route::get('/request-custom/{id}/invoice', [InvoiceController::class, 'invoiceCustom']);
 
     // Submit Ulasan (Customer)
-    Route::post('/ulasan', [\App\Http\Controllers\UlasanController::class, 'store']);
+    Route::post('/ulasan', [UlasanController::class, 'store']);
 
     // Pesan Kontak (Customer)
     Route::get('/pesan', [PesanKontakController::class, 'indexCustomer']);
@@ -118,5 +129,4 @@ Route::middleware(['auth:sanctum', 'role.customer'])->prefix('customer')->group(
 });
 
 // ─── MIDTRANS WEBHOOK (public, tanpa auth) ─────────────────────────────────────
-Route::post('/payment/notification', [\App\Http\Controllers\Customer\MidtransController::class, 'notification']);
-
+Route::post('/payment/notification', [MidtransController::class, 'notification']);
