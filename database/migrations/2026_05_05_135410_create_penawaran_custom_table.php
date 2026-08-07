@@ -18,15 +18,15 @@ return new class extends Migration
                 'menunggu',
                 'diterima',
                 'ditolak',
-                'direvisi'
+                'direvisi',
             ])->default('menunggu');
             $table->text('catatan_admin')->nullable();
             $table->timestamps();
 
             $table->foreign('id_request')
-                  ->references('id_request')
-                  ->on('request_custom_paket')
-                  ->onDelete('cascade');
+                ->references('id_request')
+                ->on('request_custom_paket')
+                ->onDelete('cascade');
         });
     }
 

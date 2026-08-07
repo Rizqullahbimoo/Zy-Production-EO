@@ -19,9 +19,9 @@ return new class extends Migration
             $table->timestamps();
 
             $table->foreign('id_kategori')
-                  ->references('id_kategori')
-                  ->on('kategori_event')
-                  ->onDelete('restrict');
+                ->references('id_kategori')
+                ->on('kategori_event')
+                ->onDelete('restrict');
         });
     }
 

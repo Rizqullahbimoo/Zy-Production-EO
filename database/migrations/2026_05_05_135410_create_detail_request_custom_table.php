@@ -16,14 +16,14 @@ return new class extends Migration
             $table->timestamps();
 
             $table->foreign('id_request')
-                  ->references('id_request')
-                  ->on('request_custom_paket')
-                  ->onDelete('cascade');
+                ->references('id_request')
+                ->on('request_custom_paket')
+                ->onDelete('cascade');
 
             $table->foreign('id_fasilitas')
-                  ->references('id_fasilitas')
-                  ->on('fasilitas_layanan')
-                  ->onDelete('restrict');
+                ->references('id_fasilitas')
+                ->on('fasilitas_layanan')
+                ->onDelete('restrict');
         });
     }
 

@@ -20,20 +20,20 @@ return new class extends Migration
                 'menunggu',
                 'dikonfirmasi',
                 'dibatalkan',
-                'selesai'
+                'selesai',
             ])->default('menunggu');
             $table->text('catatan')->nullable();
             $table->timestamps();
 
             $table->foreign('id_user')
-                  ->references('id_user')
-                  ->on('users')
-                  ->onDelete('restrict');
+                ->references('id_user')
+                ->on('users')
+                ->onDelete('restrict');
 
             $table->foreign('id_paket')
-                  ->references('id_paket')
-                  ->on('paket_layanan')
-                  ->onDelete('restrict');
+                ->references('id_paket')
+                ->on('paket_layanan')
+                ->onDelete('restrict');
         });
     }
 

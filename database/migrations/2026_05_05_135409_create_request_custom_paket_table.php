@@ -24,19 +24,19 @@ return new class extends Migration
                 'ditawarkan',
                 'diterima',
                 'ditolak',
-                'selesai'
+                'selesai',
             ])->default('menunggu');
             $table->timestamps();
 
             $table->foreign('id_user')
-                  ->references('id_user')
-                  ->on('users')
-                  ->onDelete('restrict');
+                ->references('id_user')
+                ->on('users')
+                ->onDelete('restrict');
 
             $table->foreign('id_kategori')
-                  ->references('id_kategori')
-                  ->on('kategori_event')
-                  ->onDelete('restrict');
+                ->references('id_kategori')
+                ->on('kategori_event')
+                ->onDelete('restrict');
         });
     }
 

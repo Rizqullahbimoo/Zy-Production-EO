@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('midtrans_order_id')->nullable()->unique()->after('catatan');
             $table->text('snap_token')->nullable()->after('midtrans_order_id');
             $table->enum('payment_status', [
-                'unpaid', 'pending', 'paid', 'failed', 'expired', 'refund'
+                'unpaid', 'pending', 'paid', 'failed', 'expired', 'refund',
             ])->default('unpaid')->after('snap_token');
         });
 
@@ -27,7 +27,7 @@ return new class extends Migration
             $table->string('midtrans_order_id')->nullable()->unique()->after('catatan_admin');
             $table->text('snap_token')->nullable()->after('midtrans_order_id');
             $table->enum('payment_status', [
-                'unpaid', 'pending', 'paid', 'failed', 'expired', 'refund'
+                'unpaid', 'pending', 'paid', 'failed', 'expired', 'refund',
             ])->default('unpaid')->after('snap_token');
         });
     }

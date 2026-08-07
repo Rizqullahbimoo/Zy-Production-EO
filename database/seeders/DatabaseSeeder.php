@@ -2,14 +2,15 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
+use App\Models\Galeri;
 use App\Models\KategoriEvent;
 use App\Models\PaketLayanan;
 use App\Models\Pemesanan;
 use App\Models\RequestCustomPaket;
+use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Carbon\Carbon;
 
 class DatabaseSeeder extends Seeder
 {
@@ -22,10 +23,10 @@ class DatabaseSeeder extends Seeder
         $admin = User::updateOrCreate(
             ['email' => 'admin@zyproduction.com'],
             [
-                'nama'     => 'Admin ZY Production',
+                'nama' => 'Admin ZY Production',
                 'password' => Hash::make('admin123'),
-                'no_hp'    => '08123456789',
-                'role'     => 'admin',
+                'no_hp' => '08123456789',
+                'role' => 'admin',
             ]
         );
 
@@ -33,10 +34,10 @@ class DatabaseSeeder extends Seeder
         $customer = User::updateOrCreate(
             ['email' => 'customer@zyproduction.com'],
             [
-                'nama'     => 'Bimo Customer',
+                'nama' => 'Bimo Customer',
                 'password' => Hash::make('customer123'),
-                'no_hp'    => '08198765432',
-                'role'     => 'user',
+                'no_hp' => '08198765432',
+                'role' => 'user',
             ]
         );
 
@@ -44,14 +45,14 @@ class DatabaseSeeder extends Seeder
         $customersList = [$customer];
         $names = ['Andi Saputra', 'Siti Rahma', 'Budi Santoso', 'Rina Oktavia', 'Dimas Pratama', 'Ahmad Fauzi', 'Dewi Lestari', 'Hadi Wijaya'];
         foreach ($names as $idx => $name) {
-            $email = 'customer' . ($idx + 1) . '@example.com';
+            $email = 'customer'.($idx + 1).'@example.com';
             $user = User::updateOrCreate(
                 ['email' => $email],
                 [
-                    'nama'     => $name,
+                    'nama' => $name,
                     'password' => Hash::make('customer123'),
-                    'no_hp'    => '0812' . rand(11111111, 99999999),
-                    'role'     => 'user',
+                    'no_hp' => '0812'.rand(11111111, 99999999),
+                    'role' => 'user',
                 ]
             );
             $customersList[] = $user;
@@ -117,9 +118,9 @@ class DatabaseSeeder extends Seeder
                     $allPackages[] = PaketLayanan::updateOrCreate(
                         ['nama_paket' => $pInfo['nama']],
                         [
-                            'id_kategori'  => $cat->id_kategori,
-                            'deskripsi'    => 'Paket lengkap layanan ' . $catName . ' dengan fasilitas terbaik.',
-                            'harga'        => $pInfo['harga'],
+                            'id_kategori' => $cat->id_kategori,
+                            'deskripsi' => 'Paket lengkap layanan '.$catName.' dengan fasilitas terbaik.',
+                            'harga' => $pInfo['harga'],
                             'status_paket' => 'aktif',
                         ]
                     );
@@ -137,7 +138,7 @@ class DatabaseSeeder extends Seeder
                 $randCustomer = $customersList[array_rand($customersList)];
                 $randPackage = $allPackages[array_rand($allPackages)];
                 $status = $statuses[$i % count($statuses)];
-                
+
                 // Let's make the last few orders match the wireframe exactly
                 if ($i === 20) { // ORD-005
                     $randCustomer = User::where('nama', 'Dimas Pratama')->first() ?: $customer;
@@ -162,14 +163,14 @@ class DatabaseSeeder extends Seeder
                 }
 
                 Pemesanan::create([
-                    'id_user'           => $randCustomer->id_user,
-                    'id_paket'          => $randPackage->id_paket,
-                    'kode_pemesanan'    => 'ORD-' . str_pad($i, 3, '0', STR_PAD_LEFT),
+                    'id_user' => $randCustomer->id_user,
+                    'id_paket' => $randPackage->id_paket,
+                    'kode_pemesanan' => 'ORD-'.str_pad($i, 3, '0', STR_PAD_LEFT),
                     'tanggal_pemesanan' => Carbon::now()->subDays(25 - $i),
-                    'tanggal_acara'     => Carbon::now()->addDays($i + 5),
-                    'lokasi_acara'      => $locations[array_rand($locations)],
-                    'status_pemesanan'  => $status,
-                    'catatan'           => 'Catatan pemesanan dummy ke-' . $i,
+                    'tanggal_acara' => Carbon::now()->addDays($i + 5),
+                    'lokasi_acara' => $locations[array_rand($locations)],
+                    'status_pemesanan' => $status,
+                    'catatan' => 'Catatan pemesanan dummy ke-'.$i,
                 ]);
             }
         }
@@ -180,23 +181,23 @@ class DatabaseSeeder extends Seeder
             for ($i = 1; $i <= 8; $i++) {
                 $randCustomer = $customersList[array_rand($customersList)];
                 $randCat = $categories[array_rand($categories)];
-                
+
                 RequestCustomPaket::create([
-                    'id_user'         => $randCustomer->id_user,
-                    'id_kategori'     => $randCat->id_kategori,
+                    'id_user' => $randCustomer->id_user,
+                    'id_kategori' => $randCat->id_kategori,
                     'tanggal_request' => Carbon::now()->subDays(10 - $i),
-                    'tanggal_acara'   => Carbon::now()->addDays($i + 15),
-                    'lokasi_acara'    => 'Lokasi Custom Klien ke-' . $i,
-                    'jumlah_tamu'     => rand(50, 500),
-                    'budget_acara'    => rand(10, 100) * 1000000,
-                    'catatan'         => 'Permintaan kustomisasi paket event detail ke-' . $i,
-                    'status_request'  => $reqStatuses[$i % count($reqStatuses)],
+                    'tanggal_acara' => Carbon::now()->addDays($i + 15),
+                    'lokasi_acara' => 'Lokasi Custom Klien ke-'.$i,
+                    'jumlah_tamu' => rand(50, 500),
+                    'budget_acara' => rand(10, 100) * 1000000,
+                    'catatan' => 'Permintaan kustomisasi paket event detail ke-'.$i,
+                    'status_request' => $reqStatuses[$i % count($reqStatuses)],
                 ]);
             }
         }
 
         // ── Seed Gallery (Galeri: 6 total) ──────────────────────────────────
-        if (\App\Models\Galeri::count() == 0) {
+        if (Galeri::count() == 0) {
             $galleryData = [
                 [
                     'judul' => 'Wedding Event',
@@ -249,7 +250,7 @@ class DatabaseSeeder extends Seeder
             ];
 
             foreach ($galleryData as $data) {
-                \App\Models\Galeri::create($data);
+                Galeri::create($data);
             }
         }
     }

@@ -17,14 +17,14 @@ return new class extends Migration
             $table->timestamps();
 
             $table->foreign('id_paket')
-                  ->references('id_paket')
-                  ->on('paket_layanan')
-                  ->onDelete('cascade');
+                ->references('id_paket')
+                ->on('paket_layanan')
+                ->onDelete('cascade');
 
             $table->foreign('id_fasilitas')
-                  ->references('id_fasilitas')
-                  ->on('fasilitas_layanan')
-                  ->onDelete('restrict');
+                ->references('id_fasilitas')
+                ->on('fasilitas_layanan')
+                ->onDelete('restrict');
         });
     }
 

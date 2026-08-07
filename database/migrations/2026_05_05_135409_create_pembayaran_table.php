@@ -18,20 +18,20 @@ return new class extends Migration
             $table->enum('status_konfirmasi', [
                 'menunggu',
                 'dikonfirmasi',
-                'ditolak'
+                'ditolak',
             ])->default('menunggu');
             $table->text('catatan_admin')->nullable();
             $table->timestamps();
 
             $table->foreign('id_pemesanan')
-                  ->references('id_pemesanan')
-                  ->on('pemesanan')
-                  ->onDelete('cascade');
+                ->references('id_pemesanan')
+                ->on('pemesanan')
+                ->onDelete('cascade');
 
             $table->foreign('created_id')
-                  ->references('id_user')
-                  ->on('users')
-                  ->onDelete('restrict');
+                ->references('id_user')
+                ->on('users')
+                ->onDelete('restrict');
         });
     }
 
