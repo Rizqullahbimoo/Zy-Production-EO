@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests\Admin;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Validation\Rule;
 
@@ -33,16 +33,16 @@ class KategoriRequest extends FormRequest
     {
         return [
             'nama_kategori.required' => 'Nama kategori wajib diisi.',
-            'nama_kategori.unique'   => 'Nama kategori sudah ada.',
+            'nama_kategori.unique' => 'Nama kategori sudah ada.',
         ];
     }
 
     protected function failedValidation(Validator $validator): void
     {
         throw new HttpResponseException(response()->json([
-            'status'  => 'error',
+            'status' => 'error',
             'message' => 'Validasi gagal.',
-            'errors'  => $validator->errors(),
+            'errors' => $validator->errors(),
         ], 422));
     }
 }

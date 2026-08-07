@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests\Admin;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
 class FasilitasRequest extends FormRequest
@@ -17,8 +17,8 @@ class FasilitasRequest extends FormRequest
     {
         return [
             'nama_fasilitas' => ['required', 'string', 'max:255'],
-            'deskripsi'      => ['nullable', 'string'],
-            'id_kategori'    => ['required', 'integer', 'exists:kategori_event,id_kategori'],
+            'deskripsi' => ['nullable', 'string'],
+            'id_kategori' => ['required', 'integer', 'exists:kategori_event,id_kategori'],
         ];
     }
 
@@ -32,9 +32,9 @@ class FasilitasRequest extends FormRequest
     protected function failedValidation(Validator $validator): void
     {
         throw new HttpResponseException(response()->json([
-            'status'  => 'error',
+            'status' => 'error',
             'message' => 'Validasi gagal.',
-            'errors'  => $validator->errors(),
+            'errors' => $validator->errors(),
         ], 422));
     }
 }

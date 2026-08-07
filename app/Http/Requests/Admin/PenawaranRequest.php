@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests\Admin;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
 class PenawaranRequest extends FormRequest
@@ -17,17 +17,17 @@ class PenawaranRequest extends FormRequest
     {
         return [
             'total_penawaran' => ['required', 'numeric', 'min:0'],
-            'dp_awal'         => ['nullable', 'numeric', 'min:0'],
-            'catatan_admin'   => ['nullable', 'string'],
+            'dp_awal' => ['nullable', 'numeric', 'min:0'],
+            'catatan_admin' => ['nullable', 'string'],
         ];
     }
 
     protected function failedValidation(Validator $validator): void
     {
         throw new HttpResponseException(response()->json([
-            'status'  => 'error',
+            'status' => 'error',
             'message' => 'Validasi gagal.',
-            'errors'  => $validator->errors(),
+            'errors' => $validator->errors(),
         ], 422));
     }
 }
