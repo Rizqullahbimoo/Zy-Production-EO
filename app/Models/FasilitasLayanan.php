@@ -10,6 +10,7 @@ class FasilitasLayanan extends Model
     use HasFactory;
 
     protected $table = 'fasilitas_layanan';
+
     protected $primaryKey = 'id_fasilitas';
 
     protected $fillable = [

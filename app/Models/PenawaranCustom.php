@@ -10,6 +10,7 @@ class PenawaranCustom extends Model
     use HasFactory;
 
     protected $table = 'penawaran_custom';
+
     protected $primaryKey = 'id_penawaran';
 
     protected $fillable = [
@@ -26,8 +27,8 @@ class PenawaranCustom extends Model
 
     protected $casts = [
         'tanggal_penawaran' => 'date',
-        'total_penawaran'   => 'decimal:2',
-        'dp_awal'           => 'decimal:2',
+        'total_penawaran' => 'decimal:2',
+        'dp_awal' => 'decimal:2',
     ];
 
     // Alias harga_penawaran -> total_penawaran untuk backward compat frontend

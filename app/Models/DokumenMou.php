@@ -11,6 +11,7 @@ class DokumenMou extends Model
     use HasFactory;
 
     protected $table = 'dokumen_mou';
+
     protected $primaryKey = 'id_mou';
 
     protected $fillable = [

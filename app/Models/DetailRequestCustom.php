@@ -10,6 +10,7 @@ class DetailRequestCustom extends Model
     use HasFactory;
 
     protected $table = 'detail_request_custom';
+
     protected $primaryKey = 'id_detail_request';
 
     protected $fillable = [

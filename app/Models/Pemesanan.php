@@ -10,6 +10,7 @@ class Pemesanan extends Model
     use HasFactory;
 
     protected $table = 'pemesanan';
+
     protected $primaryKey = 'id_pemesanan';
 
     protected $fillable = [
@@ -30,8 +31,8 @@ class Pemesanan extends Model
 
     protected $casts = [
         'tanggal_pemesanan' => 'date',
-        'tanggal_acara'     => 'date',
-        'dp_amount'         => 'decimal:2',
+        'tanggal_acara' => 'date',
+        'dp_amount' => 'decimal:2',
     ];
 
     // Relasi

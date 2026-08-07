@@ -12,7 +12,7 @@ class PesanKontak extends Model
         'kontak',
         'pesan',
         'balasan_admin',
-        'status'
+        'status',
     ];
 
     public function user()

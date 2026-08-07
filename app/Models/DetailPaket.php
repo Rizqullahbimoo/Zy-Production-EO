@@ -10,6 +10,7 @@ class DetailPaket extends Model
     use HasFactory;
 
     protected $table = 'detail_paket';
+
     protected $primaryKey = 'id_detail_paket';
 
     protected $fillable = [

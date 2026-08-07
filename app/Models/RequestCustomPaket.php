@@ -10,6 +10,7 @@ class RequestCustomPaket extends Model
     use HasFactory;
 
     protected $table = 'request_custom_paket';
+
     protected $primaryKey = 'id_request';
 
     protected $fillable = [
@@ -26,8 +27,8 @@ class RequestCustomPaket extends Model
 
     protected $casts = [
         'tanggal_request' => 'date',
-        'tanggal_acara'   => 'date',
-        'budget_acara'    => 'decimal:2',
+        'tanggal_acara' => 'date',
+        'budget_acara' => 'decimal:2',
     ];
 
     // Relasi

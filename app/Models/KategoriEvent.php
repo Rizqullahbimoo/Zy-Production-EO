@@ -10,6 +10,7 @@ class KategoriEvent extends Model
     use HasFactory;
 
     protected $table = 'kategori_event';
+
     protected $primaryKey = 'id_kategori';
 
     protected $fillable = [

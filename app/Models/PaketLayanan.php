@@ -10,6 +10,7 @@ class PaketLayanan extends Model
     use HasFactory;
 
     protected $table = 'paket_layanan';
+
     protected $primaryKey = 'id_paket';
 
     protected $fillable = [

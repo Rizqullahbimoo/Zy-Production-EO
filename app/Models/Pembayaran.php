@@ -10,6 +10,7 @@ class Pembayaran extends Model
     use HasFactory;
 
     protected $table = 'pembayaran';
+
     protected $primaryKey = 'id_pembayaran';
 
     protected $fillable = [
@@ -24,7 +25,7 @@ class Pembayaran extends Model
 
     protected $casts = [
         'tanggal_bayar' => 'date',
-        'jumlah_bayar'  => 'decimal:2',
+        'jumlah_bayar' => 'decimal:2',
     ];
 
     // Relasi
