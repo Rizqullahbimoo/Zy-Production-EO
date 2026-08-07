@@ -5,10 +5,10 @@
 import { useState } from "react";
 
 const STATUS_STEPS = [
-  { key: "belum_ada",             label: "Draf MOU" },
+  { key: "belum_ada", label: "Draf MOU" },
   { key: "menunggu_ttd_customer", label: "TTD Anda" },
-  { key: "menunggu_ttd_admin",    label: "TTD Admin" },
-  { key: "selesai",               label: "Selesai" },
+  { key: "menunggu_ttd_admin", label: "TTD Admin" },
+  { key: "selesai", label: "Selesai" },
 ];
 
 function stepIndex(status) {

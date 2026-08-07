@@ -16,35 +16,35 @@ function loadSnapScript() {
       ? "https://app.midtrans.com/snap/snap.js"
       : "https://app.sandbox.midtrans.com/snap/snap.js";
     script.setAttribute("data-client-key", import.meta.env.VITE_MIDTRANS_CLIENT_KEY || "");
-    script.onload  = () => resolve(window.snap);
+    script.onload = () => resolve(window.snap);
     script.onerror = reject;
     document.head.appendChild(script);
   });
 }
 
 export default function CustomerStatus() {
-  const navigate  = useNavigate();
-  const token     = localStorage.getItem("auth_token");
+  const navigate = useNavigate();
+  const token = localStorage.getItem("auth_token");
 
   /* ── Tabs ── */
   const [activeTab, setActiveTab] = useState("paket"); // "paket" | "custom"
 
   /* ── Tab: Paket Bawaan ── */
-  const [myPemesanan, setMyPemesanan]             = useState([]);
-  const [loadingPemesanan, setLoadingPemesanan]   = useState(false);
+  const [myPemesanan, setMyPemesanan] = useState([]);
+  const [loadingPemesanan, setLoadingPemesanan] = useState(false);
   const [selectedPemesanan, setSelectedPemesanan] = useState(null);
   const [isPayingPemesanan, setIsPayingPemesanan] = useState(false);
 
   /* ── Tab: Custom ── */
-  const [myRequests, setMyRequests]               = useState([]);
-  const [loadingStatus, setLoadingStatus]         = useState(false);
-  const [selectedRequest, setSelectedRequest]     = useState(null);
-  const [isPayingCustom, setIsPayingCustom]       = useState(false);
+  const [myRequests, setMyRequests] = useState([]);
+  const [loadingStatus, setLoadingStatus] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [isPayingCustom, setIsPayingCustom] = useState(false);
 
   /* ── Tab: Pesan Masuk ── */
-  const [myPesan, setMyPesan]                     = useState([]);
-  const [loadingPesan, setLoadingPesan]           = useState(false);
-  const [selectedPesan, setSelectedPesan]         = useState(null);
+  const [myPesan, setMyPesan] = useState([]);
+  const [loadingPesan, setLoadingPesan] = useState(false);
+  const [selectedPesan, setSelectedPesan] = useState(null);
 
   /* ── Ulasan Modal ── */
   const [showUlasanModal, setShowUlasanModal] = useState(false);
@@ -56,14 +56,14 @@ export default function CustomerStatus() {
 
   const getStatusBadge = status => {
     switch (status) {
-      case "menunggu":     return "badge-warning";
-      case "dikonfirmasi": 
-      case "diterima":     return "badge-success";
-      case "ditawarkan":   return "badge-info";
-      case "dibatalkan":   
-      case "ditolak":      return "badge-danger";
-      case "selesai":      return "badge-primary";
-      default:             return "badge-secondary";
+      case "menunggu": return "badge-warning";
+      case "dikonfirmasi":
+      case "diterima": return "badge-success";
+      case "ditawarkan": return "badge-info";
+      case "dibatalkan":
+      case "ditolak": return "badge-danger";
+      case "selesai": return "badge-primary";
+      default: return "badge-secondary";
     }
   };
   const getStatusLabel = status => {
@@ -73,11 +73,11 @@ export default function CustomerStatus() {
 
   const getPaymentBadge = ps => {
     switch (ps) {
-      case "paid":    return "badge-paid";
+      case "paid": return "badge-paid";
       case "pending": return "badge-warning";
       case "failed":
       case "expired": return "badge-danger";
-      default:        return "badge-unpaid";
+      default: return "badge-unpaid";
     }
   };
   const getPaymentLabel = ps => {
@@ -157,7 +157,7 @@ export default function CustomerStatus() {
     setIsPayingPemesanan(true);
     try {
       const snap = await loadSnapScript();
-      const res  = await window.axios.post(`/api/customer/payment/token-paket/${pemesanan.id_pemesanan}`);
+      const res = await window.axios.post(`/api/customer/payment/token-paket/${pemesanan.id_pemesanan}`);
       if (res.data.status === "success") {
         snap.pay(res.data.snap_token, {
           onSuccess: async (result) => {
@@ -165,8 +165,8 @@ export default function CustomerStatus() {
             fetchPemesanan();
           },
           onPending: () => { alert("Pembayaran tertunda. Status akan diperbarui otomatis."); fetchPemesanan(); },
-          onError:   () => { alert("Pembayaran gagal. Silakan coba lagi."); },
-          onClose:   () => {},
+          onError: () => { alert("Pembayaran gagal. Silakan coba lagi."); },
+          onClose: () => {},
         });
       }
     } catch (err) { alert("Gagal membuka pembayaran: " + (err?.response?.data?.message || err.message)); }
@@ -178,7 +178,7 @@ export default function CustomerStatus() {
     setIsPayingCustom(true);
     try {
       const snap = await loadSnapScript();
-      const res  = await window.axios.post(`/api/customer/payment/token-custom/${penawaran.id_penawaran}`);
+      const res = await window.axios.post(`/api/customer/payment/token-custom/${penawaran.id_penawaran}`);
       if (res.data.status === "success") {
         snap.pay(res.data.snap_token, {
           onSuccess: async (result) => {
@@ -186,8 +186,8 @@ export default function CustomerStatus() {
             fetchMyRequests();
           },
           onPending: () => { alert("Pembayaran tertunda. Status akan diperbarui otomatis."); fetchMyRequests(); },
-          onError:   () => { alert("Pembayaran gagal. Silakan coba lagi."); },
-          onClose:   () => {},
+          onError: () => { alert("Pembayaran gagal. Silakan coba lagi."); },
+          onClose: () => {},
         });
       }
     } catch (err) { alert("Gagal membuka pembayaran: " + (err?.response?.data?.message || err.message)); }
@@ -707,11 +707,11 @@ export default function CustomerStatus() {
         <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(5px)' }}>
           <form onSubmit={handleSubmitUlasan} style={{ background: '#1a1a2e', padding: '2rem', borderRadius: '15px', width: '90%', maxWidth: '400px', border: '1px solid rgba(255,255,255,0.1)' }}>
             <h3 style={{ color: '#fff', marginBottom: '1.5rem', textAlign: 'center' }}>⭐ Beri Penilaian</h3>
-            
+
             <div style={{ marginBottom: '1.5rem' }}>
               <label style={{ display: 'block', color: 'rgba(255,255,255,0.7)', marginBottom: '0.5rem' }}>Rating (1-5)</label>
-              <select 
-                className="form-control" 
+              <select
+                className="form-control"
                 value={ulasanData.rating}
                 onChange={e => setUlasanData({...ulasanData, rating: e.target.value})}
                 style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: '8px' }}
@@ -722,8 +722,8 @@ export default function CustomerStatus() {
 
             <div style={{ marginBottom: '1.5rem' }}>
               <label style={{ display: 'block', color: 'rgba(255,255,255,0.7)', marginBottom: '0.5rem' }}>Komentar (Opsional)</label>
-              <textarea 
-                className="form-control" 
+              <textarea
+                className="form-control"
                 rows="4"
                 placeholder="Ceritakan pengalaman Anda..."
                 value={ulasanData.komentar}

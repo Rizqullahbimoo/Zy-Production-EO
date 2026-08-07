@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import Sidebar from '../components/sidebar';
+import Sidebar from '../components/Sidebar';
 import MouManageModal from '../components/admin/MouManageModal';
 import '../../css/pages/admin-dashboard.css';
 
@@ -62,7 +62,7 @@ export default function AdminDashboard() {
   const [isLoadingPackages, setIsLoadingPackages] = useState(false);
   const [showPackageModal, setShowPackageModal] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState(null);
-  
+
   // Package form fields
   const [packageName, setPackageName] = useState('');
   const [packagePrice, setPackagePrice] = useState('');
@@ -184,12 +184,12 @@ export default function AdminDashboard() {
       alert('Balasan tidak boleh kosong!');
       return;
     }
-    
+
     try {
       const response = await window.axios.patch(`/api/admin/pesan/${id}/reply`, {
         balasan_admin: replyText[id]
       });
-      
+
       if (response.data?.status === 'success') {
         alert('Balasan berhasil dikirim!');
         setActiveReplyId(null);
@@ -228,7 +228,7 @@ export default function AdminDashboard() {
     setErrorMsg('');
     try {
       const response = await window.axios.get(`/api/admin/pemesanan`, {
-        params: { 
+        params: {
           search: searchVal,
           status: statusVal
         }
@@ -272,7 +272,7 @@ export default function AdminDashboard() {
   const handleUpdateStatus = async (e) => {
     e.preventDefault();
     if (!selectedOrder) return;
-    
+
     setIsSubmittingStatus(true);
     setErrorMsg('');
     try {
@@ -282,7 +282,7 @@ export default function AdminDashboard() {
       if (response.data?.status === 'success') {
         // Refresh the list
         fetchOrders(orderSearch, orderStatusFilter);
-        
+
         // Update selected order view dynamically
         setSelectedOrder(prev => ({
           ...prev,
@@ -313,7 +313,7 @@ export default function AdminDashboard() {
     setErrorMsg('');
     try {
       const response = await window.axios.get(`/api/admin/request-custom`, {
-        params: { 
+        params: {
           search: searchVal,
           status: statusVal
         }
@@ -345,7 +345,7 @@ export default function AdminDashboard() {
         const data = response.data.data;
         setSelectedCustomRequest(data);
         setSelectedCustomStatus(data.status_request);
-        
+
         // Reset penawaran form
         setTotalPenawaran('');
         setDpAwal('');
@@ -363,7 +363,7 @@ export default function AdminDashboard() {
   const handleUpdateCustomStatus = async (e) => {
     e.preventDefault();
     if (!selectedCustomRequest) return;
-    
+
     setIsSubmittingCustomStatus(true);
     setErrorMsg('');
     try {
@@ -373,7 +373,7 @@ export default function AdminDashboard() {
       if (response.data?.status === 'success') {
         // Refresh the list
         fetchCustomRequests(customSearch, customStatusFilter);
-        
+
         // Update selected custom request view dynamically
         setSelectedCustomRequest(prev => ({
           ...prev,
@@ -395,7 +395,7 @@ export default function AdminDashboard() {
   const handleSubmitPenawaran = async (e) => {
     e.preventDefault();
     if (!selectedCustomRequest) return;
-    
+
     if (!totalPenawaran || isNaN(totalPenawaran) || parseFloat(totalPenawaran) < 0) {
       alert('Harap masukkan total penawaran harga yang valid.');
       return;
@@ -1277,7 +1277,7 @@ export default function AdminDashboard() {
                     {item.status === 'dibalas' ? 'Telah Dibalas' : 'Menunggu Balasan'}
                   </span>
                 </div>
-                
+
                 <div style={{ padding: '1rem', backgroundColor: 'var(--bg-page)', borderRadius: '8px', marginBottom: '1rem' }}>
                   <p style={{ margin: 0 }}><strong>Pesan:</strong><br/>{item.pesan}</p>
                 </div>
@@ -1339,9 +1339,9 @@ export default function AdminDashboard() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
             <div className="zy-form-group">
               <label className="zy-form-label">Bulan</label>
-              <select 
-                className="zy-form-select" 
-                value={laporanBulan} 
+              <select
+                className="zy-form-select"
+                value={laporanBulan}
                 onChange={e => setLaporanBulan(e.target.value)}
               >
                 {Array.from({length: 12}, (_, i) => i + 1).map(m => (
@@ -1351,12 +1351,12 @@ export default function AdminDashboard() {
             </div>
             <div className="zy-form-group">
               <label className="zy-form-label">Tahun</label>
-              <input 
-                type="number" 
-                className="zy-filter-input" 
-                value={laporanTahun} 
-                onChange={e => setLaporanTahun(e.target.value)} 
-                min="2020" max="2100" 
+              <input
+                type="number"
+                className="zy-filter-input"
+                value={laporanTahun}
+                onChange={e => setLaporanTahun(e.target.value)}
+                min="2020" max="2100"
               />
             </div>
           </div>
@@ -1364,7 +1364,7 @@ export default function AdminDashboard() {
 
         {/* 2 Cards Grid for Download Options */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-          
+
           {/* Card PDF */}
           <div className="zy-section-card fade-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '2rem' }}>
             <div style={{ background: 'rgba(220, 53, 69, 0.1)', color: '#dc3545', padding: '16px', borderRadius: '50%', marginBottom: '1rem' }}>
@@ -1372,10 +1372,10 @@ export default function AdminDashboard() {
             </div>
             <h3 style={{ marginBottom: '0.5rem', fontSize: '1.2rem', color: 'var(--text-main)' }}>Dokumen PDF</h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem', flex: 1 }}>Format rapi yang cocok untuk dicetak langsung atau dijadikan dokumen arsip.</p>
-            <button 
-              style={{ 
+            <button
+              style={{
                 width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px',
-                backgroundColor: '#dc3545', color: 'white', border: 'none', padding: '12px 24px', 
+                backgroundColor: '#dc3545', color: 'white', border: 'none', padding: '12px 24px',
                 borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '1rem',
                 transition: 'all 0.2s ease',
                 boxShadow: '0 4px 6px rgba(220, 53, 69, 0.2)'
@@ -1416,10 +1416,10 @@ export default function AdminDashboard() {
             </div>
             <h3 style={{ marginBottom: '0.5rem', fontSize: '1.2rem', color: 'var(--text-main)' }}>Spreadsheet Excel</h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem', flex: 1 }}>Format XLSX asli yang langsung siap untuk diolah menggunakan Microsoft Excel.</p>
-            <button 
-              style={{ 
-                width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', 
-                backgroundColor: '#217346', color: 'white', border: 'none', padding: '12px 24px', 
+            <button
+              style={{
+                width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px',
+                backgroundColor: '#217346', color: 'white', border: 'none', padding: '12px 24px',
                 borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '1rem',
                 transition: 'all 0.2s ease',
                 boxShadow: '0 4px 6px rgba(33, 115, 70, 0.2)'
@@ -1461,9 +1461,9 @@ export default function AdminDashboard() {
   return (
     <div className="zy-admin-layout">
       {/* Sidebar with callbacks wired up */}
-      <Sidebar 
+      <Sidebar
         activeItem={activeTab}
-        defaultActive="dashboard" 
+        defaultActive="dashboard"
         onSelect={(tab) => setActiveTab(tab)}
         onLogout={handleLogout}
         categories={categories}
@@ -1602,17 +1602,17 @@ export default function AdminDashboard() {
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
-                <input 
-                  type="text" 
-                  className="zy-filter-input" 
-                  placeholder="Cari kode pemesanan, nama client, atau nama paket..." 
+                <input
+                  type="text"
+                  className="zy-filter-input"
+                  placeholder="Cari kode pemesanan, nama client, atau nama paket..."
                   value={orderSearch}
                   onChange={(e) => setOrderSearch(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') handleSearchOrders(); }}
                 />
               </div>
               <div className="zy-status-filter-wrapper" style={{ minWidth: '180px' }}>
-                <select 
+                <select
                   className="zy-form-select"
                   style={{ padding: '0.72rem 1rem', height: '43px', borderRadius: '8px', border: '1px solid var(--neutral-light)', backgroundColor: 'var(--bg-page)', fontSize: '0.95rem' }}
                   value={orderStatusFilter}
@@ -1734,17 +1734,17 @@ export default function AdminDashboard() {
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
-                <input 
-                  type="text" 
-                  className="zy-filter-input" 
-                  placeholder="Cari kode request, nama client, atau kategori event..." 
+                <input
+                  type="text"
+                  className="zy-filter-input"
+                  placeholder="Cari kode request, nama client, atau kategori event..."
                   value={customSearch}
                   onChange={(e) => setCustomSearch(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') handleSearchCustomRequests(); }}
                 />
               </div>
               <div className="zy-status-filter-wrapper" style={{ minWidth: '180px' }}>
-                <select 
+                <select
                   className="zy-form-select"
                   style={{ padding: '0.72rem 1rem', height: '43px', borderRadius: '8px', border: '1px solid var(--neutral-light)', backgroundColor: 'var(--bg-page)', fontSize: '0.95rem' }}
                   value={customStatusFilter}
@@ -1921,14 +1921,14 @@ export default function AdminDashboard() {
                           <td style={{ textAlign: 'center' }}>{cat.jumlah_paket ?? 0}</td>
                           <td style={{ textAlign: 'center' }}>
                             <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
-                              <button 
+                              <button
                                 className="zy-btn-detail"
                                 style={{ backgroundColor: 'transparent', border: '1px solid var(--primary)', color: 'var(--primary)' }}
                                 onClick={() => handleOpenEditCategory(cat)}
                               >
                                 Edit
                               </button>
-                              <button 
+                              <button
                                 className="zy-btn-submit"
                                 style={{ backgroundColor: '#FFF0F0', color: '#C92A2A', border: '1px solid #FFC9C9', padding: '0.4rem 1rem', fontSize: '0.85rem', minWidth: 'auto', height: 'auto' }}
                                 onClick={() => handleDeleteCategory(cat.id_kategori)}
@@ -2306,14 +2306,14 @@ export default function AdminDashboard() {
                           <td>{fac.deskripsi || '-'}</td>
                           <td style={{ textAlign: 'center' }}>
                             <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
-                              <button 
+                              <button
                                 className="zy-btn-detail"
                                 style={{ backgroundColor: 'transparent', border: '1px solid var(--primary)', color: 'var(--primary)' }}
                                 onClick={() => handleOpenEditFacility(fac)}
                               >
                                 Edit
                               </button>
-                              <button 
+                              <button
                                 className="zy-btn-submit"
                                 style={{ backgroundColor: '#FFF0F0', color: '#C92A2A', border: '1px solid #FFC9C9', padding: '0.4rem 1rem', fontSize: '0.85rem', minWidth: 'auto', height: 'auto' }}
                                 onClick={() => handleDeleteFacility(fac.id_fasilitas)}
@@ -2439,8 +2439,8 @@ export default function AdminDashboard() {
             <div className="zy-profile-grid-container">
               {/* Left Side: Profile Card */}
               <div className="zy-profile-card">
-                <div 
-                  className="zy-profile-avatar-container" 
+                <div
+                  className="zy-profile-avatar-container"
                   onClick={() => document.getElementById('profile_foto_input')?.click()}
                   style={{ cursor: 'pointer' }}
                 >
@@ -2461,27 +2461,27 @@ export default function AdminDashboard() {
                     <span>Ubah Foto</span>
                   </div>
                 </div>
-                <input 
-                  type="file" 
-                  id="profile_foto_input" 
-                  style={{ display: 'none' }} 
-                  accept="image/*" 
-                  onChange={handleProfileFotoChange} 
+                <input
+                  type="file"
+                  id="profile_foto_input"
+                  style={{ display: 'none' }}
+                  accept="image/*"
+                  onChange={handleProfileFotoChange}
                 />
                 <h3 className="zy-profile-name">{profileNama || 'Administrator'}</h3>
                 <span className="zy-profile-role-badge">
                   {user ? (user.role === 'admin' ? 'SUPER ADMIN' : user.role.toUpperCase()) : 'SUPER ADMIN'}
                 </span>
-                
-                <button 
-                  type="button" 
-                  className="zy-btn-detail" 
+
+                <button
+                  type="button"
+                  className="zy-btn-detail"
                   style={{ marginBottom: '1.5rem', fontSize: '0.85rem', padding: '0.35rem 0.75rem' }}
                   onClick={() => document.getElementById('profile_foto_input')?.click()}
                 >
                   Pilih Foto
                 </button>
-                
+
                 <div className="zy-profile-meta-info">
                   <div className="zy-profile-meta-item">
                     <span className="zy-meta-label">ID Pengguna</span>
@@ -2525,25 +2525,25 @@ export default function AdminDashboard() {
                   <div className="zy-form-row">
                     <div className="zy-form-group">
                       <label className="zy-form-label" htmlFor="profile_nama">Nama Lengkap</label>
-                      <input 
-                        type="text" 
-                        id="profile_nama" 
-                        className="zy-form-input" 
-                        value={profileNama} 
-                        onChange={(e) => setProfileNama(e.target.value)} 
-                        required 
+                      <input
+                        type="text"
+                        id="profile_nama"
+                        className="zy-form-input"
+                        value={profileNama}
+                        onChange={(e) => setProfileNama(e.target.value)}
+                        required
                         placeholder="Nama Lengkap"
                       />
                     </div>
                     <div className="zy-form-group">
                       <label className="zy-form-label" htmlFor="profile_email">Alamat Email</label>
-                      <input 
-                        type="email" 
-                        id="profile_email" 
-                        className="zy-form-input" 
-                        value={profileEmail} 
-                        onChange={(e) => setProfileEmail(e.target.value)} 
-                        required 
+                      <input
+                        type="email"
+                        id="profile_email"
+                        className="zy-form-input"
+                        value={profileEmail}
+                        onChange={(e) => setProfileEmail(e.target.value)}
+                        required
                         placeholder="email@example.com"
                       />
                     </div>
@@ -2551,13 +2551,13 @@ export default function AdminDashboard() {
 
                   <div className="zy-form-group" style={{ maxWidth: 'calc(50% - 0.75rem)' }}>
                     <label className="zy-form-label" htmlFor="profile_nohp">No. Telepon / HP</label>
-                    <input 
-                      type="text" 
-                      id="profile_nohp" 
-                      className="zy-form-input" 
-                      value={profileNoHp} 
-                      onChange={(e) => setProfileNoHp(e.target.value)} 
-                      required 
+                    <input
+                      type="text"
+                      id="profile_nohp"
+                      className="zy-form-input"
+                      value={profileNoHp}
+                      onChange={(e) => setProfileNoHp(e.target.value)}
+                      required
                       placeholder="08xxxxxxxxxx"
                     />
                   </div>
@@ -2570,32 +2570,32 @@ export default function AdminDashboard() {
                   <div className="zy-form-row">
                     <div className="zy-form-group">
                       <label className="zy-form-label" htmlFor="profile_password">Kata Sandi Baru</label>
-                      <input 
-                        type="password" 
-                        id="profile_password" 
-                        className="zy-form-input" 
-                        value={profilePassword} 
-                        onChange={(e) => setProfilePassword(e.target.value)} 
+                      <input
+                        type="password"
+                        id="profile_password"
+                        className="zy-form-input"
+                        value={profilePassword}
+                        onChange={(e) => setProfilePassword(e.target.value)}
                         placeholder="Min. 8 karakter"
                       />
                     </div>
                     <div className="zy-form-group">
                       <label className="zy-form-label" htmlFor="profile_password_confirm">Konfirmasi Kata Sandi Baru</label>
-                      <input 
-                        type="password" 
-                        id="profile_password_confirm" 
-                        className="zy-form-input" 
-                        value={profilePasswordConfirm} 
-                        onChange={(e) => setProfilePasswordConfirm(e.target.value)} 
+                      <input
+                        type="password"
+                        id="profile_password_confirm"
+                        className="zy-form-input"
+                        value={profilePasswordConfirm}
+                        onChange={(e) => setProfilePasswordConfirm(e.target.value)}
                         placeholder="Ulangi kata sandi baru"
                       />
                     </div>
                   </div>
 
                   <div className="zy-profile-form-actions">
-                    <button 
-                      type="submit" 
-                      className="zy-btn-submit" 
+                    <button
+                      type="submit"
+                      className="zy-btn-submit"
                       disabled={isSavingProfile}
                       style={{ padding: '0.75rem 2rem', fontSize: '1rem', height: 'auto', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
                     >
@@ -2616,13 +2616,13 @@ export default function AdminDashboard() {
         ) : (
           /* PLACEHOLDER VIEWS FOR DEVELOPMENT */
           <div className="zy-placeholder-container">
-            <svg 
-              className="zy-placeholder-icon" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="1.5" 
-              strokeLinecap="round" 
+            <svg
+              className="zy-placeholder-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
               strokeLinejoin="round"
             >
               <circle cx="12" cy="12" r="10" />
@@ -2763,18 +2763,18 @@ export default function AdminDashboard() {
                             <td>{formatRupiah(pay.jumlah_bayar)}</td>
                             <td>
                               <span className={`zy-status-badge ${
-                                pay.status_konfirmasi === 'dikonfirmasi' ? 'status-diproses' : 
+                                pay.status_konfirmasi === 'dikonfirmasi' ? 'status-diproses' :
                                 pay.status_konfirmasi === 'ditolak' ? 'status-dibatalkan' : 'status-menunggu-verifikasi'
                               }`} style={{ padding: '0.2rem 0.5rem', fontSize: '0.7rem' }}>
-                                {pay.status_konfirmasi === 'dikonfirmasi' ? 'Dikonfirmasi' : 
+                                {pay.status_konfirmasi === 'dikonfirmasi' ? 'Dikonfirmasi' :
                                  pay.status_konfirmasi === 'ditolak' ? 'Ditolak' : 'Menunggu Verifikasi'}
                               </span>
                             </td>
                             <td>
                               {pay.bukti_pembayaran ? (
-                                <a 
-                                  href={`/storage/${pay.bukti_pembayaran}`} 
-                                  target="_blank" 
+                                <a
+                                  href={`/storage/${pay.bukti_pembayaran}`}
+                                  target="_blank"
                                   rel="noopener noreferrer"
                                   style={{ color: 'var(--primary)', fontWeight: 'bold', textDecoration: 'underline' }}
                                 >
@@ -2802,10 +2802,10 @@ export default function AdminDashboard() {
               <form onSubmit={handleUpdateStatus} className="zy-status-form status-form-normal" style={{ width: '100%' }}>
                 <div className="zy-form-group">
                   <label className="zy-form-label" htmlFor="status_pemesanan">Ubah Status Pemesanan:</label>
-                  <select 
+                  <select
                     id="status_pemesanan"
-                    className="zy-form-select" 
-                    value={selectedOrderStatus} 
+                    className="zy-form-select"
+                    value={selectedOrderStatus}
                     onChange={(e) => setSelectedOrderStatus(e.target.value)}
                   >
                     <option value="menunggu">Menunggu Verifikasi</option>
@@ -3018,7 +3018,7 @@ export default function AdminDashboard() {
                     <div className="zy-penawaran-form-grid">
                       <div className="zy-form-group">
                         <label className="zy-form-label" htmlFor="total_penawaran">Total Penawaran Harga (Rp):</label>
-                        <input 
+                        <input
                           type="number"
                           id="total_penawaran"
                           className="zy-filter-input"
@@ -3032,7 +3032,7 @@ export default function AdminDashboard() {
                       </div>
                       <div className="zy-form-group">
                         <label className="zy-form-label" htmlFor="dp_awal">Minimal DP Awal (Rp):</label>
-                        <input 
+                        <input
                           type="number"
                           id="dp_awal"
                           className="zy-filter-input"
@@ -3045,7 +3045,7 @@ export default function AdminDashboard() {
                       </div>
                       <div className="zy-form-group" style={{ gridColumn: 'span 2' }}>
                         <label className="zy-form-label" htmlFor="catatan_admin">Catatan Admin / Proposal Rincian:</label>
-                        <textarea 
+                        <textarea
                           id="catatan_admin"
                           className="zy-filter-input"
                           style={{ padding: '0.65rem 1rem', minHeight: '80px', resize: 'vertical', fontFamily: 'inherit' }}
@@ -3055,9 +3055,9 @@ export default function AdminDashboard() {
                         />
                       </div>
                     </div>
-                    <button 
-                      type="submit" 
-                      className="zy-btn-submit" 
+                    <button
+                      type="submit"
+                      className="zy-btn-submit"
                       style={{ marginTop: '1rem', width: '100%' }}
                       disabled={isSubmittingPenawaran}
                     >
@@ -3080,16 +3080,16 @@ export default function AdminDashboard() {
               <form onSubmit={handleUpdateCustomStatus} className="zy-status-form status-form-normal" style={{ width: '100%' }}>
                 <div className="zy-form-group">
                   <label className="zy-form-label" htmlFor="status_request">Ubah Status Request Custom:</label>
-                  <select 
+                  <select
                     id="status_request"
-                    className="zy-form-select" 
-                    value={selectedCustomStatus} 
+                    className="zy-form-select"
+                    value={selectedCustomStatus}
                     onChange={(e) => setSelectedCustomStatus(e.target.value)}
                   >
                     {/* Selalu tampilkan status saat ini agar dropdown tidak blank */}
                     {['menunggu', 'diproses', 'ditawarkan'].includes(selectedCustomRequest.status_request) && (
                       <option value={selectedCustomRequest.status_request}>
-                        {selectedCustomRequest.status_request === 'menunggu' ? 'Menunggu Review' : 
+                        {selectedCustomRequest.status_request === 'menunggu' ? 'Menunggu Review' :
                          selectedCustomRequest.status_request === 'diproses' ? 'Diproses' : 'Menunggu Penawaran'}
                       </option>
                     )}
@@ -3135,16 +3135,16 @@ export default function AdminDashboard() {
       {/* Package Add/Edit Modal Overlay */}
       {showPackageModal && (
         <div className="zy-modal-overlay" onClick={() => setShowPackageModal(false)}>
-          <form 
-            className="zy-modal" 
+          <form
+            className="zy-modal"
             onClick={(e) => e.stopPropagation()}
             onSubmit={handleSavePackage}
           >
             <div className="zy-modal-header">
               <h3>{selectedPackage ? 'Edit Paket Layanan' : 'Tambah Paket Layanan Baru'}</h3>
-              <button 
+              <button
                 type="button"
-                className="zy-modal-close-btn" 
+                className="zy-modal-close-btn"
                 onClick={() => setShowPackageModal(false)}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -3187,12 +3187,12 @@ export default function AdminDashboard() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                 <div className="zy-form-group" style={{ minWidth: 'auto' }}>
                   <label className="zy-form-label" htmlFor="nama_paket">Nama Paket *</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     id="nama_paket"
-                    className="zy-filter-input" 
+                    className="zy-filter-input"
                     style={{ padding: '0.65rem 1rem' }}
-                    placeholder="Contoh: Paket Wedding Bronze" 
+                    placeholder="Contoh: Paket Wedding Bronze"
                     value={packageName}
                     onChange={(e) => setPackageName(e.target.value)}
                     required
@@ -3201,12 +3201,12 @@ export default function AdminDashboard() {
 
                 <div className="zy-form-group" style={{ minWidth: 'auto' }}>
                   <label className="zy-form-label" htmlFor="harga">Harga Paket (Rp) *</label>
-                  <input 
-                    type="number" 
+                  <input
+                    type="number"
                     id="harga"
-                    className="zy-filter-input" 
+                    className="zy-filter-input"
                     style={{ padding: '0.65rem 1rem' }}
-                    placeholder="Contoh: 8000000" 
+                    placeholder="Contoh: 8000000"
                     value={packagePrice}
                     onChange={(e) => setPackagePrice(e.target.value)}
                     required
@@ -3216,11 +3216,11 @@ export default function AdminDashboard() {
 
                 <div className="zy-form-group" style={{ minWidth: 'auto' }}>
                   <label className="zy-form-label" htmlFor="deskripsi">Deskripsi Paket</label>
-                  <textarea 
+                  <textarea
                     id="deskripsi"
-                    className="zy-filter-input" 
+                    className="zy-filter-input"
                     style={{ padding: '0.65rem 1rem', minHeight: '80px', resize: 'vertical', fontFamily: 'inherit' }}
-                    placeholder="Tuliskan rincian layanan paket (misal: catering, dekorasi, dokumentasi)..." 
+                    placeholder="Tuliskan rincian layanan paket (misal: catering, dekorasi, dokumentasi)..."
                     value={packageDesc}
                     onChange={(e) => setPackageDesc(e.target.value)}
                   />
@@ -3228,7 +3228,7 @@ export default function AdminDashboard() {
 
                 <div className="zy-form-group" style={{ minWidth: 'auto' }}>
                   <label className="zy-form-label" htmlFor="status_paket">Status Paket</label>
-                  <select 
+                  <select
                     id="status_paket"
                     className="zy-form-select"
                     value={packageStatus}
@@ -3241,10 +3241,10 @@ export default function AdminDashboard() {
 
                 <div className="zy-form-group" style={{ minWidth: 'auto' }}>
                   <label className="zy-form-label" htmlFor="package_foto">Foto Paket (Format: JPG/PNG/WebP, Max 5MB)</label>
-                  <input 
-                    type="file" 
+                  <input
+                    type="file"
                     id="package_foto"
-                    className="zy-filter-input" 
+                    className="zy-filter-input"
                     style={{ padding: '0.5rem 1rem' }}
                     accept="image/*"
                     onChange={(e) => setPackageFoto(e.target.files[0] || null)}
@@ -3390,16 +3390,16 @@ export default function AdminDashboard() {
       {/* Category Add/Edit Modal Overlay */}
       {showCategoryModal && (
         <div className="zy-modal-overlay" onClick={() => setShowCategoryModal(false)}>
-          <form 
-            className="zy-modal" 
+          <form
+            className="zy-modal"
             onClick={(e) => e.stopPropagation()}
             onSubmit={handleSaveCategory}
           >
             <div className="zy-modal-header">
               <h3>{selectedCategory ? 'Edit Kategori Event' : 'Tambah Kategori Event Baru'}</h3>
-              <button 
+              <button
                 type="button"
-                className="zy-modal-close-btn" 
+                className="zy-modal-close-btn"
                 onClick={() => setShowCategoryModal(false)}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -3412,12 +3412,12 @@ export default function AdminDashboard() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                 <div className="zy-form-group" style={{ minWidth: 'auto' }}>
                   <label className="zy-form-label" htmlFor="nama_kategori">Nama Kategori *</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     id="nama_kategori"
-                    className="zy-filter-input" 
+                    className="zy-filter-input"
                     style={{ padding: '0.65rem 1rem' }}
-                    placeholder="Contoh: Gathering" 
+                    placeholder="Contoh: Gathering"
                     value={categoryName}
                     onChange={(e) => setCategoryName(e.target.value)}
                     required
@@ -3426,11 +3426,11 @@ export default function AdminDashboard() {
 
                 <div className="zy-form-group" style={{ minWidth: 'auto' }}>
                   <label className="zy-form-label" htmlFor="deskripsi_kategori">Deskripsi Kategori</label>
-                  <textarea 
+                  <textarea
                     id="deskripsi_kategori"
-                    className="zy-filter-input" 
+                    className="zy-filter-input"
                     style={{ padding: '0.65rem 1rem', minHeight: '80px', resize: 'vertical', fontFamily: 'inherit' }}
-                    placeholder="Tuliskan rincian deskripsi kategori event..." 
+                    placeholder="Tuliskan rincian deskripsi kategori event..."
                     value={categoryDesc}
                     onChange={(e) => setCategoryDesc(e.target.value)}
                   />
@@ -3439,8 +3439,8 @@ export default function AdminDashboard() {
             </div>
 
             <div className="zy-modal-footer">
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="zy-btn-submit"
                 disabled={isSubmittingCategory}
               >
@@ -3453,8 +3453,8 @@ export default function AdminDashboard() {
                   'Simpan'
                 )}
               </button>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className="zy-btn-close"
                 onClick={() => setShowCategoryModal(false)}
               >
@@ -3468,16 +3468,16 @@ export default function AdminDashboard() {
       {/* Facility Add/Edit Modal Overlay */}
       {showFacilityModal && (
         <div className="zy-modal-overlay" onClick={() => setShowFacilityModal(false)}>
-          <form 
-            className="zy-modal" 
+          <form
+            className="zy-modal"
             onClick={(e) => e.stopPropagation()}
             onSubmit={handleSaveFacility}
           >
             <div className="zy-modal-header">
               <h3>{selectedFacility ? 'Edit Fasilitas Layanan' : 'Tambah Fasilitas Layanan Baru'}</h3>
-              <button 
+              <button
                 type="button"
-                className="zy-modal-close-btn" 
+                className="zy-modal-close-btn"
                 onClick={() => setShowFacilityModal(false)}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -3490,12 +3490,12 @@ export default function AdminDashboard() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                 <div className="zy-form-group" style={{ minWidth: 'auto' }}>
                   <label className="zy-form-label" htmlFor="nama_fasilitas">Nama Fasilitas *</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     id="nama_fasilitas"
-                    className="zy-filter-input" 
+                    className="zy-filter-input"
                     style={{ padding: '0.65rem 1rem' }}
-                    placeholder="Contoh: Sound System 5000W" 
+                    placeholder="Contoh: Sound System 5000W"
                     value={facilityName}
                     onChange={(e) => setFacilityName(e.target.value)}
                     required
@@ -3504,11 +3504,11 @@ export default function AdminDashboard() {
 
                 <div className="zy-form-group" style={{ minWidth: 'auto' }}>
                   <label className="zy-form-label" htmlFor="deskripsi_fasilitas">Deskripsi Fasilitas</label>
-                  <textarea 
+                  <textarea
                     id="deskripsi_fasilitas"
-                    className="zy-filter-input" 
+                    className="zy-filter-input"
                     style={{ padding: '0.65rem 1rem', minHeight: '80px', resize: 'vertical', fontFamily: 'inherit' }}
-                    placeholder="Tuliskan rincian deskripsi fasilitas..." 
+                    placeholder="Tuliskan rincian deskripsi fasilitas..."
                     value={facilityDesc}
                     onChange={(e) => setFacilityDesc(e.target.value)}
                   />
@@ -3517,8 +3517,8 @@ export default function AdminDashboard() {
             </div>
 
             <div className="zy-modal-footer">
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="zy-btn-submit"
                 disabled={isSubmittingFacility}
               >
@@ -3531,8 +3531,8 @@ export default function AdminDashboard() {
                   'Simpan'
                 )}
               </button>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className="zy-btn-close"
                 onClick={() => setShowFacilityModal(false)}
               >
@@ -3546,16 +3546,16 @@ export default function AdminDashboard() {
       {/* Gallery Add/Edit Modal Overlay */}
       {showGalleryModal && (
         <div className="zy-modal-overlay" onClick={() => setShowGalleryModal(false)}>
-          <form 
-            className="zy-modal" 
+          <form
+            className="zy-modal"
             onClick={(e) => e.stopPropagation()}
             onSubmit={handleSaveGallery}
           >
             <div className="zy-modal-header">
               <h3>{selectedGallery ? 'Edit Galeri Event' : 'Tambah Galeri Event Baru'}</h3>
-              <button 
+              <button
                 type="button"
-                className="zy-modal-close-btn" 
+                className="zy-modal-close-btn"
                 onClick={() => setShowGalleryModal(false)}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -3568,12 +3568,12 @@ export default function AdminDashboard() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                 <div className="zy-form-group" style={{ minWidth: 'auto' }}>
                   <label className="zy-form-label" htmlFor="gallery_judul">Judul Galeri *</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     id="gallery_judul"
-                    className="zy-filter-input" 
+                    className="zy-filter-input"
                     style={{ padding: '0.65rem 1rem' }}
-                    placeholder="Contoh: Wedding Event Luxury" 
+                    placeholder="Contoh: Wedding Event Luxury"
                     value={galleryTitle}
                     onChange={(e) => setGalleryTitle(e.target.value)}
                     required
@@ -3582,11 +3582,11 @@ export default function AdminDashboard() {
 
                 <div className="zy-form-group" style={{ minWidth: 'auto' }}>
                   <label className="zy-form-label" htmlFor="gallery_deskripsi">Deskripsi Galeri</label>
-                  <textarea 
+                  <textarea
                     id="gallery_deskripsi"
-                    className="zy-filter-input" 
+                    className="zy-filter-input"
                     style={{ padding: '0.65rem 1rem', minHeight: '80px', resize: 'vertical', fontFamily: 'inherit' }}
-                    placeholder="Tuliskan rincian dokumentasi event..." 
+                    placeholder="Tuliskan rincian dokumentasi event..."
                     value={galleryDesc}
                     onChange={(e) => setGalleryDesc(e.target.value)}
                   />
@@ -3594,12 +3594,12 @@ export default function AdminDashboard() {
 
                 <div className="zy-form-group" style={{ minWidth: 'auto' }}>
                   <label className="zy-form-label" htmlFor="gallery_urutan">Urutan Tampil</label>
-                  <input 
-                    type="number" 
+                  <input
+                    type="number"
                     id="gallery_urutan"
-                    className="zy-filter-input" 
+                    className="zy-filter-input"
                     style={{ padding: '0.65rem 1rem' }}
-                    placeholder="Contoh: 1" 
+                    placeholder="Contoh: 1"
                     value={galleryOrder}
                     onChange={(e) => setGalleryOrder(e.target.value)}
                     min="0"
@@ -3608,10 +3608,10 @@ export default function AdminDashboard() {
 
                 <div className="zy-form-group" style={{ minWidth: 'auto' }}>
                   <label className="zy-form-label" htmlFor="gallery_tanggal">Tanggal Event *</label>
-                  <input 
-                    type="date" 
+                  <input
+                    type="date"
                     id="gallery_tanggal"
-                    className="zy-filter-input" 
+                    className="zy-filter-input"
                     style={{ padding: '0.65rem 1rem' }}
                     value={galleryTanggal}
                     onChange={(e) => setGalleryTanggal(e.target.value)}
@@ -3621,10 +3621,10 @@ export default function AdminDashboard() {
 
                 <div className="zy-form-group" style={{ minWidth: 'auto' }}>
                   <label className="zy-form-label" htmlFor="gallery_foto">Foto Galeri (Format: JPG/PNG/WebP, Max 5MB)</label>
-                  <input 
-                    type="file" 
+                  <input
+                    type="file"
                     id="gallery_foto"
-                    className="zy-filter-input" 
+                    className="zy-filter-input"
                     style={{ padding: '0.5rem 1rem' }}
                     accept="image/*"
                     onChange={(e) => setGalleryFoto(e.target.files[0] || null)}
@@ -3640,8 +3640,8 @@ export default function AdminDashboard() {
             </div>
 
             <div className="zy-modal-footer">
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="zy-btn-submit"
                 disabled={isSubmittingGallery}
               >
@@ -3654,8 +3654,8 @@ export default function AdminDashboard() {
                   'Simpan'
                 )}
               </button>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className="zy-btn-close"
                 onClick={() => setShowGalleryModal(false)}
               >

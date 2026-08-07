@@ -16,14 +16,14 @@ export default function CustomerApp() {
     <BrowserRouter>
       <Routes>
         <Route element={<CustomerLayout />}>
-          <Route path="/"          element={<CustomerHome />} />
-          <Route path="/about"     element={<CustomerAbout />} />
+          <Route path="/" element={<CustomerHome />} />
+          <Route path="/about" element={<CustomerAbout />} />
           <Route path="/portfolio" element={<CustomerPortfolio />} />
-          <Route path="/katalog"   element={<CustomerKatalog />} />
-          <Route path="/contact"   element={<CustomerContact />} />
-          <Route path="/status"    element={<CustomerStatus />} />
+          <Route path="/katalog" element={<CustomerKatalog />} />
+          <Route path="/contact" element={<CustomerContact />} />
+          <Route path="/status" element={<CustomerStatus />} />
           {/* Fallback: redirect ke home */}
-          <Route path="*"          element={<Navigate to="/" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
     </BrowserRouter>

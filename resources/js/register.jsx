@@ -2,7 +2,7 @@
  * register.jsx — Vite entry point for the Register page.
  * Mounts the React RegisterPage into #app-register.
  */
-import './bootstrap';   // sets up window.axios
+import './bootstrap'; // sets up window.axios
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import RegisterPage from './pages/Register';

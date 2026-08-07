@@ -14,7 +14,7 @@ import '../../css/pages/login.css';
  * component is reusable in modals, drawers, or other contexts.
  */
 export default function LoginPage() {
-  const [isLoading, setIsLoading]     = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [serverError, setServerError] = useState('');
 
   /**
@@ -27,7 +27,7 @@ export default function LoginPage() {
 
     try {
       const response = await window.axios.post('/api/login', { email, password });
-      const { data } = response.data;          // { user, token, token_type }
+      const { data } = response.data; // { user, token, token_type }
       const { user, token } = data;
 
       // Persist token for subsequent API calls
@@ -36,17 +36,6 @@ export default function LoginPage() {
 
       // Set Authorization header globally for future axios requests
       window.axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-
-      // ── TESTING ALERT: shows role clearly ──────────────────────────────
-      const roleLabel = user.role === 'admin' ? '👑 Admin' : '🙋 Customer';
-      alert(
-        `✅ Login Berhasil!\n\n` +
-        `Nama  : ${user.nama}\n` +
-        `Email : ${user.email}\n` +
-        `Role  : ${roleLabel}\n` +
-        `Token : ${token.substring(0, 20)}...`
-      );
-      // ───────────────────────────────────────────────────────────────────
 
       // Redirect based on role
       if (user.role === 'admin') {
@@ -98,10 +87,10 @@ export default function LoginPage() {
         />
         <div className="login-hero-overlay">
           <div className="login-hero-logo">
-            <img 
-              src="/images/logo.jpg" 
-              alt="ZY Production" 
-              className="login-hero-logo-img" 
+            <img
+              src="/images/logo.jpg"
+              alt="ZY Production"
+              className="login-hero-logo-img"
             />
             <div className="login-hero-logo-subtitle">Event Management System</div>
           </div>

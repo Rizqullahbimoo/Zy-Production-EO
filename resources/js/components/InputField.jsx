@@ -43,9 +43,9 @@ export default function InputField({
   // Build class list for input element
   const inputClasses = [
     'zy-field-input',
-    iconLeft        ? 'has-icon-left'  : '',
-    isPassword      ? 'has-icon-right' : '',
-    error           ? 'error'          : '',
+    iconLeft ? 'has-icon-left' : '',
+    isPassword ? 'has-icon-right' : '',
+    error ? 'error' : '',
   ].filter(Boolean).join(' ');
 
   return (

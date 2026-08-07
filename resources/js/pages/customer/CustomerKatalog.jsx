@@ -4,35 +4,35 @@
  * Integrasi: Midtrans Snap untuk pembayaran paket bawaan.
  */
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 export default function CustomerKatalog() {
   const navigate = useNavigate();
   const token = localStorage.getItem("auth_token");
 
-  const [categories, setCategories]                   = useState([]);
-  const [packages, setPackages]                       = useState([]);
-  const [loadingPackages, setLoadingPackages]         = useState(true);
+  const [categories, setCategories] = useState([]);
+  const [packages, setPackages] = useState([]);
+  const [loadingPackages, setLoadingPackages] = useState(true);
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState("all");
 
-  const [showDetailModal, setShowDetailModal]         = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedDetailPaket, setSelectedDetailPaket] = useState(null);
-  const [loadingDetail, setLoadingDetail]             = useState(false);
+  const [loadingDetail, setLoadingDetail] = useState(false);
 
-  const [showOrderModal, setShowOrderModal]           = useState(false);
-  const [orderPackage, setOrderPackage]               = useState(null);
-  const [orderForm, setOrderForm]                     = useState({ tanggal_acara: "", lokasi_acara: "", jumlah_tamu: "", catatan: "" });
-  const [orderError, setOrderError]                   = useState("");
-  const [isSubmittingOrder, setIsSubmittingOrder]     = useState(false);
-  const [orderResult, setOrderResult]                 = useState(null);
+  const [showOrderModal, setShowOrderModal] = useState(false);
+  const [orderPackage, setOrderPackage] = useState(null);
+  const [orderForm, setOrderForm] = useState({ tanggal_acara: "", lokasi_acara: "", jumlah_tamu: "", catatan: "" });
+  const [orderError, setOrderError] = useState("");
+  const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
+  const [orderResult, setOrderResult] = useState(null);
 
-  const [showRequestModal, setShowRequestModal]       = useState(false);
-  const [requestStep, setRequestStep]                 = useState(1);
-  const [facilities, setFacilities]                   = useState([]);
-  const [loadingFacilities, setLoadingFacilities]     = useState(false);
-  const [formData, setFormData]                       = useState({ id_kategori: "", tanggal_acara: "", lokasi_acara: "", jumlah_tamu: "", budget_acara: "", catatan: "", fasilitas: [] });
-  const [requestError, setRequestError]               = useState("");
-  const [requestSuccess, setRequestSuccess]           = useState(false);
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [requestStep, setRequestStep] = useState(1);
+  const [facilities, setFacilities] = useState([]);
+  const [loadingFacilities, setLoadingFacilities] = useState(false);
+  const [formData, setFormData] = useState({ id_kategori: "", tanggal_acara: "", lokasi_acara: "", jumlah_tamu: "", budget_acara: "", catatan: "", fasilitas: [] });
+  const [requestError, setRequestError] = useState("");
+  const [requestSuccess, setRequestSuccess] = useState(false);
   const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
 
   useEffect(() => {

@@ -11,9 +11,9 @@ import '../../css/pages/register.css';
  *  - Alert: success → redirect to /login, fail → show error
  */
 export default function RegisterPage() {
-  const [isLoading, setIsLoading]       = useState(false);
-  const [serverError, setServerError]   = useState('');
-  const [serverErrors, setServerErrors] = useState({});   // 422 field-level errors
+  const [isLoading, setIsLoading] = useState(false);
+  const [serverError, setServerError] = useState('');
+  const [serverErrors, setServerErrors] = useState({}); // 422 field-level errors
 
   const handleRegister = async (formData) => {
     setServerError('');
@@ -21,20 +21,7 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      const response = await window.axios.post('/api/register', formData);
-      const { data } = response.data;   // { user, token, token_type }
-      const { user } = data;
-
-      // ── TESTING ALERT ──────────────────────────────────────────────────
-      alert(
-        `✅ Registrasi Berhasil!\n\n` +
-        `Nama  : ${user.nama}\n` +
-        `Email : ${user.email}\n` +
-        `Role  : 🙋 Customer\n\n` +
-        `Silakan login dengan akun Anda.`
-      );
-      // ───────────────────────────────────────────────────────────────────
-
+      await window.axios.post('/api/register', formData);
       // Redirect to login
       window.location.href = '/login';
 
@@ -88,10 +75,10 @@ export default function RegisterPage() {
         />
         <div className="register-hero-overlay">
           <div className="register-hero-logo">
-            <img 
-              src="/images/logo.jpg" 
-              alt="ZY Production" 
-              className="register-hero-logo-img" 
+            <img
+              src="/images/logo.jpg"
+              alt="ZY Production"
+              className="register-hero-logo-img"
             />
             <div className="register-hero-logo-subtitle">Daftar Akun Customer</div>
           </div>

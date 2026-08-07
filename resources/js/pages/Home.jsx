@@ -20,7 +20,7 @@ export default function HomePage() {
   const [requestStep, setRequestStep] = useState(1);
   const [facilities, setFacilities] = useState([]);
   const [loadingFacilities, setLoadingFacilities] = useState(false);
-  
+
   // Custom Request Form Values
   const [formData, setFormData] = useState({
     id_kategori: '',
@@ -31,7 +31,7 @@ export default function HomePage() {
     catatan: '',
     fasilitas: [] // Array of { id_fasilitas, keterangan }
   });
-  
+
   const [requestError, setRequestError] = useState('');
   const [requestSuccess, setRequestSuccess] = useState(false);
   const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
@@ -188,7 +188,7 @@ export default function HomePage() {
   const handleFacilityDescChange = (facilityId, value) => {
     setFormData(prev => ({
       ...prev,
-      fasilitas: prev.fasilitas.map(f => 
+      fasilitas: prev.fasilitas.map(f =>
         f.id_fasilitas === facilityId ? { ...f, keterangan: value } : f
       )
     }));
@@ -376,8 +376,8 @@ export default function HomePage() {
           <div className="header-actions">
             {token && user ? (
               <div className="profile-widget">
-                <button 
-                  className="profile-trigger" 
+                <button
+                  className="profile-trigger"
                   onClick={() => setShowProfileDropdown(!showProfileDropdown)}
                 >
                   <div className="avatar-circle">
@@ -399,8 +399,8 @@ export default function HomePage() {
                         <span className="user-role-badge">{user.role === 'admin' ? '👑 Administrator' : '🙋 Customer'}</span>
                       </div>
                       <hr className="dropdown-divider" />
-                      <button 
-                        className="dropdown-item" 
+                      <button
+                        className="dropdown-item"
                         onClick={() => { setShowProfileDropdown(false); handleOpenStatusModal(); }}
                       >
                         <svg className="dropdown-icon" viewBox="0 0 24 24" width="16" height="16">
@@ -408,7 +408,7 @@ export default function HomePage() {
                         </svg>
                         Status Pemesanan
                       </button>
-                      
+
                       {user.role === 'admin' && (
                         <a href="/admin/dashboard" className="dropdown-item">
                           <svg className="dropdown-icon" viewBox="0 0 24 24" width="16" height="16">
@@ -417,7 +417,7 @@ export default function HomePage() {
                           Dashboard Admin
                         </a>
                       )}
-                      
+
                       <hr className="dropdown-divider" />
                       <button className="dropdown-item text-danger" onClick={handleLogout}>
                         <svg className="dropdown-icon" viewBox="0 0 24 24" width="16" height="16">
@@ -508,8 +508,8 @@ export default function HomePage() {
             <div className="hero-glass-card">
               <div className="slider-wrapper">
                 {heroSlides.map((slide, idx) => (
-                  <div 
-                    key={idx} 
+                  <div
+                    key={idx}
                     className={`slider-slide ${idx === currentHeroSlide ? 'active' : ''}`}
                     style={{ backgroundImage: `url(${slide.image})` }}
                   >
@@ -523,12 +523,12 @@ export default function HomePage() {
                   </div>
                 ))}
               </div>
-              
+
               {/* Slider Dots */}
               <div className="slider-dots">
                 {heroSlides.map((_, idx) => (
-                  <button 
-                    key={idx} 
+                  <button
+                    key={idx}
                     className={`slider-dot ${idx === currentHeroSlide ? 'active' : ''}`}
                     onClick={() => setCurrentHeroSlide(idx)}
                   />
@@ -632,7 +632,7 @@ export default function HomePage() {
             <p className="about-paragraph text-muted">
               Baik acara intimate keluarga kecil seperti ulang tahun atau pesta pernikahan megah, hingga kegiatan outbound serta rapat korporat berskala ratusan peserta — kami siap menyelesaikannya secara eksklusif. Kami mendengarkan kebutuhan klien secara teliti dan menerjemahkannya ke dalam realita yang memukau.
             </p>
-            
+
             <div className="about-stats">
               <div className="stat-item">
                 <h4>99%</h4>
@@ -664,8 +664,8 @@ export default function HomePage() {
           {/* Portfolio Filter Tabs */}
           <div className="filter-tabs">
             {['All', 'Wedding', 'Launching', 'Outbound', 'Party', 'Gathering'].map(tab => (
-              <button 
-                key={tab} 
+              <button
+                key={tab}
                 className={`filter-tab ${activePortfolioTab === tab ? 'active' : ''}`}
                 onClick={() => setActivePortfolioTab(tab)}
               >
@@ -705,15 +705,15 @@ export default function HomePage() {
 
           {/* Catalog Filter Tabs */}
           <div className="catalog-categories">
-            <button 
+            <button
               className={`catalog-cat-btn ${selectedCategoryFilter === 'all' ? 'active' : ''}`}
               onClick={() => setSelectedCategoryFilter('all')}
             >
               Semua Paket ({packages.length})
             </button>
             {categories.map(cat => (
-              <button 
-                key={cat.id_kategori} 
+              <button
+                key={cat.id_kategori}
                 className={`catalog-cat-btn ${selectedCategoryFilter === cat.id_kategori.toString() ? 'active' : ''}`}
                 onClick={() => setSelectedCategoryFilter(cat.id_kategori.toString())}
               >
@@ -733,10 +733,10 @@ export default function HomePage() {
               {filteredPackages.map(pkg => (
                 <div key={pkg.id_paket} className="package-card">
                   <div className="package-img-wrapper">
-                    <img 
-                      src={pkg.foto || '/images/login-hero.jpg'} 
-                      alt={pkg.nama_paket} 
-                      className="package-img" 
+                    <img
+                      src={pkg.foto || '/images/login-hero.jpg'}
+                      alt={pkg.nama_paket}
+                      className="package-img"
                       onError={(e) => {
                         e.currentTarget.src = '/images/login-hero.jpg';
                       }}
@@ -751,7 +751,7 @@ export default function HomePage() {
                         <span className="price-label">Mulai Dari</span>
                         <span className="price-value">{formatIDR(pkg.harga)}</span>
                       </div>
-                      <button 
+                      <button
                         className="btn btn-outline btn-sm"
                         onClick={() => {
                           if (!token) {
@@ -788,7 +788,7 @@ export default function HomePage() {
                   <p className="promo-desc">
                     Miliki visi event tersendiri? Padukan fasilitas, sesuaikan budget, dan rancang paket custom spesial Anda bersama planner profesional kami.
                   </p>
-                  <button 
+                  <button
                     className="btn btn-primary btn-full"
                     onClick={() => {
                       if (!token) {
@@ -827,7 +827,7 @@ export default function HomePage() {
             <h3 className="section-tag-small">Kemitraan Terpercaya</h3>
             <h2 className="section-title">Client Kami!</h2>
           </div>
-          
+
           <div className="clients-grid">
             {['TechCorp', 'GlobalBiz', 'MediaGroup', 'StarStudio', 'JavaVentures', 'IndoPrime'].map((client, idx) => (
               <div key={idx} className="client-logo-circle">
@@ -851,7 +851,7 @@ export default function HomePage() {
               Kepuasan klien adalah prioritas utama kami. Berikut adalah pengalaman mereka yang telah mempercayakan momen spesialnya bersama ZY Production.
             </p>
           </div>
-          
+
           {testimonials.length === 0 ? (
             <div className="text-center" style={{ padding: '2rem', color: 'rgba(255,255,255,0.5)' }}>Belum ada ulasan saat ini.</div>
           ) : (
@@ -935,7 +935,7 @@ export default function HomePage() {
           <div className="contact-form-card">
             <h3>Kirim Pesan Langsung</h3>
             <p>Tinggalkan kontak Anda, kami akan segera merespons dalam waktu 1x24 jam kerja.</p>
-            
+
             <form onSubmit={(e) => { e.preventDefault(); alert('Pesan berhasil terkirim! Terima kasih telah menghubungi ZY Production.'); e.currentTarget.reset(); }}>
               <div className="form-group">
                 <label>Nama Lengkap</label>
@@ -1061,7 +1061,7 @@ export default function HomePage() {
                     Custom paket Anda telah masuk ke sistem. Tim kami akan segera meninjau, menyusun penawaran terbaik, dan memperbarui status pemesanan Anda.
                   </p>
                   <div className="success-actions">
-                    <button 
+                    <button
                       className="btn btn-primary"
                       onClick={() => {
                         setShowRequestModal(false);
@@ -1071,7 +1071,7 @@ export default function HomePage() {
                     >
                       Pantau Status Pemesanan
                     </button>
-                    <button 
+                    <button
                       className="btn btn-outline"
                       onClick={() => { setShowRequestModal(false); setRequestSuccess(false); }}
                     >
@@ -1097,10 +1097,10 @@ export default function HomePage() {
                     <div className="step-content">
                       <div className="form-group">
                         <label className="required-label">Kategori Event</label>
-                        <select 
-                          className="form-control" 
-                          name="id_kategori" 
-                          value={formData.id_kategori} 
+                        <select
+                          className="form-control"
+                          name="id_kategori"
+                          value={formData.id_kategori}
                           onChange={handleInputChange}
                           required
                         >
@@ -1116,51 +1116,51 @@ export default function HomePage() {
                       <div className="form-grid-2">
                         <div className="form-group">
                           <label className="required-label">Tanggal Acara</label>
-                          <input 
-                            type="date" 
-                            className="form-control" 
-                            name="tanggal_acara" 
-                            value={formData.tanggal_acara} 
+                          <input
+                            type="date"
+                            className="form-control"
+                            name="tanggal_acara"
+                            value={formData.tanggal_acara}
                             onChange={handleInputChange}
-                            required 
+                            required
                           />
                         </div>
                         <div className="form-group">
                           <label className="required-label">Jumlah Tamu (Pax)</label>
-                          <input 
-                            type="number" 
-                            className="form-control" 
-                            name="jumlah_tamu" 
+                          <input
+                            type="number"
+                            className="form-control"
+                            name="jumlah_tamu"
                             placeholder="Contoh: 250"
-                            value={formData.jumlah_tamu} 
+                            value={formData.jumlah_tamu}
                             onChange={handleInputChange}
                             min="1"
-                            required 
+                            required
                           />
                         </div>
                       </div>
 
                       <div className="form-group">
                         <label className="required-label">Lokasi Acara (Kota/Gedung)</label>
-                        <input 
-                          type="text" 
-                          className="form-control" 
-                          name="lokasi_acara" 
+                        <input
+                          type="text"
+                          className="form-control"
+                          name="lokasi_acara"
                           placeholder="Contoh: Ballroom Hotel Grand, Mampang"
-                          value={formData.lokasi_acara} 
+                          value={formData.lokasi_acara}
                           onChange={handleInputChange}
-                          required 
+                          required
                         />
                       </div>
 
                       <div className="form-group">
                         <label>Rencana Budget Maksimal (Rp)</label>
-                        <input 
-                          type="number" 
-                          className="form-control" 
-                          name="budget_acara" 
+                        <input
+                          type="number"
+                          className="form-control"
+                          name="budget_acara"
                           placeholder="Masukkan angka, contoh: 50000000"
-                          value={formData.budget_acara} 
+                          value={formData.budget_acara}
                           onChange={handleInputChange}
                         />
                         <span className="input-tip">Kosongkan jika ingin dihitung otomatis oleh perencana kami.</span>
@@ -1168,8 +1168,8 @@ export default function HomePage() {
 
                       <div className="modal-footer-actions">
                         <span className="step-info">Langkah 1 dari 3</span>
-                        <button 
-                          type="button" 
+                        <button
+                          type="button"
                           className="btn btn-primary"
                           disabled={!formData.id_kategori || !formData.tanggal_acara || !formData.lokasi_acara || !formData.jumlah_tamu}
                           onClick={() => setRequestStep(2)}
@@ -1223,9 +1223,9 @@ export default function HomePage() {
 
                                 {isChecked && (
                                   <div className="facility-input-detail">
-                                    <input 
-                                      type="text" 
-                                      className="form-control form-control-sm" 
+                                    <input
+                                      type="text"
+                                      className="form-control form-control-sm"
                                       placeholder="Tambahkan detail permintaan khusus untuk fasilitas ini (opsional)..."
                                       value={currentFacObj?.keterangan || ''}
                                       onChange={(e) => handleFacilityDescChange(fac.id_fasilitas, e.target.value)}
@@ -1243,8 +1243,8 @@ export default function HomePage() {
                           Kembali
                         </button>
                         <span className="step-info">Langkah 2 dari 3</span>
-                        <button 
-                          type="button" 
+                        <button
+                          type="button"
                           className="btn btn-primary"
                           disabled={formData.fasilitas.length === 0}
                           onClick={() => setRequestStep(3)}
@@ -1260,12 +1260,12 @@ export default function HomePage() {
                     <div className="step-content">
                       <div className="form-group">
                         <label>Catatan Tambahan / Deskripsi Rencana Event</label>
-                        <textarea 
-                          className="form-control" 
-                          name="catatan" 
-                          rows="5" 
+                        <textarea
+                          className="form-control"
+                          name="catatan"
+                          rows="5"
                           placeholder="Tulis instruksi khusus, tema warna, layout yang diinginkan, atau pertanyaan tambahan..."
-                          value={formData.catatan} 
+                          value={formData.catatan}
                           onChange={handleInputChange}
                         ></textarea>
                       </div>
@@ -1274,29 +1274,29 @@ export default function HomePage() {
                         <h4>Ringkasan Pengajuan</h4>
                         <div className="summary-grid">
                           <div>
-                            <span>Kategori:</span> 
+                            <span>Kategori:</span>
                             <strong>
                               {categories.find(c => c.id_kategori.toString() === formData.id_kategori)?.nama_kategori || '-'}
                             </strong>
                           </div>
                           <div>
-                            <span>Tanggal:</span> 
+                            <span>Tanggal:</span>
                             <strong>{formatDateIndo(formData.tanggal_acara)}</strong>
                           </div>
                           <div>
-                            <span>Tamu:</span> 
+                            <span>Tamu:</span>
                             <strong>{formData.jumlah_tamu} Pax</strong>
                           </div>
                           <div>
-                            <span>Lokasi:</span> 
+                            <span>Lokasi:</span>
                             <strong>{formData.lokasi_acara}</strong>
                           </div>
                           <div>
-                            <span>Budget:</span> 
+                            <span>Budget:</span>
                             <strong>{formData.budget_acara ? formatIDR(formData.budget_acara) : 'Otomatis'}</strong>
                           </div>
                           <div>
-                            <span>Fasilitas Terpilih:</span> 
+                            <span>Fasilitas Terpilih:</span>
                             <strong>{formData.fasilitas.length} Layanan</strong>
                           </div>
                         </div>
@@ -1307,8 +1307,8 @@ export default function HomePage() {
                           Kembali
                         </button>
                         <span className="step-info">Langkah 3 dari 3</span>
-                        <button 
-                          type="submit" 
+                        <button
+                          type="submit"
                           className="btn btn-primary"
                           disabled={isSubmittingRequest}
                         >
@@ -1353,7 +1353,7 @@ export default function HomePage() {
                   </svg>
                   <h4>Belum Ada Pengajuan Custom</h4>
                   <p>Anda belum memiliki request custom paket yang sedang berjalan.</p>
-                  <button 
+                  <button
                     className="btn btn-primary"
                     onClick={() => {
                       setShowStatusModal(false);
@@ -1372,8 +1372,8 @@ export default function HomePage() {
                     <h4 className="list-title">Daftar Pengajuan Anda</h4>
                     <div className="status-cards-scroll">
                       {myRequests.map(req => (
-                        <div 
-                          key={req.id_request} 
+                        <div
+                          key={req.id_request}
                           className={`status-item-card ${selectedRequestDetail?.id_request === req.id_request ? 'active' : ''}`}
                           onClick={() => setSelectedRequestDetail(req)}
                         >

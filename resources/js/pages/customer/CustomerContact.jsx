@@ -16,7 +16,7 @@ export default function CustomerContact() {
   const handleSubmit = async e => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     try {
       const response = await window.axios.post('/api/pesan', {
         nama_lengkap: formState.nama,

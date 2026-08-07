@@ -81,13 +81,6 @@ export default function LoginForm({
     }
   };
 
-  const handleBlur = (e) => {
-    const { name } = e.target;
-    setTouched((prev) => ({ ...prev, [name]: true }));
-    const newErrors = validateForm(form);
-    setErrors((prev) => ({ ...prev, [name]: newErrors[name] || '' }));
-  };
-
   const handleSubmit = (e) => {
     e.preventDefault();
 
