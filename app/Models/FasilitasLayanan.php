@@ -17,6 +17,7 @@ class FasilitasLayanan extends Model
         'id_kategori',
         'nama_fasilitas',
         'deskripsi',
+        'harga_estimasi',
     ];
 
     // Relasi

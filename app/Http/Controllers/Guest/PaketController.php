@@ -136,7 +136,14 @@ class PaketController extends Controller
         if ($request->filled('id_kategori')) {
             $query->where('id_kategori', $request->id_kategori);
         }
-        $fasilitas = $query->orderBy('nama_fasilitas')->get();
+
+        // harga_estimasi sengaja tidak disertakan — referensi internal admin saja.
+        $fasilitas = $query->orderBy('nama_fasilitas')->get()->map(fn ($f) => [
+            'id_fasilitas' => $f->id_fasilitas,
+            'id_kategori' => $f->id_kategori,
+            'nama_fasilitas' => $f->nama_fasilitas,
+            'deskripsi' => $f->deskripsi,
+        ]);
 
         return response()->json([
             'status' => 'success',

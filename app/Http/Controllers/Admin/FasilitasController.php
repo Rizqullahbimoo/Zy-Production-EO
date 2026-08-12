@@ -36,6 +36,7 @@ class FasilitasController extends Controller
             'nama_fasilitas' => $request->nama_fasilitas,
             'deskripsi' => $request->deskripsi,
             'id_kategori' => $request->id_kategori,
+            'harga_estimasi' => $request->harga_estimasi,
         ]);
 
         return response()->json([
@@ -83,6 +84,7 @@ class FasilitasController extends Controller
             'nama_fasilitas' => $request->nama_fasilitas,
             'deskripsi' => $request->deskripsi,
             'id_kategori' => $request->id_kategori,
+            'harga_estimasi' => $request->harga_estimasi,
         ]);
 
         return response()->json([

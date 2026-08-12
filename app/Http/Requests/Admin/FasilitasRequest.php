@@ -19,6 +19,7 @@ class FasilitasRequest extends FormRequest
             'nama_fasilitas' => ['required', 'string', 'max:255'],
             'deskripsi' => ['nullable', 'string'],
             'id_kategori' => ['required', 'integer', 'exists:kategori_event,id_kategori'],
+            'harga_estimasi' => ['nullable', 'numeric', 'min:0'],
         ];
     }
 

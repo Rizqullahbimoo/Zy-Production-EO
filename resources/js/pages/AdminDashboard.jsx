@@ -94,6 +94,7 @@ export default function AdminDashboard() {
   const [selectedFacility, setSelectedFacility] = useState(null);
   const [facilityName, setFacilityName] = useState('');
   const [facilityDesc, setFacilityDesc] = useState('');
+  const [facilityHargaEstimasi, setFacilityHargaEstimasi] = useState('');
   const [isSubmittingFacility, setIsSubmittingFacility] = useState(false);
 
   // Galeri Event CRUD state
@@ -736,6 +737,7 @@ export default function AdminDashboard() {
     setSelectedFacility(null);
     setFacilityName('');
     setFacilityDesc('');
+    setFacilityHargaEstimasi('');
     setShowFacilityModal(true);
   };
 
@@ -743,6 +745,7 @@ export default function AdminDashboard() {
     setSelectedFacility(facility);
     setFacilityName(facility.nama_fasilitas || '');
     setFacilityDesc(facility.deskripsi || '');
+    setFacilityHargaEstimasi(facility.harga_estimasi ?? '');
     setShowFacilityModal(true);
   };
 
@@ -764,14 +767,16 @@ export default function AdminDashboard() {
         response = await window.axios.put(`/api/admin/fasilitas/${selectedFacility.id_fasilitas}`, {
           nama_fasilitas: facilityName,
           deskripsi: facilityDesc,
-          id_kategori: catId
+          id_kategori: catId,
+          harga_estimasi: facilityHargaEstimasi === '' ? null : facilityHargaEstimasi
         });
       } else {
         // Add mode
         response = await window.axios.post('/api/admin/fasilitas', {
           nama_fasilitas: facilityName,
           deskripsi: facilityDesc,
-          id_kategori: catId
+          id_kategori: catId,
+          harga_estimasi: facilityHargaEstimasi === '' ? null : facilityHargaEstimasi
         });
       }
 
@@ -3512,6 +3517,26 @@ export default function AdminDashboard() {
                     value={facilityDesc}
                     onChange={(e) => setFacilityDesc(e.target.value)}
                   />
+                </div>
+
+                <div className="zy-form-group" style={{ minWidth: 'auto' }}>
+                  <label className="zy-form-label" htmlFor="harga_estimasi_fasilitas">
+                    Harga Estimasi (Rp) — referensi internal admin
+                  </label>
+                  <input
+                    type="number"
+                    id="harga_estimasi_fasilitas"
+                    className="zy-filter-input"
+                    style={{ padding: '0.65rem 1rem' }}
+                    placeholder="Contoh: 1200000"
+                    min="0"
+                    step="1"
+                    value={facilityHargaEstimasi}
+                    onChange={(e) => setFacilityHargaEstimasi(e.target.value)}
+                  />
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    Tidak ditampilkan ke customer, hanya untuk referensi harga internal.
+                  </span>
                 </div>
               </div>
             </div>
