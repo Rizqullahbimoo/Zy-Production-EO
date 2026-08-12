@@ -51,14 +51,14 @@ export default function CustomerPortfolio() {
     <>
       {/* ── PAGE HERO ── */}
       <section style={{
-        background: 'linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%)',
+        background: 'linear-gradient(135deg, #FFFFFF 0%, #FFF8EA 50%, #FFFFFF 100%)',
         padding: '5rem 0 3rem',
         textAlign: 'center',
-        color: '#fff'
+        color: 'var(--color-text-main)'
       }}>
         <div className="container">
           <span className="section-tag">Karya Terbaik Kami</span>
-          <h1 className="section-title" style={{ color: '#fff', marginTop: '1rem' }}>
+          <h1 className="section-title" style={{ color: 'var(--color-text-main)', marginTop: '1rem' }}>
             Galeri Dokumentasi <span className="text-gradient">Event</span>
           </h1>
           <p className="section-subtitle" style={{ maxWidth: '600px', margin: '1.5rem auto 0', opacity: 0.8 }}>
@@ -128,9 +128,9 @@ export default function CustomerPortfolio() {
             gap: '3rem',
             marginTop: '4rem',
             padding: '2rem',
-            background: 'rgba(255,255,255,0.03)',
+            background: 'var(--color-surface-2, #F8F9FA)',
             borderRadius: '16px',
-            border: '1px solid rgba(255,255,255,0.06)'
+            border: '1px solid var(--color-border, #E7E7E7)'
           }}>
             {[
               { val: '500+', lbl: 'Event Terdokumentasi' },
@@ -138,8 +138,8 @@ export default function CustomerPortfolio() {
               { val: '100%', lbl: 'Momen Terabadikan' },
             ].map((s, i) => (
               <div key={i} style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--color-gold, #D4AF37)' }}>{s.val}</div>
-                <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginTop: '0.25rem' }}>{s.lbl}</div>
+                <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--color-primary, #E29A00)' }}>{s.val}</div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: '0.25rem' }}>{s.lbl}</div>
               </div>
             ))}
           </div>
@@ -167,8 +167,8 @@ export default function CustomerPortfolio() {
             <div style={{ padding: '1.5rem' }}>
               <span style={{
                 display: 'inline-block',
-                background: 'var(--color-gold, #D4AF37)',
-                color: '#0f0f1a',
+                background: 'var(--color-primary, #E29A00)',
+                color: '#1A1A1A',
                 fontSize: '0.75rem',
                 fontWeight: 700,
                 padding: '0.2rem 0.75rem',
@@ -176,7 +176,7 @@ export default function CustomerPortfolio() {
                 marginBottom: '0.75rem'
               }}>{selectedItem.category}</span>
               <h3 style={{ margin: '0 0 0.5rem' }}>{selectedItem.title}</h3>
-              {selectedItem.desc && <p style={{ color: 'rgba(255,255,255,0.6)', margin: 0 }}>{selectedItem.desc}</p>}
+              {selectedItem.desc && <p style={{ color: 'var(--color-text-muted)', margin: 0 }}>{selectedItem.desc}</p>}
               <button
                 className="btn btn-outline"
                 style={{ marginTop: '1rem' }}

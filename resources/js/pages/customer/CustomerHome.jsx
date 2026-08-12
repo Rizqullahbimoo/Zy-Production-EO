@@ -89,10 +89,6 @@ export default function CustomerHome() {
         <div className="hero-grid container">
           {/* Hero Left Content */}
           <div className="hero-content">
-            <span className="hero-badge">
-              <span className="pulse-dot"></span>
-              ✨ Professional Event Organizer
-            </span>
             <h1 className="hero-title">
               Wujudkan Event Impian <br />
               <span className="text-gradient">Sempurna & Berkelas</span> <br />

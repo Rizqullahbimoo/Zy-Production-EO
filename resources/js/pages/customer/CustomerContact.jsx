@@ -112,14 +112,14 @@ export default function CustomerContact() {
     <>
       {/* ── PAGE HERO ── */}
       <section style={{
-        background: 'linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%)',
+        background: 'linear-gradient(135deg, #FFFFFF 0%, #FFF8EA 50%, #FFFFFF 100%)',
         padding: '5rem 0 3rem',
         textAlign: 'center',
-        color: '#fff'
+        color: 'var(--color-text-main)'
       }}>
         <div className="container">
           <span className="section-tag">Hubungi Kami</span>
-          <h1 className="section-title" style={{ color: '#fff', marginTop: '1rem' }}>
+          <h1 className="section-title" style={{ color: 'var(--color-text-main)', marginTop: '1rem' }}>
             Konsultasikan Acara Impian <span className="text-gradient">Anda Sekarang</span>
           </h1>
           <p className="section-subtitle" style={{ maxWidth: '600px', margin: '1.5rem auto 0', opacity: 0.8 }}>
@@ -148,7 +148,7 @@ export default function CustomerContact() {
                         href={method.link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        style={{ color: 'var(--color-gold, #D4AF37)', fontSize: '0.85rem', textDecoration: 'none', fontWeight: 600 }}
+                        style={{ color: 'var(--color-primary, #E29A00)', fontSize: '0.85rem', textDecoration: 'none', fontWeight: 600 }}
                       >
                         {method.linkLabel}
                       </a>
@@ -160,7 +160,7 @@ export default function CustomerContact() {
 
             {/* Social Media */}
             <div style={{ marginTop: '2rem' }}>
-              <h4 style={{ marginBottom: '1rem', color: 'rgba(255,255,255,0.8)', fontSize: '0.95rem' }}>Ikuti Kami di Media Sosial</h4>
+              <h4 style={{ marginBottom: '1rem', color: 'var(--color-text-main)', fontSize: '0.95rem' }}>Ikuti Kami di Media Sosial</h4>
               <div className="social-links">
                 {['instagram', 'facebook', 'youtube'].map((s, idx) => (
                   <a key={idx} href={`https://${s}.com`} target="_blank" rel="noopener noreferrer" className="social-icon-btn">
@@ -261,7 +261,7 @@ export default function CustomerContact() {
       </section>
 
       {/* ── FAQ SECTION ── */}
-      <section style={{ background: 'var(--color-surface, #1e1e2e)', padding: '5rem 0' }}>
+      <section style={{ background: 'var(--color-surface-2, #F8F9FA)', padding: '5rem 0' }}>
         <div className="container">
           <div className="section-header text-center">
             <span className="section-tag">FAQ</span>
@@ -272,7 +272,7 @@ export default function CustomerContact() {
               <div
                 key={i}
                 style={{
-                  borderBottom: '1px solid rgba(255,255,255,0.08)',
+                  borderBottom: '1px solid var(--color-border, #E7E7E7)',
                   marginBottom: '0',
                 }}
               >
@@ -288,7 +288,7 @@ export default function CustomerContact() {
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     cursor: 'pointer',
-                    color: '#fff',
+                    color: 'var(--color-text-main)',
                     fontSize: '0.95rem',
                     fontWeight: 600,
                   }}
@@ -302,7 +302,7 @@ export default function CustomerContact() {
                   </svg>
                 </button>
                 {openFaq === i && (
-                  <div style={{ paddingBottom: '1.25rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.7, fontSize: '0.9rem' }}>
+                  <div style={{ paddingBottom: '1.25rem', color: 'var(--color-text-muted)', lineHeight: 1.7, fontSize: '0.9rem' }}>
                     {faq.a}
                   </div>
                 )}

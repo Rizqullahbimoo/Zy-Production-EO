@@ -232,15 +232,15 @@ export default function CustomerStatus() {
   if (!token) {
     return (
       <>
-        <section style={{ background: "linear-gradient(135deg, #08080f 0%, #12121e 50%, #0e0e1a 100%)", padding: "5rem 0 3rem", textAlign: "center", color: "#fff" }}>
-          <div className="container"><span className="section-tag">Status Pemesanan</span><h1 className="section-title" style={{ color: "#fff", marginTop: "1rem" }}>Lacak <span className="text-gradient">Status Pengajuan</span> Anda</h1></div>
+        <section style={{ background: "linear-gradient(135deg, #FFFFFF 0%, #FFF8EA 50%, #FFFFFF 100%)", padding: "5rem 0 3rem", textAlign: "center", color: "var(--color-text-main)" }}>
+          <div className="container"><span className="section-tag">Status Pemesanan</span><h1 className="section-title" style={{ color: "var(--color-text-main)", marginTop: "1rem" }}>Lacak <span className="text-gradient">Status Pengajuan</span> Anda</h1></div>
         </section>
         <section style={{ padding: "6rem 0", textAlign: "center" }}>
           <div className="container">
-            <div style={{ maxWidth: "480px", margin: "0 auto", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "20px", padding: "3rem 2rem" }}>
+            <div style={{ maxWidth: "480px", margin: "0 auto", background: "var(--color-bg-card, #FFFFFF)", border: "1px solid var(--color-border, #E7E7E7)", borderRadius: "20px", padding: "3rem 2rem" }}>
               <div style={{ fontSize: "4rem", marginBottom: "1.5rem" }}>🔒</div>
-              <h3 style={{ color: "#fff", marginBottom: "1rem" }}>Login Diperlukan</h3>
-              <p style={{ color: "rgba(255,255,255,0.6)", marginBottom: "2rem", lineHeight: 1.7 }}>Untuk melihat dan melacak status pemesanan Anda, silakan login terlebih dahulu ke akun ZY Production Anda.</p>
+              <h3 style={{ color: "var(--color-text-main)", marginBottom: "1rem" }}>Login Diperlukan</h3>
+              <p style={{ color: "var(--color-text-muted)", marginBottom: "2rem", lineHeight: 1.7 }}>Untuk melihat dan melacak status pemesanan Anda, silakan login terlebih dahulu ke akun ZY Production Anda.</p>
               <div style={{ display: "flex", gap: "1rem", justifyContent: "center" }}>
                 <a href="/login" className="btn btn-primary">Login Sekarang</a>
                 <a href="/register" className="btn btn-outline">Daftar Akun</a>
@@ -255,11 +255,11 @@ export default function CustomerStatus() {
   return (
     <>
       {/* PAGE HERO */}
-      <section style={{ background: "linear-gradient(135deg, #08080f 0%, #12121e 50%, #0e0e1a 100%)", padding: "5rem 0 3rem", textAlign: "center", color: "#fff", position: "relative", overflow: "hidden" }}>
+      <section style={{ background: "linear-gradient(135deg, #FFFFFF 0%, #FFF8EA 50%, #FFFFFF 100%)", padding: "5rem 0 3rem", textAlign: "center", color: "var(--color-text-main)", position: "relative", overflow: "hidden" }}>
         <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(ellipse 60% 50% at 50% 0%, rgba(226,154,0,0.08) 0%, transparent 70%)" }} />
         <div className="container" style={{ position: "relative" }}>
           <span className="section-tag">Status Pemesanan</span>
-          <h1 className="section-title" style={{ color: "#fff", marginTop: "1rem" }}>Lacak <span className="text-gradient">Status Pemesanan</span> Anda</h1>
+          <h1 className="section-title" style={{ color: "var(--color-text-main)", marginTop: "1rem" }}>Lacak <span className="text-gradient">Status Pemesanan</span> Anda</h1>
           <p className="section-subtitle" style={{ maxWidth: "600px", margin: "1.5rem auto 0", opacity: 0.75 }}>Pantau perkembangan setiap paket bawaan maupun request custom yang telah Anda ajukan secara real-time.</p>
         </div>
       </section>
@@ -362,13 +362,13 @@ export default function CustomerStatus() {
                           <div className="offer-box">
                             <div className="offer-price">
                               <span>Harga Total Paket</span>
-                              <h3 style={{ fontSize: '1.1rem', color: 'rgba(255,255,255,0.85)' }}>{formatIDR(selectedPemesanan.paket_layanan?.harga)}</h3>
+                              <h3 style={{ fontSize: '1.1rem', color: 'var(--color-text-main)' }}>{formatIDR(selectedPemesanan.paket_layanan?.harga)}</h3>
                             </div>
                             <div className="offer-price" style={{ marginTop: '8px' }}>
                               <span style={{ color: 'var(--color-primary)' }}>💰 DP (Down Payment) yang Harus Dibayar</span>
                               <h3>{formatIDR(selectedPemesanan.dp_amount || (selectedPemesanan.paket_layanan?.harga ? selectedPemesanan.paket_layanan.harga / 2 : 0))}</h3>
                             </div>
-                            <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', margin: '8px 0 0', fontStyle: 'italic' }}>* Sisa pelunasan dibayarkan sesuai ketentuan yang tercantum dalam dokumen MOU.</p>
+                            <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', margin: '8px 0 0', fontStyle: 'italic' }}>* Sisa pelunasan dibayarkan sesuai ketentuan yang tercantum dalam dokumen MOU.</p>
                             <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: '12px' }}>
                               <span className={`status-badge-lg ${getPaymentBadge(selectedPemesanan.payment_status)}`}>
                                 {getPaymentLabel(selectedPemesanan.payment_status)}
@@ -394,7 +394,7 @@ export default function CustomerStatus() {
                               </div>
                             )}
                             {(selectedPemesanan.payment_status === "unpaid" || selectedPemesanan.payment_status === "failed" || !selectedPemesanan.payment_status) && (
-                              <p style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.35)", margin: '8px 0 0' }}>
+                              <p style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", margin: '8px 0 0' }}>
                                 Didukung: Transfer Bank, Kartu Kredit/Debit, GoPay, OVO, QRIS & lebih.
                               </p>
                             )}
@@ -505,13 +505,13 @@ export default function CustomerStatus() {
                                 </div>
                                 <div className="offer-price">
                                   <span>Total Anggaran Event</span>
-                                  <h3 style={{ fontSize: '1.1rem', color: 'rgba(255,255,255,0.85)' }}>{formatIDR(offer.total_penawaran)}</h3>
+                                  <h3 style={{ fontSize: '1.1rem', color: 'var(--color-text-main)' }}>{formatIDR(offer.total_penawaran)}</h3>
                                 </div>
                                 <div className="offer-price" style={{ marginTop: '8px' }}>
                                   <span style={{ color: 'var(--color-primary)' }}>💰 DP (Down Payment) yang Harus Dibayar</span>
                                   <h3>{formatIDR(offer.dp_awal || (offer.total_penawaran ? offer.total_penawaran / 2 : 0))}</h3>
                                 </div>
-                                <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', margin: '8px 0 0', fontStyle: 'italic' }}>* Sisa pelunasan dibayarkan sesuai ketentuan yang tercantum dalam dokumen MOU.</p>
+                                <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', margin: '8px 0 0', fontStyle: 'italic' }}>* Sisa pelunasan dibayarkan sesuai ketentuan yang tercantum dalam dokumen MOU.</p>
                                 {offer.catatan_admin && (
                                   <div className="offer-desc"><strong>Catatan Admin:</strong><p>{offer.catatan_admin}</p></div>
                                 )}
@@ -619,7 +619,7 @@ export default function CustomerStatus() {
                             </span>
                           </div>
                           <p className="req-date">📅 {formatDateIndo(p.created_at)}</p>
-                          <p style={{ fontSize: "0.85rem", opacity: 0.7, marginTop: "0.5rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                          <p style={{ fontSize: "0.85rem", color: "var(--color-text-muted)", marginTop: "0.5rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                             {p.pesan}
                           </p>
                         </div>
@@ -631,10 +631,10 @@ export default function CustomerStatus() {
                   <div className="status-detail-pane">
                     {selectedPesan ? (
                       <div className="detail-content fade-in">
-                        <div className="detail-header" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", paddingBottom: "1.5rem", marginBottom: "1.5rem" }}>
+                        <div className="detail-header" style={{ borderBottom: "1px solid var(--color-border)", paddingBottom: "1.5rem", marginBottom: "1.5rem" }}>
                           <h2 className="detail-title">Detail Pesan</h2>
                           <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
-                            <p style={{ margin: 0, opacity: 0.7, fontSize: "0.9rem" }}>📅 Dikirim: {formatDateIndo(selectedPesan.created_at)}</p>
+                            <p style={{ margin: 0, color: "var(--color-text-muted)", fontSize: "0.9rem" }}>📅 Dikirim: {formatDateIndo(selectedPesan.created_at)}</p>
                             <span className={`status-badge ${selectedPesan.status === 'dibalas' ? 'badge-success' : 'badge-warning'}`}>
                               {selectedPesan.status === 'dibalas' ? 'Telah Dibalas' : 'Menunggu Balasan'}
                             </span>
@@ -644,15 +644,15 @@ export default function CustomerStatus() {
                         <div className="detail-section" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginTop: '1rem' }}>
                           {/* Chat Bubble: Customer */}
                           <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-                            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--color-surface-2, #F8F9FA)', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
                             </div>
                             <div style={{ flex: 1 }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                                <span style={{ fontWeight: '600', color: '#fff' }}>Anda</span>
-                                <span style={{ fontSize: '0.8rem', opacity: 0.5 }}>{new Date(selectedPesan.created_at).toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'})}</span>
+                                <span style={{ fontWeight: '600', color: 'var(--color-text-main)' }}>Anda</span>
+                                <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>{new Date(selectedPesan.created_at).toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'})}</span>
                               </div>
-                              <div style={{ background: "rgba(255,255,255,0.04)", padding: "1.25rem", borderRadius: "0 12px 12px 12px", border: "1px solid rgba(255,255,255,0.08)", lineHeight: 1.6, color: 'rgba(255,255,255,0.9)' }}>
+                              <div style={{ background: "var(--color-surface-2, #F8F9FA)", padding: "1.25rem", borderRadius: "0 12px 12px 12px", border: "1px solid var(--color-border)", lineHeight: 1.6, color: 'var(--color-text-main)' }}>
                                 {selectedPesan.pesan}
                               </div>
                             </div>
@@ -662,22 +662,22 @@ export default function CustomerStatus() {
                           {selectedPesan.status === 'dibalas' ? (
                             <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', marginTop: '1rem' }}>
                               <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(135deg, #e29a00 0%, #ffc107 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 12px rgba(226,154,0,0.3)' }}>
-                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" strokeWidth="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" /></svg>
+                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#1A1A1A" strokeWidth="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" /></svg>
                               </div>
                               <div style={{ flex: 1 }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                                  <span style={{ fontWeight: '600', color: '#e29a00' }}>Admin ZY Production</span>
-                                  <span style={{ fontSize: '0.8rem', opacity: 0.5 }}>{new Date(selectedPesan.updated_at).toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'})}</span>
+                                  <span style={{ fontWeight: '600', color: '#B27B00' }}>Admin ZY Production</span>
+                                  <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>{new Date(selectedPesan.updated_at).toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'})}</span>
                                 </div>
-                                <div style={{ background: "rgba(226,154,0,0.06)", padding: "1.25rem", borderRadius: "0 12px 12px 12px", border: "1px solid rgba(226,154,0,0.2)", lineHeight: 1.6, color: '#fff' }}>
+                                <div style={{ background: "rgba(226,154,0,0.06)", padding: "1.25rem", borderRadius: "0 12px 12px 12px", border: "1px solid rgba(226,154,0,0.25)", lineHeight: 1.6, color: 'var(--color-text-main)' }}>
                                   {selectedPesan.balasan_admin}
                                 </div>
                               </div>
                             </div>
                           ) : (
-                            <div style={{ marginTop: "1rem", textAlign: "center", padding: "2rem", background: "rgba(255,255,255,0.02)", borderRadius: "12px", border: "1px dashed rgba(255,255,255,0.1)" }}>
-                              <div className="icon-pulse" style={{ marginBottom: "1rem", color: "rgba(255,255,255,0.4)" }}><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 14 14" /></svg></div>
-                              <p style={{ opacity: 0.7, margin: 0 }}>Mohon kesediaannya menunggu. Tim Planner ZY Production akan segera merespons pertanyaan Anda.</p>
+                            <div style={{ marginTop: "1rem", textAlign: "center", padding: "2rem", background: "var(--color-surface-2, #F8F9FA)", borderRadius: "12px", border: "1px dashed var(--color-border)" }}>
+                              <div className="icon-pulse" style={{ marginBottom: "1rem", color: "var(--color-text-muted)" }}><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 14 14" /></svg></div>
+                              <p style={{ color: 'var(--color-text-muted)', margin: 0 }}>Mohon kesediaannya menunggu. Tim Planner ZY Production akan segera merespons pertanyaan Anda.</p>
                             </div>
                           )}
                         </div>
@@ -696,7 +696,7 @@ export default function CustomerStatus() {
 
           {/* Quick links */}
           <div style={{ textAlign: "center", marginTop: "3rem" }}>
-            <p style={{ color: "rgba(255,255,255,0.45)", marginBottom: "1rem", fontSize: "0.9rem" }}>Ingin memesan atau mengajukan custom paket baru?</p>
+            <p style={{ color: "var(--color-text-muted)", marginBottom: "1rem", fontSize: "0.9rem" }}>Ingin memesan atau mengajukan custom paket baru?</p>
             <Link to="/katalog" className="btn btn-outline">Kembali ke Katalog</Link>
           </div>
         </div>
@@ -705,30 +705,30 @@ export default function CustomerStatus() {
       {/* Ulasan Modal */}
       {showUlasanModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(5px)' }}>
-          <form onSubmit={handleSubmitUlasan} style={{ background: '#1a1a2e', padding: '2rem', borderRadius: '15px', width: '90%', maxWidth: '400px', border: '1px solid rgba(255,255,255,0.1)' }}>
-            <h3 style={{ color: '#fff', marginBottom: '1.5rem', textAlign: 'center' }}>⭐ Beri Penilaian</h3>
+          <form onSubmit={handleSubmitUlasan} style={{ background: '#FFFFFF', padding: '2rem', borderRadius: '15px', width: '90%', maxWidth: '400px', border: '1px solid var(--color-border, #E7E7E7)', boxShadow: '0 20px 50px rgba(30,22,6,0.18)' }}>
+            <h3 style={{ color: 'var(--color-text-main)', marginBottom: '1.5rem', textAlign: 'center' }}>⭐ Beri Penilaian</h3>
 
             <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{ display: 'block', color: 'rgba(255,255,255,0.7)', marginBottom: '0.5rem' }}>Rating (1-5)</label>
+              <label style={{ display: 'block', color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>Rating (1-5)</label>
               <select
                 className="form-control"
                 value={ulasanData.rating}
                 onChange={e => setUlasanData({...ulasanData, rating: e.target.value})}
-                style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: '8px' }}
+                style={{ width: '100%', padding: '0.8rem', background: '#F8F9FA', border: '1px solid var(--color-border, #E7E7E7)', color: 'var(--color-text-main)', borderRadius: '8px' }}
               >
                 {[5,4,3,2,1].map(num => <option key={num} value={num}>{num} Bintang</option>)}
               </select>
             </div>
 
             <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{ display: 'block', color: 'rgba(255,255,255,0.7)', marginBottom: '0.5rem' }}>Komentar (Opsional)</label>
+              <label style={{ display: 'block', color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>Komentar (Opsional)</label>
               <textarea
                 className="form-control"
                 rows="4"
                 placeholder="Ceritakan pengalaman Anda..."
                 value={ulasanData.komentar}
                 onChange={e => setUlasanData({...ulasanData, komentar: e.target.value})}
-                style={{ width: '100%', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: '8px', resize: 'vertical' }}
+                style={{ width: '100%', padding: '0.8rem', background: '#F8F9FA', border: '1px solid var(--color-border, #E7E7E7)', color: 'var(--color-text-main)', borderRadius: '8px', resize: 'vertical' }}
               />
             </div>
 

@@ -31,7 +31,7 @@ const getFileIcon = (fileName) => {
   return "📄";
 };
 
-/** Styled drag-and-drop dropzone — versi dark mode untuk halaman customer */
+/** Styled drag-and-drop dropzone — tema terang, konsisten dengan halaman customer */
 function FileDropzone({ inputId, file, onFileChange }) {
   const [isDragging, setIsDragging] = useState(false);
 
@@ -49,7 +49,7 @@ function FileDropzone({ inputId, file, onFileChange }) {
       onDrop={handleDrop}
       onClick={() => document.getElementById(inputId).click()}
       style={{
-        border: `2px dashed ${isDragging ? "#e29a00" : file ? "#4ade80" : "rgba(255,255,255,0.2)"}`,
+        border: `2px dashed ${isDragging ? "#e29a00" : file ? "#16A34A" : "var(--color-border, #E7E7E7)"}`,
         borderRadius: "10px",
         padding: "1.25rem 1rem",
         textAlign: "center",
@@ -57,8 +57,8 @@ function FileDropzone({ inputId, file, onFileChange }) {
         background: isDragging
           ? "rgba(226,154,0,0.07)"
           : file
-          ? "rgba(74,222,128,0.06)"
-          : "rgba(255,255,255,0.03)",
+          ? "rgba(22,163,74,0.06)"
+          : "var(--color-surface-2, #F8F9FA)",
         transition: "all 0.2s ease",
         marginBottom: "12px",
         userSelect: "none",
@@ -75,10 +75,10 @@ function FileDropzone({ inputId, file, onFileChange }) {
       {file ? (
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.35rem" }}>
           <span style={{ fontSize: "1.75rem" }}>{getFileIcon(file.name)}</span>
-          <span style={{ fontWeight: 700, color: "#4ade80", fontSize: "0.85rem", wordBreak: "break-all" }}>
+          <span style={{ fontWeight: 700, color: "#16A34A", fontSize: "0.85rem", wordBreak: "break-all" }}>
             {file.name}
           </span>
-          <span style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)" }}>
+          <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)" }}>
             {formatFileSize(file.size)}
           </span>
           <span
@@ -90,14 +90,14 @@ function FileDropzone({ inputId, file, onFileChange }) {
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.4rem" }}>
-          <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5">
+          <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="var(--color-text-muted, #666666)" strokeWidth="1.5">
             <path strokeLinecap="round" strokeLinejoin="round"
               d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
           </svg>
-          <span style={{ fontWeight: 600, color: "rgba(255,255,255,0.7)", fontSize: "0.85rem" }}>
+          <span style={{ fontWeight: 600, color: "var(--color-text-main)", fontSize: "0.85rem" }}>
             {isDragging ? "Lepas file di sini…" : "Klik atau seret file ke sini"}
           </span>
-          <span style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.35)" }}>
+          <span style={{ fontSize: "0.72rem", color: "var(--color-text-muted)" }}>
             PDF, JPG, PNG — Maks 5MB
           </span>
         </div>
@@ -177,7 +177,7 @@ export default function MouStatusCard({ mou, onUploaded }) {
       <div className="offer-box">
         {/* Belum Ada */}
         {status === "belum_ada" && (
-          <p style={{ margin: 0, color: "rgba(255,255,255,0.7)" }}>
+          <p style={{ margin: 0, color: "var(--color-text-muted)" }}>
             Admin belum menyiapkan dokumen MOU untuk pesanan ini. Anda akan mendapat notifikasi email begitu draf tersedia.
           </p>
         )}
@@ -185,7 +185,7 @@ export default function MouStatusCard({ mou, onUploaded }) {
         {/* Menunggu TTD Customer */}
         {status === "menunggu_ttd_customer" && (
           <div>
-            <p style={{ margin: "0 0 12px", color: "rgba(255,255,255,0.85)" }}>
+            <p style={{ margin: "0 0 12px", color: "var(--color-text-main)" }}>
               Draf dokumen MOU sudah tersedia. Unduh, cetak, tandatangani secara manual, lalu unggah kembali hasil scan/foto di bawah ini.
             </p>
             {mou?.file_draft && (
@@ -204,7 +204,7 @@ export default function MouStatusCard({ mou, onUploaded }) {
                 file={file}
                 onFileChange={handleFileChange}
               />
-              {error && <p style={{ color: "#ff6b6b", fontSize: "0.8rem", margin: "0 0 10px" }}>{error}</p>}
+              {error && <p style={{ color: "#DC2626", fontSize: "0.8rem", margin: "0 0 10px" }}>{error}</p>}
               <button type="submit" className="btn-pay-midtrans" disabled={isUploading}>
                 {isUploading ? "Mengunggah..." : "Unggah Dokumen Bertanda Tangan"}
               </button>
@@ -214,7 +214,7 @@ export default function MouStatusCard({ mou, onUploaded }) {
 
         {/* Menunggu TTD Admin */}
         {status === "menunggu_ttd_admin" && (
-          <p style={{ margin: 0, color: "rgba(255,255,255,0.85)" }}>
+          <p style={{ margin: 0, color: "var(--color-text-main)" }}>
             ⏳ Dokumen Anda sudah diterima. Admin sedang memeriksa &amp; menandatangani dokumen. Anda akan mendapat notifikasi begitu proses selesai.
           </p>
         )}
@@ -222,7 +222,7 @@ export default function MouStatusCard({ mou, onUploaded }) {
         {/* Selesai */}
         {status === "selesai" && (
           <div>
-            <p style={{ margin: "0 0 10px", color: "#4ade80", fontWeight: 600 }}>
+            <p style={{ margin: "0 0 10px", color: "#16A34A", fontWeight: 600 }}>
               ✅ Dokumen MOU selesai — pembayaran DP kini tersedia.
             </p>
             {mou?.file_final && (

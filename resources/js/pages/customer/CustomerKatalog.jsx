@@ -132,11 +132,11 @@ export default function CustomerKatalog() {
   return (
     <>
       {/* PAGE HERO */}
-      <section style={{ background: "linear-gradient(135deg, #08080f 0%, #12121e 50%, #0e0e1a 100%)", padding: "5rem 0 3rem", textAlign: "center", color: "#fff", position: "relative", overflow: "hidden" }}>
-        <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(ellipse 60% 50% at 50% 0%, rgba(226,154,0,0.1) 0%, transparent 70%)" }} />
+      <section style={{ background: "linear-gradient(135deg, #FFFFFF 0%, #FFF8EA 50%, #FFFFFF 100%)", padding: "5rem 0 3rem", textAlign: "center", color: "var(--color-text-main)", position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(ellipse 60% 50% at 50% 0%, rgba(226,154,0,0.08) 0%, transparent 70%)" }} />
         <div className="container" style={{ position: "relative" }}>
           <span className="section-tag">Pilihan Paket</span>
-          <h1 className="section-title" style={{ color: "#fff", marginTop: "1rem" }}>Katalog Paket <span className="text-gradient">Layanan Terbaik</span></h1>
+          <h1 className="section-title" style={{ color: "var(--color-text-main)", marginTop: "1rem" }}>Katalog Paket <span className="text-gradient">Layanan Terbaik</span></h1>
           <p className="section-subtitle" style={{ maxWidth: "600px", margin: "1.5rem auto 0", opacity: 0.75 }}>Pilih dari beragam paket standard terpopuler yang telah kami rancang dengan fasilitas lengkap dan harga ekonomis.</p>
         </div>
       </section>
@@ -207,12 +207,12 @@ export default function CustomerKatalog() {
               {orderResult ? (
                 <div className="order-success-view">
                   <div className="order-success-icon"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg></div>
-                  <h3 style={{ color: "#fff", margin: 0 }}>Pemesanan Diterima!</h3>
-                  <p style={{ color: "rgba(255,255,255,0.6)", margin: 0, lineHeight: 1.6, maxWidth: "340px" }}>Pemesanan paket <strong style={{ color: "#fff" }}>{orderPackage.nama_paket}</strong> berhasil dibuat.</p>
+                  <h3 style={{ color: "var(--color-text-main)", margin: 0 }}>Pemesanan Diterima!</h3>
+                  <p style={{ color: "var(--color-text-muted)", margin: 0, lineHeight: 1.6, maxWidth: "340px" }}>Pemesanan paket <strong style={{ color: "var(--color-text-main)" }}>{orderPackage.nama_paket}</strong> berhasil dibuat.</p>
                   <div className="order-success-code">{orderResult.kode_pemesanan}</div>
                   <div className="pay-now-section">
                     <span className="pay-now-label">Total yang harus dibayar</span>
-                    <span style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--color-primary)", textShadow: "0 0 20px rgba(226,154,0,0.4)" }}>{formatIDR(orderPackage.harga)}</span>
+                    <span style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--color-primary)" }}>{formatIDR(orderPackage.harga)}</span>
                     <div className="mou-locked-notice" style={{ width: "100%", justifyContent: "center", textAlign: "center" }}>
                       🔒 Admin akan menyiapkan dokumen MOU terlebih dahulu. Pantau & selesaikan proses tanda tangan MOU di halaman Status sebelum dapat membayar DP.
                     </div>
@@ -234,7 +234,7 @@ export default function CustomerKatalog() {
                   <div className="form-group"><label className="required-label">Lokasi Acara</label><input type="text" className="form-control" name="lokasi_acara" placeholder="Contoh: Ballroom Hotel Grand, Jakarta" value={orderForm.lokasi_acara} onChange={handleOrderFormChange} required /></div>
                   <div className="form-group"><label>Catatan Tambahan</label><textarea className="form-control" name="catatan" rows="3" placeholder="Tema, permintaan khusus, atau informasi lainnya..." value={orderForm.catatan} onChange={handleOrderFormChange} /></div>
                   <div style={{ background: "rgba(226,154,0,0.06)", border: "1px solid rgba(226,154,0,0.2)", borderRadius: "10px", padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
-                    <span style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.875rem" }}>Total Pembayaran</span>
+                    <span style={{ color: "var(--color-text-muted)", fontSize: "0.875rem" }}>Total Pembayaran</span>
                     <span style={{ fontSize: "1.25rem", fontWeight: 800, color: "var(--color-primary)" }}>{formatIDR(orderPackage.harga)}</span>
                   </div>
                   <div className="modal-footer-actions" style={{ borderTop: "none", paddingTop: 0, marginTop: 0 }}>
@@ -268,7 +268,7 @@ export default function CustomerKatalog() {
                 <span style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--color-primary)" }}>{formatIDR(selectedDetailPaket.harga)}</span>
               </div>
               {selectedDetailPaket.deskripsi && (
-                <p style={{ color: "rgba(255,255,255,0.7)", lineHeight: 1.7, marginBottom: "1.5rem" }}>{selectedDetailPaket.deskripsi}</p>
+                <p style={{ color: "var(--color-text-muted)", lineHeight: 1.7, marginBottom: "1.5rem" }}>{selectedDetailPaket.deskripsi}</p>
               )}
 
               <h4 className="facilities-title">Fasilitas & Benefit</h4>

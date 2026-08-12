@@ -56,20 +56,20 @@ export default function CustomerAbout() {
       <section
         className="about-page-hero"
         style={{
-          background: 'linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%)',
+          background: 'linear-gradient(135deg, #FFFFFF 0%, #FFF8EA 50%, #FFFFFF 100%)',
           padding: '5rem 0 3rem',
           textAlign: 'center',
-          color: '#fff',
+          color: 'var(--color-text-main)',
         }}
       >
         <div className="container">
           <span className="section-tag">Tentang Kami</span>
-          <h1 className="section-title" style={{ color: '#fff', marginTop: '1rem' }}>
+          <h1 className="section-title" style={{ color: 'var(--color-text-main)', marginTop: '1rem' }}>
             ABOUT US
           </h1>
           <p
             className="section-subtitle"
-            style={{ maxWidth: '680px', margin: '1.5rem auto 0', opacity: 0.8, fontSize: '15px', lineHeight: '1.7' }}
+            style={{ maxWidth: '680px', margin: '1.5rem auto 0', opacity: 0.85, fontSize: '15px', lineHeight: '1.7' }}
           >
             Halaman ini menampilkan profil singkat ZY Production sebagai penyedia layanan event organizer berbasis
             website yang membantu pengguna merencanakan dan memesan layanan event secara lebih terstruktur.
@@ -78,14 +78,14 @@ export default function CustomerAbout() {
       </section>
 
       {/* ── VISI & MISI ── */}
-      <section style={{ background: 'var(--color-surface, #1e1e2e)', padding: '4rem 0' }}>
+      <section style={{ background: 'var(--color-surface-2, #F8F9FA)', padding: '4rem 0' }}>
         <div className="container">
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
             {/* Visi */}
             <div
               style={{
-                background: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.1)',
+                background: 'var(--color-bg-card, #FFFFFF)',
+                border: '1px solid var(--color-border, #E7E7E7)',
                 borderRadius: '12px',
                 padding: '2rem',
               }}
@@ -93,9 +93,9 @@ export default function CustomerAbout() {
               <span
                 style={{
                   display: 'inline-block',
-                  background: 'rgba(212,175,55,0.15)',
-                  border: '1px solid rgba(212,175,55,0.3)',
-                  color: 'var(--color-gold, #D4AF37)',
+                  background: 'var(--color-primary-muted, rgba(226,154,0,0.12))',
+                  border: '1px solid rgba(226,154,0,0.3)',
+                  color: 'var(--color-primary, #E29A00)',
                   fontSize: '11.5px',
                   fontWeight: 700,
                   letterSpacing: '0.08em',
@@ -107,10 +107,10 @@ export default function CustomerAbout() {
               >
                 VISI
               </span>
-              <h3 style={{ color: '#fff', fontSize: '17px', marginBottom: '0.75rem' }}>
+              <h3 style={{ color: 'var(--color-text-main)', fontSize: '17px', marginBottom: '0.75rem' }}>
                 Menjadi Mitra Event yang Terpercaya
               </h3>
-              <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '13.5px', lineHeight: '1.7', margin: 0 }}>
+              <p style={{ color: 'var(--color-text-muted)', fontSize: '13.5px', lineHeight: '1.7', margin: 0 }}>
                 Menjadi penyedia layanan event organizer yang profesional, adaptif, dan mudah diakses melalui sistem
                 digital untuk mendukung berbagai kebutuhan acara.
               </p>
@@ -119,8 +119,8 @@ export default function CustomerAbout() {
             {/* Misi */}
             <div
               style={{
-                background: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.1)',
+                background: 'var(--color-bg-card, #FFFFFF)',
+                border: '1px solid var(--color-border, #E7E7E7)',
                 borderRadius: '12px',
                 padding: '2rem',
               }}
@@ -128,9 +128,9 @@ export default function CustomerAbout() {
               <span
                 style={{
                   display: 'inline-block',
-                  background: 'rgba(212,175,55,0.15)',
-                  border: '1px solid rgba(212,175,55,0.3)',
-                  color: 'var(--color-gold, #D4AF37)',
+                  background: 'var(--color-primary-muted, rgba(226,154,0,0.12))',
+                  border: '1px solid rgba(226,154,0,0.3)',
+                  color: 'var(--color-primary, #E29A00)',
                   fontSize: '11.5px',
                   fontWeight: 700,
                   letterSpacing: '0.08em',
@@ -142,12 +142,12 @@ export default function CustomerAbout() {
               >
                 MISI
               </span>
-              <h3 style={{ color: '#fff', fontSize: '17px', marginBottom: '0.75rem' }}>
+              <h3 style={{ color: 'var(--color-text-main)', fontSize: '17px', marginBottom: '0.75rem' }}>
                 Mewujudkan Event Secara Terarah
               </h3>
               <ul
                 style={{
-                  color: 'rgba(255,255,255,0.65)',
+                  color: 'var(--color-text-muted)',
                   fontSize: '13.5px',
                   lineHeight: '1.9',
                   margin: 0,
@@ -171,8 +171,8 @@ export default function CustomerAbout() {
             {/* Text */}
             <div
               style={{
-                background: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.1)',
+                background: 'var(--color-surface-2, #F8F9FA)',
+                border: '1px solid var(--color-border, #E7E7E7)',
                 borderRadius: '12px',
                 padding: '2rem',
               }}
@@ -207,8 +207,8 @@ export default function CustomerAbout() {
                   className="about-main-img"
                   style={{
                     objectFit: 'contain',
-                    backgroundColor: '#000',
-                    boxShadow: '0 0 60px rgba(226,154,0,0.25), 0 20px 40px rgba(0,0,0,0.4)',
+                    backgroundColor: '#FFFFFF',
+                    boxShadow: '0 0 60px rgba(226,154,0,0.15), 0 20px 40px rgba(30,22,6,0.12)',
                   }}
                 />
                 <div className="about-floating-card">
@@ -222,7 +222,7 @@ export default function CustomerAbout() {
       </section>
 
       {/* ── WHAT WE CAN DO? ── */}
-      <section style={{ background: 'var(--color-surface, #1e1e2e)', padding: '5rem 0' }}>
+      <section style={{ background: 'var(--color-surface-2, #F8F9FA)', padding: '5rem 0' }}>
         <div className="container">
           <div className="section-header text-center">
             <span className="section-tag">Layanan Kami</span>
@@ -244,8 +244,8 @@ export default function CustomerAbout() {
               <div
                 key={i}
                 style={{
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.08)',
+                  background: 'var(--color-bg-card, #FFFFFF)',
+                  border: '1px solid var(--color-border, #E7E7E7)',
                   borderRadius: '14px',
                   padding: '1.75rem',
                   display: 'flex',
@@ -254,13 +254,13 @@ export default function CustomerAbout() {
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-6px)';
-                  e.currentTarget.style.boxShadow = '0 20px 40px rgba(0,0,0,0.3)';
-                  e.currentTarget.style.borderColor = 'rgba(212,175,55,0.35)';
+                  e.currentTarget.style.boxShadow = '0 20px 40px rgba(30,22,6,0.12)';
+                  e.currentTarget.style.borderColor = 'rgba(226,154,0,0.4)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = '';
                   e.currentTarget.style.boxShadow = '';
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
+                  e.currentTarget.style.borderColor = 'var(--color-border, #E7E7E7)';
                 }}
               >
                 {/* Icon Placeholder */}
@@ -269,8 +269,8 @@ export default function CustomerAbout() {
                     width: '44px',
                     height: '44px',
                     borderRadius: '10px',
-                    background: 'rgba(212,175,55,0.1)',
-                    border: '1px solid rgba(212,175,55,0.2)',
+                    background: 'var(--color-primary-muted, rgba(226,154,0,0.1))',
+                    border: '1px solid rgba(226,154,0,0.25)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -280,10 +280,10 @@ export default function CustomerAbout() {
                 >
                   {svc.icon}
                 </div>
-                <h4 style={{ color: '#fff', fontSize: '14.5px', marginBottom: '0.6rem' }}>{svc.title}</h4>
+                <h4 style={{ color: 'var(--color-text-main)', fontSize: '14.5px', marginBottom: '0.6rem' }}>{svc.title}</h4>
                 <p
                   style={{
-                    color: 'rgba(255,255,255,0.6)',
+                    color: 'var(--color-text-muted)',
                     fontSize: '12.5px',
                     lineHeight: '1.6',
                     margin: '0 0 1.25rem',
@@ -329,8 +329,8 @@ export default function CustomerAbout() {
               <div
                 key={i}
                 style={{
-                  background: 'rgba(255,255,255,0.03)',
-                  border: '1px dashed rgba(212,175,55,0.3)',
+                  background: 'var(--color-bg-card, #FFFFFF)',
+                  border: '1px dashed rgba(226,154,0,0.4)',
                   borderRadius: '14px',
                   padding: '2rem',
                   textAlign: 'center',
@@ -340,16 +340,16 @@ export default function CustomerAbout() {
                   gap: '1rem',
                   transition: 'background 0.3s',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(212,175,55,0.05)')}
-                onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.03)')}
+                onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--color-primary-muted, rgba(226,154,0,0.06))')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--color-bg-card, #FFFFFF)')}
               >
                 {/* Document Placeholder Visual */}
                 <div
                   style={{
                     width: '70px',
                     height: '90px',
-                    background: 'rgba(255,255,255,0.05)',
-                    border: '1px solid rgba(255,255,255,0.1)',
+                    background: 'var(--color-surface-2, #F8F9FA)',
+                    border: '1px solid var(--color-border, #E7E7E7)',
                     borderRadius: '8px',
                     display: 'flex',
                     alignItems: 'center',
@@ -367,17 +367,17 @@ export default function CustomerAbout() {
                       right: 0,
                       width: '18px',
                       height: '18px',
-                      background: 'linear-gradient(225deg, rgba(212,175,55,0.3) 50%, transparent 50%)',
+                      background: 'linear-gradient(225deg, rgba(226,154,0,0.35) 50%, transparent 50%)',
                       borderRadius: '0 8px 0 0',
                     }}
                   />
                 </div>
 
                 <div>
-                  <h4 style={{ color: '#fff', fontSize: '13.5px', marginBottom: '0.4rem' }}>{doc.title}</h4>
+                  <h4 style={{ color: 'var(--color-text-main)', fontSize: '13.5px', marginBottom: '0.4rem' }}>{doc.title}</h4>
                   <p
                     style={{
-                      color: 'rgba(255,255,255,0.4)',
+                      color: 'var(--color-text-muted)',
                       fontSize: '11.5px',
                       margin: 0,
                       fontStyle: 'italic',
@@ -391,9 +391,9 @@ export default function CustomerAbout() {
                 <span
                   style={{
                     display: 'inline-block',
-                    background: 'rgba(212,175,55,0.1)',
-                    border: '1px solid rgba(212,175,55,0.25)',
-                    color: 'var(--color-gold, #D4AF37)',
+                    background: 'var(--color-primary-muted, rgba(226,154,0,0.1))',
+                    border: '1px solid rgba(226,154,0,0.3)',
+                    color: 'var(--color-primary, #E29A00)',
                     fontSize: '11px',
                     fontWeight: 600,
                     padding: '3px 10px',
@@ -409,7 +409,7 @@ export default function CustomerAbout() {
           <p
             style={{
               textAlign: 'center',
-              color: 'rgba(255,255,255,0.35)',
+              color: 'var(--color-text-muted)',
               fontSize: '12.5px',
               marginTop: '2rem',
               fontStyle: 'italic',
@@ -421,7 +421,7 @@ export default function CustomerAbout() {
       </section>
 
       {/* ── TIM KAMI ── */}
-      <section style={{ background: 'var(--color-surface, #1e1e2e)', padding: '5rem 0' }}>
+      <section style={{ background: 'var(--color-surface-2, #F8F9FA)', padding: '5rem 0' }}>
         <div className="container">
           <div className="section-header text-center">
             <span className="section-tag">Orang-Orang Hebat</span>
@@ -442,8 +442,8 @@ export default function CustomerAbout() {
               <div
                 key={i}
                 style={{
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.08)',
+                  background: 'var(--color-bg-card, #FFFFFF)',
+                  border: '1px solid var(--color-border, #E7E7E7)',
                   borderRadius: '16px',
                   padding: '2rem',
                   textAlign: 'center',
@@ -451,7 +451,7 @@ export default function CustomerAbout() {
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-6px)';
-                  e.currentTarget.style.boxShadow = '0 20px 40px rgba(0,0,0,0.3)';
+                  e.currentTarget.style.boxShadow = '0 20px 40px rgba(30,22,6,0.12)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = '';
@@ -459,8 +459,8 @@ export default function CustomerAbout() {
                 }}
               >
                 <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>{member.emoji}</div>
-                <h4 style={{ color: '#fff', marginBottom: '0.25rem', fontSize: '1rem' }}>{member.name}</h4>
-                <p style={{ color: 'var(--color-gold, #D4AF37)', fontSize: '0.8rem', margin: 0 }}>{member.role}</p>
+                <h4 style={{ color: 'var(--color-text-main)', marginBottom: '0.25rem', fontSize: '1rem' }}>{member.name}</h4>
+                <p style={{ color: 'var(--color-primary, #E29A00)', fontSize: '0.8rem', margin: 0 }}>{member.role}</p>
               </div>
             ))}
           </div>
