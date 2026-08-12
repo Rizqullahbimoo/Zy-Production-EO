@@ -4,10 +4,11 @@
  * Integrasi: Midtrans Snap untuk pembayaran paket bawaan.
  */
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export default function CustomerKatalog() {
   const navigate = useNavigate();
+  const location = useLocation();
   const token = localStorage.getItem("auth_token");
 
   const [categories, setCategories] = useState([]);
@@ -104,6 +105,15 @@ export default function CustomerKatalog() {
   const handleFacilityToggle = facilityId => setFormData(prev => { const exists = prev.fasilitas.find(f => f.id_fasilitas === facilityId); if (exists) return { ...prev, fasilitas: prev.fasilitas.filter(f => f.id_fasilitas !== facilityId) }; else return { ...prev, fasilitas: [...prev.fasilitas, { id_fasilitas: facilityId, keterangan: "" }] }; });
   const handleFacilityDescChange = (facilityId, value) => setFormData(prev => ({ ...prev, fasilitas: prev.fasilitas.map(f => f.id_fasilitas === facilityId ? { ...f, keterangan: value } : f) }));
   const openRequestModal = (prefill = {}) => { if (!token) { alert("Silakan login terlebih dahulu."); window.location.href = "/login"; return; } setShowRequestModal(true); setRequestStep(1); setRequestSuccess(false); setRequestError(""); setFormData({ id_kategori: "", tanggal_acara: "", lokasi_acara: "", jumlah_tamu: "", budget_acara: "", catatan: "", fasilitas: [], ...prefill }); };
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    if (searchParams.get('custom') === 'true') {
+      openRequestModal();
+      // Optionally remove the query param so it doesn't re-trigger on refresh
+      navigate('/katalog', { replace: true });
+    }
+  }, [location.search]);
   const handleSubmitRequest = e => {
     e.preventDefault();
     if (!formData.id_kategori) { setRequestError("Kategori event harus dipilih."); return; }
