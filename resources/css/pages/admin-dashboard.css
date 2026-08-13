@@ -214,22 +214,42 @@
 }
 
 /* Column width hints for data-pemesanan table (8 cols) */
-.zy-table th:nth-child(1),
-.zy-table td:nth-child(1) { width: 14%; }   /* Kode Pemesanan */
-.zy-table th:nth-child(2),
-.zy-table td:nth-child(2) { width: 13%; }   /* Nama Pemesan */
-.zy-table th:nth-child(3),
-.zy-table td:nth-child(3) { width: 14%; }   /* Paket */
-.zy-table th:nth-child(4),
-.zy-table td:nth-child(4) { width: 13%; }   /* Tanggal Acara */
-.zy-table th:nth-child(5),
-.zy-table td:nth-child(5) { width: 14%; }   /* Status Pemesanan */
-.zy-table th:nth-child(6),
-.zy-table td:nth-child(6) { width: 13%; }   /* Status Pembayaran */
-.zy-table th:nth-child(7),
-.zy-table td:nth-child(7) { width: 11%; }   /* Status MOU */
-.zy-table th:nth-child(8),
-.zy-table td:nth-child(8) { width: 8%; }    /* Aksi */
+.zy-table-pemesanan th:nth-child(1),
+.zy-table-pemesanan td:nth-child(1) { width: 14%; }   /* Kode Pemesanan */
+.zy-table-pemesanan th:nth-child(2),
+.zy-table-pemesanan td:nth-child(2) { width: 13%; }   /* Nama Pemesan */
+.zy-table-pemesanan th:nth-child(3),
+.zy-table-pemesanan td:nth-child(3) { width: 14%; }   /* Paket */
+.zy-table-pemesanan th:nth-child(4),
+.zy-table-pemesanan td:nth-child(4) { width: 13%; }   /* Tanggal Acara */
+.zy-table-pemesanan th:nth-child(5),
+.zy-table-pemesanan td:nth-child(5) { width: 14%; }   /* Status Pemesanan */
+.zy-table-pemesanan th:nth-child(6),
+.zy-table-pemesanan td:nth-child(6) { width: 13%; }   /* Status Pembayaran */
+.zy-table-pemesanan th:nth-child(7),
+.zy-table-pemesanan td:nth-child(7) { width: 11%; }   /* Status MOU */
+.zy-table-pemesanan th:nth-child(8),
+.zy-table-pemesanan td:nth-child(8) { width: 8%; }    /* Aksi */
+
+/* Column width hints for custom-request table (9 cols) */
+.zy-table-custom-request th:nth-child(1),
+.zy-table-custom-request td:nth-child(1) { width: 12%; }   /* Kode */
+.zy-table-custom-request th:nth-child(2),
+.zy-table-custom-request td:nth-child(2) { width: 12%; }   /* Client */
+.zy-table-custom-request th:nth-child(3),
+.zy-table-custom-request td:nth-child(3) { width: 12%; }   /* Kategori */
+.zy-table-custom-request th:nth-child(4),
+.zy-table-custom-request td:nth-child(4) { width: 12%; }   /* Tanggal Acara */
+.zy-table-custom-request th:nth-child(5),
+.zy-table-custom-request td:nth-child(5) { width: 12%; }   /* Budget */
+.zy-table-custom-request th:nth-child(6),
+.zy-table-custom-request td:nth-child(6) { width: 12%; }   /* Status */
+.zy-table-custom-request th:nth-child(7),
+.zy-table-custom-request td:nth-child(7) { width: 11%; }   /* Status Pembayaran */
+.zy-table-custom-request th:nth-child(8),
+.zy-table-custom-request td:nth-child(8) { width: 9%; }    /* Status MOU */
+.zy-table-custom-request th:nth-child(9),
+.zy-table-custom-request td:nth-child(9) { width: 8%; }    /* Aksi */
 
 
 .zy-status-badge {

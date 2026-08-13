@@ -1659,7 +1659,7 @@ export default function AdminDashboard() {
                 </p>
               ) : (
                 <div className="zy-table-wrapper">
-                  <table className="zy-table">
+                  <table className="zy-table zy-table-pemesanan">
                     <thead>
                       <tr>
                         <th>Kode Pemesanan</th>
@@ -1793,7 +1793,7 @@ export default function AdminDashboard() {
                 </p>
               ) : (
                 <div className="zy-table-wrapper">
-                  <table className="zy-table">
+                  <table className="zy-table zy-table-custom-request">
                     <thead>
                       <tr>
                         <th>Kode</th>
