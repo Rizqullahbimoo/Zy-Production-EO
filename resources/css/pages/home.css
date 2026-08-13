@@ -1219,70 +1219,74 @@
   line-height: 1.6;
 }
 
-/* ── CLIENTS SECTION ── */
-.clients-section {
+/* ── CREDENTIALS / BADGE SECTION ── */
+.credentials-section {
   padding: 60px 0;
   background-color: #F8F9FA;
   color: var(--color-text-main);
 }
 
-.section-tag-small {
-  color: var(--color-primary);
-  font-size: var(--font-size-xs);
-  text-transform: uppercase;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  margin-bottom: 2px;
-}
-
-.clients-grid {
+.credentials-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: var(--spacing-lg);
-  justify-content: center;
-  margin-top: var(--spacing-xl);
 }
 
 @media (min-width: 768px) {
-  .clients-grid {
-    grid-template-columns: repeat(6, 1fr);
+  .credentials-grid {
+    grid-template-columns: repeat(4, 1fr);
   }
 }
 
-.client-logo-circle {
-  aspect-ratio: 1;
-  background-color: #FFFFFF;
+.credential-card {
+  background: #FFFFFF;
   border: 1px solid var(--color-border);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all var(--transition-base);
-}
-
-.client-logo-circle:hover {
-  background-color: var(--color-primary-muted);
-  border-color: var(--color-primary);
-  transform: scale(1.05);
-}
-
-.client-logo-content {
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-xl) var(--spacing-lg);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  text-align: center;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow-sm, 0 1px 3px rgba(30,22,6,0.05));
 }
 
-.client-initials {
-  font-size: var(--font-size-xl);
-  font-weight: 800;
+.credential-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 24px 48px rgba(30,22,6,0.10), 0 0 0 1px rgba(226,154,0,0.2), var(--glow-gold-sm);
+  border-color: rgba(226,154,0,0.4);
+  background: linear-gradient(145deg, rgba(226,154,0,0.05) 0%, #FFFFFF 100%);
+}
+
+.credential-icon-wrapper {
+  background-color: var(--color-primary-muted);
   color: var(--color-primary);
+  width: 48px;
+  height: 48px;
+  border-radius: var(--border-radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--spacing-md);
+  transition: background-color var(--transition-fast);
 }
 
-.client-name {
-  font-size: 10px;
+.credential-card:hover .credential-icon-wrapper {
+  background-color: var(--color-primary);
+  color: #ffffff;
+}
+
+.credential-card-title {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text-main);
+  margin-bottom: 4px;
+}
+
+.credential-card-desc {
+  font-size: var(--font-size-xs);
   color: var(--color-text-muted);
-  font-weight: 600;
+  line-height: 1.5;
 }
 
 /* ── CONTACT SECTION ── */
