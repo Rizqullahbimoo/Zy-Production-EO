@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\PenawaranRequest;
 use App\Mail\PenawaranBaruMail;
 use App\Models\PenawaranCustom;
 use App\Models\RequestCustomPaket;
+use App\Support\DpCalculator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -34,7 +35,7 @@ class PenawaranController extends Controller
                 'id_request' => $id_request,
                 'tanggal_penawaran' => now(),
                 'total_penawaran' => $request->total_penawaran,
-                'dp_awal' => $request->dp_awal,
+                'dp_awal' => DpCalculator::hitung((float) $request->total_penawaran),
                 'status_penawaran' => 'menunggu',
                 'catatan_admin' => $request->catatan_admin,
             ]);

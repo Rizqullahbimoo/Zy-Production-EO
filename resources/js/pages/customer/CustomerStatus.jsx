@@ -366,7 +366,7 @@ export default function CustomerStatus() {
                             </div>
                             <div className="offer-price" style={{ marginTop: '8px' }}>
                               <span style={{ color: 'var(--color-primary)' }}>💰 DP (Down Payment) yang Harus Dibayar</span>
-                              <h3>{formatIDR(selectedPemesanan.dp_amount || (selectedPemesanan.paket_layanan?.harga ? selectedPemesanan.paket_layanan.harga / 2 : 0))}</h3>
+                              <h3>{formatIDR(selectedPemesanan.dp_amount || (selectedPemesanan.paket_layanan?.harga ? selectedPemesanan.paket_layanan.harga * 0.3 : 0))}</h3>
                             </div>
                             <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', margin: '8px 0 0', fontStyle: 'italic' }}>* Sisa pelunasan dibayarkan sesuai ketentuan yang tercantum dalam dokumen MOU.</p>
                             <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: '12px' }}>
@@ -509,7 +509,7 @@ export default function CustomerStatus() {
                                 </div>
                                 <div className="offer-price" style={{ marginTop: '8px' }}>
                                   <span style={{ color: 'var(--color-primary)' }}>💰 DP (Down Payment) yang Harus Dibayar</span>
-                                  <h3>{formatIDR(offer.dp_awal || (offer.total_penawaran ? offer.total_penawaran / 2 : 0))}</h3>
+                                  <h3>{formatIDR(offer.dp_awal || (offer.total_penawaran ? offer.total_penawaran * 0.3 : 0))}</h3>
                                 </div>
                                 <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', margin: '8px 0 0', fontStyle: 'italic' }}>* Sisa pelunasan dibayarkan sesuai ketentuan yang tercantum dalam dokumen MOU.</p>
                                 {offer.catatan_admin && (

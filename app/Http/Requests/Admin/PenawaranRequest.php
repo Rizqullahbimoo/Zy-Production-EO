@@ -15,9 +15,11 @@ class PenawaranRequest extends FormRequest
 
     public function rules(): array
     {
+        // dp_awal tidak divalidasi dari input — selalu dihitung otomatis
+        // 30% dari total_penawaran di controller (lihat App\Support\DpCalculator)
+        // agar konsisten dengan aturan DP pemesanan paket standar.
         return [
             'total_penawaran' => ['required', 'numeric', 'min:0'],
-            'dp_awal' => ['nullable', 'numeric', 'min:0'],
             'catatan_admin' => ['nullable', 'string'],
         ];
     }

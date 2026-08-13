@@ -7,6 +7,7 @@ use App\Mail\PembayaranBerhasilMail;
 use App\Models\DokumenMou;
 use App\Models\Pemesanan;
 use App\Models\PenawaranCustom;
+use App\Support\DpCalculator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -57,10 +58,10 @@ class MidtransController extends Controller
         }
 
         $orderId = $pemesanan->kode_pemesanan.'-'.time();
-        // Charge DP saja (50% dari harga paket), bukan harga penuh
+        // Charge DP saja, bukan harga penuh
         $dpAmount = $pemesanan->dp_amount
             ? (float) $pemesanan->dp_amount
-            : round((float) $pemesanan->paketLayanan->harga * 0.5, 2);
+            : DpCalculator::hitung((float) $pemesanan->paketLayanan->harga);
         $grossAmount = $dpAmount;
         $user = $pemesanan->user;
 
@@ -142,7 +143,7 @@ class MidtransController extends Controller
         // Charge DP saja, bukan total penawaran
         $dpAmount = $penawaran->dp_awal
             ? (float) $penawaran->dp_awal
-            : round((float) $penawaran->total_penawaran * 0.5, 2);
+            : DpCalculator::hitung((float) $penawaran->total_penawaran);
         $grossAmount = $dpAmount;
 
         $params = [

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Customer;
 use App\Http\Controllers\Controller;
 use App\Models\PaketLayanan;
 use App\Models\Pemesanan;
+use App\Support\DpCalculator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -34,8 +35,7 @@ class PemesananCustomerController extends Controller
 
         $kode = 'PMS-'.strtoupper(substr(uniqid(), -6)).'-'.now()->format('ymd');
 
-        // DP = 50% dari harga paket
-        $dpAmount = round((float) $paket->harga * 0.5, 2);
+        $dpAmount = DpCalculator::hitung((float) $paket->harga);
 
         $pemesanan = Pemesanan::create([
             'id_user' => $request->user()->id_user,
