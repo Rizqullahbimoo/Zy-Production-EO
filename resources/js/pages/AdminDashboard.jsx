@@ -53,9 +53,9 @@ export default function AdminDashboard() {
 
   // Penawaran form states
   const [totalPenawaran, setTotalPenawaran] = useState('');
-  const [dpAwal, setDpAwal] = useState('');
   const [catatanAdmin, setCatatanAdmin] = useState('');
   const [isSubmittingPenawaran, setIsSubmittingPenawaran] = useState(false);
+  const [editingPenawaran, setEditingPenawaran] = useState(null); // penawaran object yang sedang diedit, null = mode buat baru
 
   // Kategori & Paket Event state
   const [packages, setPackages] = useState([]);
@@ -347,10 +347,20 @@ export default function AdminDashboard() {
         setSelectedCustomRequest(data);
         setSelectedCustomStatus(data.status_request);
 
-        // Reset penawaran form
-        setTotalPenawaran('');
-        setDpAwal('');
-        setCatatanAdmin('');
+        // Penawaran terbaru (jika sudah ada) -> masuk mode edit dengan data di-prefill.
+        // Belum ada penawaran sama sekali -> mode buat baru, form kosong.
+        const daftarPenawaran = data.penawaran_custom || data.penawaranCustom || [];
+        const penawaranTerbaru = daftarPenawaran.length > 0 ? daftarPenawaran[daftarPenawaran.length - 1] : null;
+
+        if (penawaranTerbaru) {
+          setEditingPenawaran(penawaranTerbaru);
+          setTotalPenawaran(String(penawaranTerbaru.total_penawaran));
+          setCatatanAdmin(penawaranTerbaru.catatan_admin || '');
+        } else {
+          setEditingPenawaran(null);
+          setTotalPenawaran('');
+          setCatatanAdmin('');
+        }
       } else {
         alert('Gagal mengambil rincian detail request custom.');
       }
@@ -392,12 +402,18 @@ export default function AdminDashboard() {
     }
   };
 
-  // Submit Penawaran (Pricing Proposal) for custom requests
+  // Submit Penawaran (Pricing Proposal) for custom requests — buat baru ATAU simpan
+  // perubahan penawaran yang sudah ada (editingPenawaran), tidak pernah keduanya.
+  const isPenawaranTerkunci = editingPenawaran?.payment_status === 'paid';
+  // DP selalu 30% dari Total Penawaran, dihitung otomatis (tidak bisa diketik manual)
+  const totalUntukDp = isPenawaranTerkunci ? Number(editingPenawaran.total_penawaran) : (parseFloat(totalPenawaran) || 0);
+  const dpOtomatis = totalUntukDp * 0.3;
+
   const handleSubmitPenawaran = async (e) => {
     e.preventDefault();
     if (!selectedCustomRequest) return;
 
-    if (!totalPenawaran || isNaN(totalPenawaran) || parseFloat(totalPenawaran) < 0) {
+    if (!isPenawaranTerkunci && (!totalPenawaran || isNaN(totalPenawaran) || parseFloat(totalPenawaran) < 0)) {
       alert('Harap masukkan total penawaran harga yang valid.');
       return;
     }
@@ -405,19 +421,22 @@ export default function AdminDashboard() {
     setIsSubmittingPenawaran(true);
     setErrorMsg('');
     try {
-      const response = await window.axios.post(`/api/admin/request-custom/${selectedCustomRequest.id_request}/penawaran`, {
-        total_penawaran: parseFloat(totalPenawaran),
-        dp_awal: dpAwal ? parseFloat(dpAwal) : 0,
-        catatan_admin: catatanAdmin
-      });
+      const payload = isPenawaranTerkunci
+        ? { total_penawaran: editingPenawaran.total_penawaran, catatan_admin: catatanAdmin }
+        : { total_penawaran: parseFloat(totalPenawaran), catatan_admin: catatanAdmin };
+
+      const response = editingPenawaran
+        ? await window.axios.patch(`/api/admin/penawaran/${editingPenawaran.id_penawaran}`, payload)
+        : await window.axios.post(`/api/admin/request-custom/${selectedCustomRequest.id_request}/penawaran`, payload);
+
       if (response.data?.status === 'success') {
-        alert('Penawaran harga berhasil dikirim!');
-        // Refresh detail view to load the newly added penawaran
+        alert(editingPenawaran ? 'Perubahan penawaran berhasil disimpan!' : 'Penawaran harga berhasil dikirim!');
+        // Refresh detail view supaya form ikut ter-prefill ulang dari data terbaru
         handleShowCustomDetail(selectedCustomRequest.id_request);
         // Refresh list
         fetchCustomRequests(customSearch, customStatusFilter);
       } else {
-        alert('Gagal mengirimkan penawaran harga.');
+        alert('Gagal menyimpan penawaran harga.');
       }
     } catch (err) {
       console.error('Error submitting penawaran:', err);
@@ -425,7 +444,7 @@ export default function AdminDashboard() {
         const validationErrs = Object.values(err.response.data.errors).flat().join('\n');
         alert(`Validasi gagal:\n${validationErrs}`);
       } else {
-        alert('Terjadi kesalahan saat mengirimkan penawaran.');
+        alert('Terjadi kesalahan saat menyimpan penawaran.');
       }
     } finally {
       setIsSubmittingPenawaran(false);
@@ -2993,7 +3012,7 @@ export default function AdminDashboard() {
                             <span className="zy-field-val" style={{fontWeight: 'bold', color: 'var(--primary)'}}>{formatRupiah(penawaran.total_penawaran)}</span>
                           </div>
                           <div className="zy-penawaran-field">
-                            <span className="zy-field-label">Minimal DP Awal</span>
+                            <span className="zy-field-label">DP Minimal (30%)</span>
                             <span className="zy-field-val">{formatRupiah(penawaran.dp_awal)}</span>
                           </div>
                           <div className="zy-penawaran-field" style={{ gridColumn: 'span 2' }}>
@@ -3016,67 +3035,74 @@ export default function AdminDashboard() {
                   </p>
                 )}
 
-                {/* Penawaran Form (Jika belum ada penawaran atau status request adalah diproses / direvisi / menunggu review) */}
-                {(!selectedCustomRequest.penawaran_custom || selectedCustomRequest.penawaran_custom.length === 0 || selectedCustomRequest.status_request === 'diproses' || selectedCustomRequest.status_request === 'menunggu') && (
-                  <form onSubmit={handleSubmitPenawaran} className="zy-penawaran-form">
-                    <h5 className="zy-penawaran-form-title">Buat Proposal Penawaran Baru</h5>
-                    <div className="zy-penawaran-form-grid">
-                      <div className="zy-form-group">
-                        <label className="zy-form-label" htmlFor="total_penawaran">Total Penawaran Harga (Rp):</label>
-                        <input
-                          type="number"
-                          id="total_penawaran"
-                          className="zy-filter-input"
-                          style={{ padding: '0.65rem 1rem' }}
-                          placeholder="Contoh: 15000000"
-                          value={totalPenawaran}
-                          onChange={(e) => setTotalPenawaran(e.target.value)}
-                          required
-                          min="0"
-                        />
-                      </div>
-                      <div className="zy-form-group">
-                        <label className="zy-form-label" htmlFor="dp_awal">Minimal DP Awal (Rp):</label>
-                        <input
-                          type="number"
-                          id="dp_awal"
-                          className="zy-filter-input"
-                          style={{ padding: '0.65rem 1rem' }}
-                          placeholder="Contoh: 5000000"
-                          value={dpAwal}
-                          onChange={(e) => setDpAwal(e.target.value)}
-                          min="0"
-                        />
-                      </div>
-                      <div className="zy-form-group" style={{ gridColumn: 'span 2' }}>
-                        <label className="zy-form-label" htmlFor="catatan_admin">Catatan Admin / Proposal Rincian:</label>
-                        <textarea
-                          id="catatan_admin"
-                          className="zy-filter-input"
-                          style={{ padding: '0.65rem 1rem', minHeight: '80px', resize: 'vertical', fontFamily: 'inherit' }}
-                          placeholder="Tuliskan rincian fasilitas yang ditawarkan atau catatan penting lainnya..."
-                          value={catatanAdmin}
-                          onChange={(e) => setCatatanAdmin(e.target.value)}
-                        />
-                      </div>
+                {/* Penawaran Form — mode "buat baru" jika belum ada penawaran sama sekali,
+                    mode "edit" (prefilled) jika request ini sudah punya penawaran. */}
+                <form onSubmit={handleSubmitPenawaran} className="zy-penawaran-form">
+                  <h5 className="zy-penawaran-form-title">
+                    {editingPenawaran ? 'Edit Proposal Penawaran' : 'Buat Proposal Penawaran Baru'}
+                  </h5>
+                  {isPenawaranTerkunci && (
+                    <p style={{ margin: '0 0 1rem', fontSize: '0.85rem', color: '#854d0e', background: '#fffbeb', border: '1px solid #fef08a', borderRadius: '6px', padding: '0.6rem 0.8rem' }}>
+                      ⚠️ DP untuk penawaran ini sudah dibayar customer. Total Penawaran &amp; DP dikunci agar tidak mismatch dengan pembayaran yang sudah masuk — hanya catatan admin yang bisa diperbarui.
+                    </p>
+                  )}
+                  <div className="zy-penawaran-form-grid">
+                    <div className="zy-form-group">
+                      <label className="zy-form-label" htmlFor="total_penawaran">Total Penawaran Harga (Rp):</label>
+                      <input
+                        type="number"
+                        id="total_penawaran"
+                        className="zy-filter-input"
+                        style={{ padding: '0.65rem 1rem' }}
+                        placeholder="Contoh: 15000000"
+                        value={totalPenawaran}
+                        onChange={(e) => setTotalPenawaran(e.target.value)}
+                        required
+                        min="0"
+                        readOnly={isPenawaranTerkunci}
+                        disabled={isPenawaranTerkunci}
+                      />
                     </div>
-                    <button
-                      type="submit"
-                      className="zy-btn-submit"
-                      style={{ marginTop: '1rem', width: '100%' }}
-                      disabled={isSubmittingPenawaran}
-                    >
-                      {isSubmittingPenawaran ? (
-                        <>
-                          <span className="zy-spinner" />
-                          Mengirim Penawaran...
-                        </>
-                      ) : (
-                        'Kirim Proposal Penawaran Harga'
-                      )}
-                    </button>
-                  </form>
-                )}
+                    <div className="zy-form-group">
+                      <label className="zy-form-label" htmlFor="dp_awal">DP Minimal 30% (Rp) — otomatis:</label>
+                      <input
+                        type="text"
+                        id="dp_awal"
+                        className="zy-filter-input"
+                        style={{ padding: '0.65rem 1rem', backgroundColor: '#f1f3f5', cursor: 'not-allowed' }}
+                        value={formatRupiah(dpOtomatis)}
+                        readOnly
+                        disabled
+                      />
+                    </div>
+                    <div className="zy-form-group" style={{ gridColumn: 'span 2' }}>
+                      <label className="zy-form-label" htmlFor="catatan_admin">Catatan Admin / Proposal Rincian:</label>
+                      <textarea
+                        id="catatan_admin"
+                        className="zy-filter-input"
+                        style={{ padding: '0.65rem 1rem', minHeight: '80px', resize: 'vertical', fontFamily: 'inherit' }}
+                        placeholder="Tuliskan rincian fasilitas yang ditawarkan atau catatan penting lainnya..."
+                        value={catatanAdmin}
+                        onChange={(e) => setCatatanAdmin(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="submit"
+                    className="zy-btn-submit"
+                    style={{ marginTop: '1rem', width: '100%' }}
+                    disabled={isSubmittingPenawaran}
+                  >
+                    {isSubmittingPenawaran ? (
+                      <>
+                        <span className="zy-spinner" />
+                        {editingPenawaran ? 'Menyimpan Perubahan...' : 'Mengirim Penawaran...'}
+                      </>
+                    ) : (
+                      editingPenawaran ? 'Simpan Perubahan' : 'Kirim Proposal Penawaran Harga'
+                    )}
+                  </button>
+                </form>
               </div>
             </div>
 

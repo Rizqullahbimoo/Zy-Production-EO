@@ -70,6 +70,74 @@ class PenawaranController extends Controller
     }
 
     /**
+     * Perbarui penawaran yang sudah ada (revisi hasil negosiasi lanjutan),
+     * bukan membuat baris baru — mencegah duplikasi riwayat penawaran.
+     *
+     * Jika DP penawaran ini sudah dibayar customer (payment_status = paid),
+     * total_penawaran & dp_awal dikunci (tidak diubah) agar tidak terjadi
+     * mismatch dengan nominal yang sudah dibayarkan; hanya catatan_admin
+     * yang tetap bisa diperbarui.
+     */
+    public function update(PenawaranRequest $request, int $id_penawaran): JsonResponse
+    {
+        $penawaran = PenawaranCustom::with('requestCustomPaket')->find($id_penawaran);
+
+        if (! $penawaran) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Penawaran tidak ditemukan.',
+            ], 404);
+        }
+
+        if ($penawaran->payment_status === 'paid') {
+            $penawaran->update([
+                'catatan_admin' => $request->catatan_admin,
+            ]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Catatan penawaran diperbarui. Total & DP tidak diubah karena DP sudah dibayar customer.',
+                'data' => $penawaran->fresh(),
+            ]);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $penawaran->update([
+                'total_penawaran' => $request->total_penawaran,
+                'dp_awal' => DpCalculator::hitung((float) $request->total_penawaran),
+                'catatan_admin' => $request->catatan_admin,
+                'status_penawaran' => 'menunggu',
+            ]);
+
+            $penawaran->requestCustomPaket->update([
+                'status_request' => 'ditawarkan',
+            ]);
+
+            DB::commit();
+
+            try {
+                Mail::to($penawaran->requestCustomPaket->user->email)->send(new PenawaranBaruMail($penawaran->fresh()));
+            } catch (\Exception $e) {
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Penawaran berhasil diperbarui.',
+                'data' => $penawaran->fresh(),
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal memperbarui penawaran: '.$e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Hapus penawaran.
      */
     public function destroy(int $id_penawaran): JsonResponse
