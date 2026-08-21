@@ -36,6 +36,15 @@ export default function CustomerKatalog() {
   const [requestSuccess, setRequestSuccess] = useState(false);
   const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
 
+  /* ── Toast notification (pengganti alert() bawaan browser) ── */
+  const [toast, setToast] = useState(null); // { type: 'success' | 'error', message }
+  const showToast = (type, message) => setToast({ type, message });
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(null), 3500);
+    return () => clearTimeout(timer);
+  }, [toast]);
+
   useEffect(() => {
     window.axios.get("/api/kategori").then(res => { if (res.data.status === "success") setCategories(res.data.data); }).catch(() => {});
     setLoadingPackages(true);
@@ -56,7 +65,11 @@ export default function CustomerKatalog() {
   const filteredPackages = selectedCategoryFilter === "all" ? packages : packages.filter(p => p.kategori.id_kategori === parseInt(selectedCategoryFilter));
 
   const openOrderModal = pkg => {
-    if (!token) { alert("Silakan login terlebih dahulu untuk memesan paket."); window.location.href = "/login"; return; }
+    if (!token) {
+      showToast('error', "Silakan login terlebih dahulu untuk memesan paket.");
+      setTimeout(() => { window.location.href = "/login"; }, 1200);
+      return;
+    }
     setOrderPackage(pkg); setOrderForm({ tanggal_acara: "", lokasi_acara: "", jumlah_tamu: "", catatan: "" }); setOrderError(""); setOrderResult(null); setShowOrderModal(true);
   };
 
@@ -104,7 +117,14 @@ export default function CustomerKatalog() {
   const handleInputChange = e => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   const handleFacilityToggle = facilityId => setFormData(prev => { const exists = prev.fasilitas.find(f => f.id_fasilitas === facilityId); if (exists) return { ...prev, fasilitas: prev.fasilitas.filter(f => f.id_fasilitas !== facilityId) }; else return { ...prev, fasilitas: [...prev.fasilitas, { id_fasilitas: facilityId, keterangan: "" }] }; });
   const handleFacilityDescChange = (facilityId, value) => setFormData(prev => ({ ...prev, fasilitas: prev.fasilitas.map(f => f.id_fasilitas === facilityId ? { ...f, keterangan: value } : f) }));
-  const openRequestModal = (prefill = {}) => { if (!token) { alert("Silakan login terlebih dahulu."); window.location.href = "/login"; return; } setShowRequestModal(true); setRequestStep(1); setRequestSuccess(false); setRequestError(""); setFormData({ id_kategori: "", tanggal_acara: "", lokasi_acara: "", jumlah_tamu: "", budget_acara: "", catatan: "", fasilitas: [], ...prefill }); };
+  const openRequestModal = (prefill = {}) => {
+    if (!token) {
+      showToast('error', "Silakan login terlebih dahulu.");
+      setTimeout(() => { window.location.href = "/login"; }, 1200);
+      return;
+    }
+    setShowRequestModal(true); setRequestStep(1); setRequestSuccess(false); setRequestError(""); setFormData({ id_kategori: "", tanggal_acara: "", lokasi_acara: "", jumlah_tamu: "", budget_acara: "", catatan: "", fasilitas: [], ...prefill });
+  };
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
@@ -381,6 +401,43 @@ export default function CustomerKatalog() {
               )}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Toast notification — pengganti alert() bawaan browser */}
+      {toast && (
+        <div
+          role="status"
+          style={{
+            position: 'fixed',
+            top: '20px',
+            right: '20px',
+            zIndex: 10000,
+            minWidth: '280px',
+            maxWidth: '420px',
+            background: '#FFFFFF',
+            border: `1px solid ${toast.type === 'success' ? 'rgba(226,154,0,0.35)' : '#FFC9C9'}`,
+            borderLeft: `4px solid ${toast.type === 'success' ? 'var(--color-primary, #E29A00)' : '#C92A2A'}`,
+            color: 'var(--color-text-main)',
+            borderRadius: '10px',
+            padding: '0.9rem 1.1rem',
+            boxShadow: '0 20px 50px rgba(30,22,6,0.18)',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '0.75rem',
+            fontSize: '0.9rem',
+            lineHeight: 1.5,
+          }}
+        >
+          <span style={{ flex: 1 }}>{toast.message}</span>
+          <button
+            type="button"
+            onClick={() => setToast(null)}
+            aria-label="Tutup notifikasi"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', fontSize: '1rem', lineHeight: 1, padding: 0 }}
+          >
+            ✕
+          </button>
         </div>
       )}
     </>

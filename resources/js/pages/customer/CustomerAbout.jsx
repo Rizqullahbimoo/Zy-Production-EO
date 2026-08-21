@@ -6,10 +6,8 @@ import { Link } from 'react-router-dom';
 
 export default function CustomerAbout() {
   const team = [
-    { name: 'Ahmad Fauzi', role: 'Founder & CEO', emoji: '👨‍💼' },
-    { name: 'Siti Rahayu', role: 'Event Director', emoji: '👩‍💼' },
-    { name: 'Budi Santoso', role: 'Creative Designer', emoji: '🎨' },
-    { name: 'Dewi Lestari', role: 'Client Relations', emoji: '🤝' },
+    { name: 'Ahmad Herryandi', role: 'Founder & CEO', photo: '/documents/assets/TEAM/ahmad-herryandi-avatar.jpg' },
+    { name: 'Anggun Meutia', role: 'Event Director', photo: '/documents/assets/TEAM/anggun-meutia-avatar.jpg' },
   ];
 
   const services = [
@@ -43,12 +41,6 @@ export default function CustomerAbout() {
     },
   ];
 
-  const legalDocuments = [
-    { title: 'Akta Pendirian Perusahaan', icon: '📄' },
-    { title: 'Nomor Induk Berusaha (NIB)', icon: '🏢' },
-    { title: 'Surat Izin Usaha Perdagangan (SIUP)', icon: '📜' },
-    { title: 'Tanda Daftar Perusahaan (TDP)', icon: '🗂️' },
-  ];
 
   return (
     <>
@@ -80,7 +72,7 @@ export default function CustomerAbout() {
       {/* ── VISI & MISI ── */}
       <section style={{ background: 'var(--color-surface-2, #F8F9FA)', padding: '4rem 0' }}>
         <div className="container">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+          <div className="about-visi-misi-grid">
             {/* Visi */}
             <div
               style={{
@@ -165,18 +157,12 @@ export default function CustomerAbout() {
       </section>
 
       {/* ── TENTANG ZY PRODUCTION ── */}
-      <section className="about-section">
+      <section className="about-section" style={{ padding: '5rem 0', overflow: 'hidden' }}>
         <div className="container">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', alignItems: 'center' }}>
+          <div className="about-tentang-grid">
+
             {/* Text */}
-            <div
-              style={{
-                background: 'var(--color-surface-2, #F8F9FA)',
-                border: '1px solid var(--color-border, #E7E7E7)',
-                borderRadius: '12px',
-                padding: '2rem',
-              }}
-            >
+            <div>
               <span className="section-tag">Tentang ZY Production</span>
               <h2 className="section-title" style={{ marginTop: '0.75rem' }}>
                 Dari Passion Menjadi Profesi Terpercaya
@@ -196,26 +182,128 @@ export default function CustomerAbout() {
                 sentuhan profesionalisme tinggi, kreativitas tanpa batas, serta komitmen penuh terhadap kepuasan
                 setiap klien.
               </p>
+
             </div>
 
-            {/* Image */}
-            <div className="about-visual">
-              <div className="visual-collage">
+            {/* Photo Collage */}
+            <div style={{ position: 'relative', height: '420px' }}>
+
+              {/* Foto Besar — persegi panjang landscape, full width */}
+              <div
+                style={{
+                  position: 'absolute',
+                  left: 0,
+                  top: 0,
+                  width: '100%',
+                  height: '55%',
+                  borderRadius: '16px',
+                  overflow: 'hidden',
+                  boxShadow: '0 20px 50px rgba(30,22,6,0.18)',
+                  transition: 'transform 0.4s ease, box-shadow 0.4s ease',
+                  zIndex: 2,
+                }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.02)'; e.currentTarget.style.boxShadow = '0 28px 60px rgba(30,22,6,0.25)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 20px 50px rgba(30,22,6,0.18)'; }}
+              >
                 <img
-                  src="/images/logo.jpg"
-                  alt="ZY Production"
-                  className="about-main-img"
-                  style={{
-                    objectFit: 'contain',
-                    backgroundColor: '#FFFFFF',
-                    boxShadow: '0 0 60px rgba(226,154,0,0.15), 0 20px 40px rgba(30,22,6,0.12)',
-                  }}
+                  src="/documents/assets/about/foto tim 1.jpeg"
+                  alt="Tim ZY Production"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
-                <div className="about-floating-card">
-                  <p className="floating-number">500+</p>
-                  <p className="floating-text">Event Sukses</p>
+                {/* Gradient overlay bottom */}
+                <div style={{
+                  position: 'absolute', bottom: 0, left: 0, right: 0, height: '40%',
+                  background: 'linear-gradient(to top, rgba(30,22,6,0.55), transparent)',
+                }} />
+                <div style={{ position: 'absolute', bottom: '1rem', left: '1rem' }}>
+                  <span style={{
+                    display: 'inline-block', background: 'rgba(226,154,0,0.9)',
+                    color: '#fff', fontSize: '10px', fontWeight: 700,
+                    padding: '3px 10px', borderRadius: '999px', letterSpacing: '0.06em',
+                    textTransform: 'uppercase',
+                  }}>Tim Profesional</span>
                 </div>
               </div>
+
+              {/* Foto Kecil Kiri — bawah kiri */}
+              <div
+                style={{
+                  position: 'absolute',
+                  left: 0,
+                  bottom: 0,
+                  width: '48.5%',
+                  height: '40%',
+                  borderRadius: '16px',
+                  overflow: 'hidden',
+                  boxShadow: '0 12px 35px rgba(30,22,6,0.15)',
+                  transition: 'transform 0.4s ease, box-shadow 0.4s ease',
+                  zIndex: 2,
+                  border: '3px solid #fff',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.boxShadow = '0 20px 45px rgba(30,22,6,0.22)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 12px 35px rgba(30,22,6,0.15)'; }}
+              >
+                <img
+                  src="/documents/assets/about/foto tim 2.jpeg"
+                  alt="Tim ZY Production 2"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              </div>
+
+              {/* Foto Kecil Kanan — bawah kanan */}
+              <div
+                style={{
+                  position: 'absolute',
+                  right: 0,
+                  bottom: 0,
+                  width: '48.5%',
+                  height: '40%',
+                  borderRadius: '16px',
+                  overflow: 'hidden',
+                  boxShadow: '0 12px 35px rgba(30,22,6,0.15)',
+                  transition: 'transform 0.4s ease, box-shadow 0.4s ease',
+                  zIndex: 2,
+                  border: '3px solid #fff',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.boxShadow = '0 20px 45px rgba(30,22,6,0.22)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 12px 35px rgba(30,22,6,0.15)'; }}
+              >
+                <img
+                  src="/documents/assets/about/foto tim 3.jpeg"
+                  alt="Tim ZY Production 3"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              </div>
+
+              {/* Gold accent blob background */}
+              <div style={{
+                position: 'absolute',
+                right: '-30px',
+                top: '20%',
+                width: '160px',
+                height: '160px',
+                borderRadius: '50%',
+                background: 'radial-gradient(circle, rgba(226,154,0,0.18) 0%, transparent 70%)',
+                zIndex: 1,
+                pointerEvents: 'none',
+              }} />
+
+              {/* Decorative dots */}
+              <div style={{
+                position: 'absolute',
+                left: '-16px',
+                bottom: '15%',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(4, 8px)',
+                gap: '6px',
+                zIndex: 1,
+                pointerEvents: 'none',
+              }}>
+                {Array.from({ length: 16 }).map((_, i) => (
+                  <div key={i} style={{ width: '5px', height: '5px', borderRadius: '50%', background: 'rgba(226,154,0,0.4)' }} />
+                ))}
+              </div>
+
             </div>
           </div>
         </div>
@@ -232,14 +320,7 @@ export default function CustomerAbout() {
             </p>
           </div>
 
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: '1.25rem',
-              marginTop: '3rem',
-            }}
-          >
+          <div className="about-services-grid" style={{ marginTop: '3rem' }}>
             {services.map((svc, i) => (
               <div
                 key={i}
@@ -312,111 +393,179 @@ export default function CustomerAbout() {
             <span className="section-tag">Legalitas</span>
             <h2 className="section-title" style={{ marginTop: '0.75rem' }}>Dokumen Legalitas Perusahaan</h2>
             <p className="section-subtitle">
-              ZY Production beroperasi secara sah dan terdaftar resmi. Berikut adalah dokumen legalitas perusahaan
-              kami.
+              ZY Production beroperasi secara sah dan terdaftar resmi. Klik dokumen untuk melihat preview.
             </p>
           </div>
 
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+              gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '1.5rem',
               marginTop: '3rem',
             }}
           >
-            {legalDocuments.map((doc, i) => (
+            {[
+              {
+                title: 'Nomor Induk Berusaha (NIB)',
+                subtitle: 'Halaman 1 & 2',
+                images: [
+                  '/documents/assets/legalitas/NIB_page-0001.jpg',
+                  '/documents/assets/legalitas/NIB_page-0002.jpg',
+                ],
+                badge: 'Terverifikasi',
+              },
+              {
+                title: 'Sertifikat BNSP RI',
+                subtitle: 'MICE (Meeting, Incentive, Convention, Exhibition)',
+                images: ['/documents/assets/legalitas/SERTIFIKAT BNSP RI - MICE.jpg'],
+                badge: 'Tersertifikasi',
+              },
+              {
+                title: 'Sertifikat BNSP RI',
+                subtitle: 'Experiential Learning',
+                images: ['/documents/assets/legalitas/SERTIFIKAT BNSP RI - EXPERIENTAL LEARNING.jpg'],
+                badge: 'Tersertifikasi',
+              },
+            ].map((doc, i) => (
               <div
                 key={i}
                 style={{
                   background: 'var(--color-bg-card, #FFFFFF)',
-                  border: '1px dashed rgba(226,154,0,0.4)',
-                  borderRadius: '14px',
-                  padding: '2rem',
-                  textAlign: 'center',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '1rem',
-                  transition: 'background 0.3s',
+                  border: '1px solid var(--color-border, #E7E7E7)',
+                  borderRadius: '16px',
+                  overflow: 'hidden',
+                  transition: 'transform 0.3s, box-shadow 0.3s, border-color 0.3s',
+                  cursor: 'pointer',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--color-primary-muted, rgba(226,154,0,0.06))')}
-                onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--color-bg-card, #FFFFFF)')}
+                onMouseEnter={e => {
+                  e.currentTarget.style.transform = 'translateY(-6px)';
+                  e.currentTarget.style.boxShadow = '0 20px 50px rgba(30,22,6,0.14)';
+                  e.currentTarget.style.borderColor = 'rgba(226,154,0,0.4)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.transform = '';
+                  e.currentTarget.style.boxShadow = '';
+                  e.currentTarget.style.borderColor = 'var(--color-border, #E7E7E7)';
+                }}
+                onClick={() => {
+                  // Open lightbox modal
+                  if (document.getElementById('legal-lightbox')) return;
+                  const overlay = document.createElement('div');
+                  overlay.id = 'legal-lightbox';
+                  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;overflow-y:auto;animation:fadeIn 0.3s ease';
+                  overlay.onclick = (ev) => { if (ev.target === overlay) overlay.remove(); };
+
+                  // Close button
+                  const closeBtn = document.createElement('button');
+                  closeBtn.innerHTML = '✕';
+                  closeBtn.style.cssText = 'position:fixed;top:1.5rem;right:1.5rem;background:rgba(255,255,255,0.15);border:none;color:#fff;font-size:1.5rem;width:44px;height:44px;border-radius:50%;cursor:pointer;z-index:10000;backdrop-filter:blur(10px);transition:background 0.2s';
+                  closeBtn.onmouseenter = () => closeBtn.style.background = 'rgba(226,154,0,0.8)';
+                  closeBtn.onmouseleave = () => closeBtn.style.background = 'rgba(255,255,255,0.15)';
+                  closeBtn.onclick = () => overlay.remove();
+                  overlay.appendChild(closeBtn);
+
+                  // Title
+                  const titleEl = document.createElement('h3');
+                  titleEl.textContent = doc.title + (doc.subtitle ? ' — ' + doc.subtitle : '');
+                  titleEl.style.cssText = 'color:#fff;font-size:1.1rem;margin-bottom:1.5rem;text-align:center';
+                  overlay.appendChild(titleEl);
+
+                  // Images container
+                  const imgContainer = document.createElement('div');
+                  imgContainer.style.cssText = 'display:flex;gap:1rem;max-width:90vw;max-height:80vh;align-items:flex-start;justify-content:center;flex-wrap:wrap';
+                  doc.images.forEach(src => {
+                    const img = document.createElement('img');
+                    img.src = src;
+                    img.alt = doc.title;
+                    img.style.cssText = 'max-height:78vh;max-width:100%;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,0.4);object-fit:contain';
+                    imgContainer.appendChild(img);
+                  });
+                  overlay.appendChild(imgContainer);
+
+                  document.body.appendChild(overlay);
+                }}
               >
-                {/* Document Placeholder Visual */}
-                <div
-                  style={{
-                    width: '70px',
-                    height: '90px',
-                    background: 'var(--color-surface-2, #F8F9FA)',
-                    border: '1px solid var(--color-border, #E7E7E7)',
-                    borderRadius: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '2rem',
-                    position: 'relative',
-                  }}
-                >
-                  {doc.icon}
-                  {/* Folded corner effect */}
-                  <div
+                {/* Preview Image */}
+                <div style={{
+                  position: 'relative',
+                  height: '260px',
+                  background: 'var(--color-surface-2, #F4F4F4)',
+                  overflow: 'hidden',
+                }}>
+                  <img
+                    src={doc.images[0]}
+                    alt={doc.title}
                     style={{
-                      position: 'absolute',
-                      top: 0,
-                      right: 0,
-                      width: '18px',
-                      height: '18px',
-                      background: 'linear-gradient(225deg, rgba(226,154,0,0.35) 50%, transparent 50%)',
-                      borderRadius: '0 8px 0 0',
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      objectPosition: 'top center',
                     }}
                   />
+                  {/* Overlay on hover hint */}
+                  <div style={{
+                    position: 'absolute', inset: 0,
+                    background: 'linear-gradient(to top, rgba(30,22,6,0.5) 0%, transparent 50%)',
+                    display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+                    paddingBottom: '1rem',
+                  }}>
+                    <span style={{
+                      background: 'rgba(255,255,255,0.95)',
+                      color: 'var(--color-text-main, #1E1606)',
+                      fontSize: '11px', fontWeight: 600,
+                      padding: '5px 14px', borderRadius: '999px',
+                      display: 'flex', alignItems: 'center', gap: '5px',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                    }}>
+                      🔍 Klik untuk Preview
+                    </span>
+                  </div>
+
+                  {/* Badge */}
+                  <div style={{ position: 'absolute', top: '0.75rem', right: '0.75rem' }}>
+                    <span style={{
+                      display: 'inline-block',
+                      background: 'rgba(34, 139, 34, 0.9)',
+                      color: '#fff', fontSize: '10px', fontWeight: 700,
+                      padding: '4px 10px', borderRadius: '999px',
+                      letterSpacing: '0.04em',
+                      boxShadow: '0 2px 8px rgba(34,139,34,0.3)',
+                    }}>✓ {doc.badge}</span>
+                  </div>
+
+                  {/* Multi-page indicator */}
+                  {doc.images.length > 1 && (
+                    <div style={{ position: 'absolute', top: '0.75rem', left: '0.75rem' }}>
+                      <span style={{
+                        display: 'inline-block',
+                        background: 'rgba(0,0,0,0.65)',
+                        backdropFilter: 'blur(8px)',
+                        color: '#fff', fontSize: '10px', fontWeight: 600,
+                        padding: '4px 10px', borderRadius: '999px',
+                      }}>📄 {doc.images.length} Halaman</span>
+                    </div>
+                  )}
                 </div>
 
-                <div>
-                  <h4 style={{ color: 'var(--color-text-main)', fontSize: '13.5px', marginBottom: '0.4rem' }}>{doc.title}</h4>
-                  <p
-                    style={{
-                      color: 'var(--color-text-muted)',
-                      fontSize: '11.5px',
-                      margin: 0,
-                      fontStyle: 'italic',
-                    }}
-                  >
-                    Dokumen segera tersedia
-                  </p>
+                {/* Card Info */}
+                <div style={{ padding: '1.25rem' }}>
+                  <h4 style={{
+                    color: 'var(--color-text-main)',
+                    fontSize: '14.5px',
+                    fontWeight: 700,
+                    marginBottom: '0.3rem',
+                  }}>{doc.title}</h4>
+                  <p style={{
+                    color: 'var(--color-text-muted)',
+                    fontSize: '12px',
+                    lineHeight: '1.5',
+                    margin: 0,
+                  }}>{doc.subtitle}</p>
                 </div>
-
-                {/* Placeholder badge */}
-                <span
-                  style={{
-                    display: 'inline-block',
-                    background: 'var(--color-primary-muted, rgba(226,154,0,0.1))',
-                    border: '1px solid rgba(226,154,0,0.3)',
-                    color: 'var(--color-primary, #E29A00)',
-                    fontSize: '11px',
-                    fontWeight: 600,
-                    padding: '3px 10px',
-                    borderRadius: '999px',
-                  }}
-                >
-                  Coming Soon
-                </span>
               </div>
             ))}
           </div>
-
-          <p
-            style={{
-              textAlign: 'center',
-              color: 'var(--color-text-muted)',
-              fontSize: '12.5px',
-              marginTop: '2rem',
-              fontStyle: 'italic',
-            }}
-          >
-            * Dokumen legalitas resmi akan segera diunggah. Untuk informasi lebih lanjut, silakan hubungi kami.
-          </p>
         </div>
       </section>
 
@@ -430,37 +579,50 @@ export default function CustomerAbout() {
               Profesional berpengalaman yang berdedikasi penuh untuk setiap event Anda.
             </p>
           </div>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: '1.5rem',
-              marginTop: '3rem',
-            }}
-          >
+          <div className="about-team-row" style={{ marginTop: '3rem' }}>
             {team.map((member, i) => (
               <div
                 key={i}
                 style={{
                   background: 'var(--color-bg-card, #FFFFFF)',
                   border: '1px solid var(--color-border, #E7E7E7)',
-                  borderRadius: '16px',
-                  padding: '2rem',
+                  borderRadius: '20px',
+                  padding: '2.5rem 3rem',
                   textAlign: 'center',
                   transition: 'transform 0.3s, box-shadow 0.3s',
+                  minWidth: '240px',
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-6px)';
-                  e.currentTarget.style.boxShadow = '0 20px 40px rgba(30,22,6,0.12)';
+                  e.currentTarget.style.boxShadow = '0 20px 50px rgba(30,22,6,0.14)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = '';
                   e.currentTarget.style.boxShadow = '';
                 }}
               >
-                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>{member.emoji}</div>
-                <h4 style={{ color: 'var(--color-text-main)', marginBottom: '0.25rem', fontSize: '1rem' }}>{member.name}</h4>
-                <p style={{ color: 'var(--color-primary, #E29A00)', fontSize: '0.8rem', margin: 0 }}>{member.role}</p>
+                {/* Photo */}
+                <div style={{
+                  width: '140px', height: '140px',
+                  borderRadius: '50%',
+                  margin: '0 auto 1.25rem',
+                  overflow: 'hidden',
+                  border: '3px solid rgba(226,154,0,0.35)',
+                  boxShadow: '0 8px 24px rgba(226,154,0,0.15)',
+                }}>
+                  <img
+                    src={member.photo}
+                    alt={member.name}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      objectPosition: 'center',
+                    }}
+                  />
+                </div>
+                <h4 style={{ color: 'var(--color-text-main)', marginBottom: '0.3rem', fontSize: '1.05rem', fontWeight: 700 }}>{member.name}</h4>
+                <p style={{ color: 'var(--color-primary, #E29A00)', fontSize: '0.8rem', margin: 0, fontWeight: 600 }}>{member.role}</p>
               </div>
             ))}
           </div>

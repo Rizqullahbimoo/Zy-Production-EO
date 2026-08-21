@@ -701,3 +701,162 @@
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ==========================================================================
+   Mobile Drawer (hamburger trigger, backdrop, close button)
+   Desktop (> 768px) is untouched — these rules only take effect at or
+   below the breakpoint already used for .zy-admin-main in admin-dashboard.css.
+   ========================================================================== */
+.zy-mobile-toggle-btn,
+.zy-mobile-close-btn {
+  display: none;
+}
+
+.zy-sidebar-backdrop {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  /* Hamburger button that opens the drawer */
+  .zy-mobile-toggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background-color: var(--white-color);
+    color: var(--black-color);
+    border: 1px solid var(--gray-color);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+    z-index: 1100;
+  }
+
+  /* Close (X) button inside the drawer header */
+  .zy-mobile-close-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: none;
+    border: 1px solid transparent;
+    color: var(--text-main);
+    cursor: pointer;
+    z-index: 10;
+  }
+
+  .zy-mobile-close-btn:hover {
+    background-color: var(--bg-hover);
+  }
+
+  /* The manual collapse toggle only makes sense on desktop's push layout;
+     on mobile the drawer is always full width and closes via the X/backdrop instead. */
+  .zy-collapse-btn {
+    display: none;
+  }
+
+  /* Backdrop overlay behind the drawer */
+  .zy-sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.45);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--transition-speed) var(--transition-cubic);
+    z-index: 1050;
+  }
+
+  .zy-sidebar-backdrop.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Sidebar becomes a fixed off-canvas drawer instead of a flex layout column,
+     so .zy-admin-main automatically reclaims the full width. */
+  .zy-sidebar-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 300px;
+    max-width: 85vw;
+    z-index: 1060;
+    transform: translateX(-100%);
+    transition: transform var(--transition-speed) var(--transition-cubic);
+  }
+
+  .zy-sidebar-wrapper.mobile-open {
+    transform: translateX(0);
+  }
+
+  /* Always render the drawer at full width — ignore the icon-only collapsed state on mobile */
+  .zy-sidebar,
+  .zy-sidebar.collapsed {
+    width: 100%;
+    min-width: 100%;
+  }
+
+  .zy-sidebar.collapsed .zy-sidebar-header {
+    padding: 24px 20px;
+    justify-content: space-between;
+  }
+
+  .zy-sidebar.collapsed .zy-brand-text {
+    opacity: 1;
+    width: auto;
+    pointer-events: auto;
+  }
+
+  .zy-sidebar.collapsed .zy-sidebar-search-box {
+    padding: 16px 20px;
+    display: block;
+  }
+
+  .zy-sidebar.collapsed .zy-sidebar-search-input {
+    opacity: 1;
+    width: 100%;
+    pointer-events: auto;
+    margin-left: 8px;
+  }
+
+  .zy-sidebar.collapsed .zy-sidebar-search-wrapper {
+    cursor: text;
+    padding: 8px 12px;
+    width: 100%;
+  }
+
+  .zy-sidebar.collapsed .zy-menu-label {
+    opacity: 1;
+    width: auto;
+    pointer-events: auto;
+    display: block;
+  }
+
+  .zy-sidebar.collapsed .zy-arrow-icon {
+    display: block;
+  }
+
+  .zy-sidebar.collapsed .zy-hover-popover,
+  .zy-sidebar:not(.collapsed) .zy-tooltip,
+  .zy-sidebar.collapsed .zy-tooltip {
+    display: none;
+  }
+
+  .zy-sidebar.collapsed .zy-profile-info {
+    opacity: 1;
+    width: auto;
+    pointer-events: auto;
+    display: flex;
+  }
+}

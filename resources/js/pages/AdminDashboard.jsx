@@ -30,6 +30,24 @@ export default function AdminDashboard() {
   const [errorMsg, setErrorMsg] = useState('');
   const [user, setUser] = useState(null);
 
+  // Toast notification & confirm modal (pengganti alert()/window.confirm() bawaan
+  // browser — dialog native memblokir seluruh event browser sampai ditutup manual,
+  // berisiko membekukan tab kalau otomasi/skrip lain sedang berjalan).
+  const [toast, setToast] = useState(null); // { type: 'success' | 'error', message }
+  const [confirmModal, setConfirmModal] = useState(null); // { title, message, onConfirm }
+
+  const showToast = (type, message) => setToast({ type, message });
+
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(null), 3500);
+    return () => clearTimeout(timer);
+  }, [toast]);
+
+  const askConfirm = (message, onConfirm, title = 'Konfirmasi Hapus') => {
+    setConfirmModal({ title, message, onConfirm });
+  };
+
   // Data Pemesanan state
   const [orders, setOrders] = useState([]);
   const [orderSearch, setOrderSearch] = useState('');
@@ -137,12 +155,12 @@ export default function AdminDashboard() {
     if (!file) return;
 
     if (!file.type.match('image.*')) {
-      alert('File harus berupa gambar (jpeg, png, jpg, gif).');
+      showToast('error', 'File harus berupa gambar (jpeg, png, jpg, gif).');
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      alert('Ukuran gambar maksimal adalah 5 MB.');
+      showToast('error', 'Ukuran gambar maksimal adalah 5 MB.');
       return;
     }
 
@@ -182,7 +200,7 @@ export default function AdminDashboard() {
 
   const handleReplyPesan = async (id) => {
     if (!replyText[id] || !replyText[id].trim()) {
-      alert('Balasan tidak boleh kosong!');
+      showToast('error', 'Balasan tidak boleh kosong!');
       return;
     }
 
@@ -192,13 +210,13 @@ export default function AdminDashboard() {
       });
 
       if (response.data?.status === 'success') {
-        alert('Balasan berhasil dikirim!');
+        showToast('success', 'Balasan berhasil dikirim!');
         setActiveReplyId(null);
         fetchPesanMasuk();
       }
     } catch (err) {
       console.error('Error replying pesan:', err);
-      alert('Gagal mengirim balasan.');
+      showToast('error', 'Gagal mengirim balasan.');
     }
   };
 
@@ -261,11 +279,11 @@ export default function AdminDashboard() {
         setSelectedOrder(response.data.data);
         setSelectedOrderStatus(response.data.data.status_pemesanan);
       } else {
-        alert('Gagal mengambil rincian detail pemesanan.');
+        showToast('error', 'Gagal mengambil rincian detail pemesanan.');
       }
     } catch (err) {
       console.error('Error fetching order detail:', err);
-      alert('Terjadi kesalahan saat mengambil rincian detail pemesanan.');
+      showToast('error', 'Terjadi kesalahan saat mengambil rincian detail pemesanan.');
     }
   };
 
@@ -289,13 +307,13 @@ export default function AdminDashboard() {
           ...prev,
           status_pemesanan: selectedOrderStatus
         }));
-        alert('Status pemesanan berhasil diperbarui!');
+        showToast('success', 'Status pemesanan berhasil diperbarui!');
       } else {
-        alert('Gagal memperbarui status.');
+        showToast('error', 'Gagal memperbarui status.');
       }
     } catch (err) {
       console.error('Error updating status:', err);
-      alert('Terjadi kesalahan saat memperbarui status pemesanan.');
+      showToast('error', 'Terjadi kesalahan saat memperbarui status pemesanan.');
     } finally {
       setIsSubmittingStatus(false);
     }
@@ -362,11 +380,11 @@ export default function AdminDashboard() {
           setCatatanAdmin('');
         }
       } else {
-        alert('Gagal mengambil rincian detail request custom.');
+        showToast('error', 'Gagal mengambil rincian detail request custom.');
       }
     } catch (err) {
       console.error('Error fetching custom request detail:', err);
-      alert('Terjadi kesalahan saat mengambil rincian detail request custom.');
+      showToast('error', 'Terjadi kesalahan saat mengambil rincian detail request custom.');
     }
   };
 
@@ -390,13 +408,13 @@ export default function AdminDashboard() {
           ...prev,
           status_request: selectedCustomStatus
         }));
-        alert('Status request custom berhasil diperbarui!');
+        showToast('success', 'Status request custom berhasil diperbarui!');
       } else {
-        alert('Gagal memperbarui status.');
+        showToast('error', 'Gagal memperbarui status.');
       }
     } catch (err) {
       console.error('Error updating custom request status:', err);
-      alert('Terjadi kesalahan saat memperbarui status request custom.');
+      showToast('error', 'Terjadi kesalahan saat memperbarui status request custom.');
     } finally {
       setIsSubmittingCustomStatus(false);
     }
@@ -414,7 +432,7 @@ export default function AdminDashboard() {
     if (!selectedCustomRequest) return;
 
     if (!isPenawaranTerkunci && (!totalPenawaran || isNaN(totalPenawaran) || parseFloat(totalPenawaran) < 0)) {
-      alert('Harap masukkan total penawaran harga yang valid.');
+      showToast('error', 'Harap masukkan total penawaran harga yang valid.');
       return;
     }
 
@@ -430,21 +448,21 @@ export default function AdminDashboard() {
         : await window.axios.post(`/api/admin/request-custom/${selectedCustomRequest.id_request}/penawaran`, payload);
 
       if (response.data?.status === 'success') {
-        alert(editingPenawaran ? 'Perubahan penawaran berhasil disimpan!' : 'Penawaran harga berhasil dikirim!');
+        showToast('success', editingPenawaran ? 'Perubahan penawaran berhasil disimpan!' : 'Penawaran harga berhasil dikirim!');
         // Refresh detail view supaya form ikut ter-prefill ulang dari data terbaru
         handleShowCustomDetail(selectedCustomRequest.id_request);
         // Refresh list
         fetchCustomRequests(customSearch, customStatusFilter);
       } else {
-        alert('Gagal menyimpan penawaran harga.');
+        showToast('error', 'Gagal menyimpan penawaran harga.');
       }
     } catch (err) {
       console.error('Error submitting penawaran:', err);
       if (err.response?.data?.errors) {
         const validationErrs = Object.values(err.response.data.errors).flat().join('\n');
-        alert(`Validasi gagal:\n${validationErrs}`);
+        showToast('error', `Validasi gagal:\n${validationErrs}`);
       } else {
-        alert('Terjadi kesalahan saat menyimpan penawaran.');
+        showToast('error', 'Terjadi kesalahan saat menyimpan penawaran.');
       }
     } finally {
       setIsSubmittingPenawaran(false);
@@ -523,7 +541,7 @@ export default function AdminDashboard() {
       }
     } catch (err) {
       console.error('Error fetching package facilities:', err);
-      alert('Gagal memuat data fasilitas paket.');
+      showToast('error', 'Gagal memuat data fasilitas paket.');
     } finally {
       setIsLoadingPackageFacilities(false);
     }
@@ -555,18 +573,18 @@ export default function AdminDashboard() {
       };
       const response = await window.axios.post(`/api/admin/kategori/${catId}/paket/${selectedPackage.id_paket}/fasilitas`, payload);
       if (response.data?.status === 'success') {
-        alert('Fasilitas paket berhasil disimpan!');
+        showToast('success', 'Fasilitas paket berhasil disimpan!');
         fetchPackages(catId);
       } else {
-        alert(response.data?.message || 'Gagal menyimpan fasilitas paket.');
+        showToast('error', response.data?.message || 'Gagal menyimpan fasilitas paket.');
       }
     } catch (err) {
       console.error('Error saving package facilities:', err);
       if (err.response?.data?.errors) {
         const validationErrs = Object.values(err.response.data.errors).flat().join('\n');
-        alert(`Validasi gagal:\n${validationErrs}`);
+        showToast('error', `Validasi gagal:\n${validationErrs}`);
       } else {
-        alert('Terjadi kesalahan saat menyimpan fasilitas paket.');
+        showToast('error', 'Terjadi kesalahan saat menyimpan fasilitas paket.');
       }
     } finally {
       setIsSubmittingPackageFacilities(false);
@@ -576,7 +594,7 @@ export default function AdminDashboard() {
   const handleSavePackage = async (e) => {
     e.preventDefault();
     if (!packageName.trim() || !packagePrice) {
-      alert('Nama paket dan harga wajib diisi.');
+      showToast('error', 'Nama paket dan harga wajib diisi.');
       return;
     }
 
@@ -621,49 +639,51 @@ export default function AdminDashboard() {
       }
 
       if (response.data?.status === 'success') {
-        alert(selectedPackage ? 'Paket layanan berhasil diperbarui!' : 'Paket layanan berhasil ditambahkan!');
+        showToast('success', selectedPackage ? 'Paket layanan berhasil diperbarui!' : 'Paket layanan berhasil ditambahkan!');
         setShowPackageModal(false);
         fetchPackages(catId);
       } else {
-        alert(response.data?.message || 'Gagal menyimpan paket.');
+        showToast('error', response.data?.message || 'Gagal menyimpan paket.');
       }
     } catch (err) {
       console.error('Error saving package:', err);
       if (err.response?.data?.errors) {
         const validationErrs = Object.values(err.response.data.errors).flat().join('\n');
-        alert(`Validasi gagal:\n${validationErrs}`);
+        showToast('error', `Validasi gagal:\n${validationErrs}`);
       } else {
-        alert('Terjadi kesalahan saat menyimpan paket.');
+        showToast('error', 'Terjadi kesalahan saat menyimpan paket.');
       }
     } finally {
       setIsSubmittingPackage(false);
     }
   };
 
-  const handleDeletePackage = async (pkgId) => {
-    if (!window.confirm('Apakah Anda yakin ingin menghapus paket layanan ini?')) {
-      return;
-    }
+  const handleDeletePackage = (pkgId, namaPaket) => {
+    askConfirm(
+      `Yakin ingin menghapus paket layanan "${namaPaket}"? Tindakan ini tidak bisa dibatalkan.`,
+      async () => {
+        setConfirmModal(null);
+        const catId = parseInt(activeTab.replace('kategori-', '')) || 1;
+        setErrorMsg('');
 
-    const catId = parseInt(activeTab.replace('kategori-', '')) || 1;
-    setErrorMsg('');
-
-    try {
-      const response = await window.axios.delete(`/api/admin/kategori/${catId}/paket/${pkgId}`);
-      if (response.data?.status === 'success') {
-        alert('Paket layanan berhasil dihapus!');
-        fetchPackages(catId);
-      } else {
-        alert(response.data?.message || 'Gagal menghapus paket.');
+        try {
+          const response = await window.axios.delete(`/api/admin/kategori/${catId}/paket/${pkgId}`);
+          if (response.data?.status === 'success') {
+            showToast('success', 'Paket layanan berhasil dihapus!');
+            fetchPackages(catId);
+          } else {
+            showToast('error', response.data?.message || 'Gagal menghapus paket.');
+          }
+        } catch (err) {
+          console.error('Error deleting package:', err);
+          if (err.response?.status === 409) {
+            showToast('error', 'Paket tidak bisa dihapus karena sudah memiliki data pemesanan.');
+          } else {
+            showToast('error', 'Terjadi kesalahan saat menghapus paket.');
+          }
+        }
       }
-    } catch (err) {
-      console.error('Error deleting package:', err);
-      if (err.response?.status === 409) {
-        alert('Paket tidak bisa dihapus karena sudah memiliki data pemesanan.');
-      } else {
-        alert('Terjadi kesalahan saat menghapus paket.');
-      }
-    }
+    );
   };
 
   const handleOpenAddCategory = () => {
@@ -683,7 +703,7 @@ export default function AdminDashboard() {
   const handleSaveCategory = async (e) => {
     e.preventDefault();
     if (!categoryName.trim()) {
-      alert('Nama kategori wajib diisi.');
+      showToast('error', 'Nama kategori wajib diisi.');
       return;
     }
 
@@ -707,48 +727,50 @@ export default function AdminDashboard() {
       }
 
       if (response.data?.status === 'success') {
-        alert(selectedCategory ? 'Kategori berhasil diperbarui!' : 'Kategori berhasil ditambahkan!');
+        showToast('success', selectedCategory ? 'Kategori berhasil diperbarui!' : 'Kategori berhasil ditambahkan!');
         setShowCategoryModal(false);
         fetchCategories();
       } else {
-        alert(response.data?.message || 'Gagal menyimpan kategori.');
+        showToast('error', response.data?.message || 'Gagal menyimpan kategori.');
       }
     } catch (err) {
       console.error('Error saving category:', err);
       if (err.response?.data?.errors) {
         const validationErrs = Object.values(err.response.data.errors).flat().join('\n');
-        alert(`Validasi gagal:\n${validationErrs}`);
+        showToast('error', `Validasi gagal:\n${validationErrs}`);
       } else {
-        alert(err.response?.data?.message || 'Terjadi kesalahan saat menyimpan kategori.');
+        showToast('error', err.response?.data?.message || 'Terjadi kesalahan saat menyimpan kategori.');
       }
     } finally {
       setIsSubmittingCategory(false);
     }
   };
 
-  const handleDeleteCategory = async (catId) => {
-    if (!window.confirm('Apakah Anda yakin ingin menghapus kategori ini?')) {
-      return;
-    }
+  const handleDeleteCategory = (catId, namaKategori) => {
+    askConfirm(
+      `Yakin ingin menghapus kategori "${namaKategori}"? Tindakan ini tidak bisa dibatalkan.`,
+      async () => {
+        setConfirmModal(null);
+        setErrorMsg('');
 
-    setErrorMsg('');
-
-    try {
-      const response = await window.axios.delete(`/api/admin/kategori/${catId}`);
-      if (response.data?.status === 'success') {
-        alert('Kategori berhasil dihapus!');
-        fetchCategories();
-      } else {
-        alert(response.data?.message || 'Gagal menghapus kategori.');
+        try {
+          const response = await window.axios.delete(`/api/admin/kategori/${catId}`);
+          if (response.data?.status === 'success') {
+            showToast('success', 'Kategori berhasil dihapus!');
+            fetchCategories();
+          } else {
+            showToast('error', response.data?.message || 'Gagal menghapus kategori.');
+          }
+        } catch (err) {
+          console.error('Error deleting category:', err);
+          if (err.response?.status === 409) {
+            showToast('error', 'Kategori tidak bisa dihapus karena masih memiliki paket layanan.');
+          } else {
+            showToast('error', 'Terjadi kesalahan saat menghapus kategori.');
+          }
+        }
       }
-    } catch (err) {
-      console.error('Error deleting category:', err);
-      if (err.response?.status === 409) {
-        alert('Kategori tidak bisa dihapus karena masih memiliki paket layanan.');
-      } else {
-        alert('Terjadi kesalahan saat menghapus kategori.');
-      }
-    }
+    );
   };
 
   // Facility (Fasilitas) CRUD handlers
@@ -771,7 +793,7 @@ export default function AdminDashboard() {
   const handleSaveFacility = async (e) => {
     e.preventDefault();
     if (!facilityName.trim()) {
-      alert('Nama fasilitas wajib diisi.');
+      showToast('error', 'Nama fasilitas wajib diisi.');
       return;
     }
 
@@ -800,49 +822,51 @@ export default function AdminDashboard() {
       }
 
       if (response.data?.status === 'success') {
-        alert(selectedFacility ? 'Fasilitas berhasil diperbarui!' : 'Fasilitas berhasil ditambahkan!');
+        showToast('success', selectedFacility ? 'Fasilitas berhasil diperbarui!' : 'Fasilitas berhasil ditambahkan!');
         setShowFacilityModal(false);
         fetchFacilities(catId);
       } else {
-        alert(response.data?.message || 'Gagal menyimpan fasilitas.');
+        showToast('error', response.data?.message || 'Gagal menyimpan fasilitas.');
       }
     } catch (err) {
       console.error('Error saving facility:', err);
       if (err.response?.data?.errors) {
         const validationErrs = Object.values(err.response.data.errors).flat().join('\n');
-        alert(`Validasi gagal:\n${validationErrs}`);
+        showToast('error', `Validasi gagal:\n${validationErrs}`);
       } else {
-        alert(err.response?.data?.message || 'Terjadi kesalahan saat menyimpan fasilitas.');
+        showToast('error', err.response?.data?.message || 'Terjadi kesalahan saat menyimpan fasilitas.');
       }
     } finally {
       setIsSubmittingFacility(false);
     }
   };
 
-  const handleDeleteFacility = async (facId) => {
-    if (!window.confirm('Apakah Anda yakin ingin menghapus fasilitas ini?')) {
-      return;
-    }
+  const handleDeleteFacility = (facId, namaFasilitas) => {
+    askConfirm(
+      `Yakin ingin menghapus fasilitas "${namaFasilitas}"? Tindakan ini tidak bisa dibatalkan.`,
+      async () => {
+        setConfirmModal(null);
+        const catId = parseInt(activeTab.replace('fasilitas-', '')) || 1;
+        setErrorMsg('');
 
-    const catId = parseInt(activeTab.replace('fasilitas-', '')) || 1;
-    setErrorMsg('');
-
-    try {
-      const response = await window.axios.delete(`/api/admin/fasilitas/${facId}`);
-      if (response.data?.status === 'success') {
-        alert('Fasilitas berhasil dihapus!');
-        fetchFacilities(catId);
-      } else {
-        alert(response.data?.message || 'Gagal menghapus fasilitas.');
+        try {
+          const response = await window.axios.delete(`/api/admin/fasilitas/${facId}`);
+          if (response.data?.status === 'success') {
+            showToast('success', 'Fasilitas berhasil dihapus!');
+            fetchFacilities(catId);
+          } else {
+            showToast('error', response.data?.message || 'Gagal menghapus fasilitas.');
+          }
+        } catch (err) {
+          console.error('Error deleting facility:', err);
+          if (err.response?.status === 409) {
+            showToast('error', 'Fasilitas tidak bisa dihapus karena sedang digunakan oleh paket atau request custom.');
+          } else {
+            showToast('error', 'Terjadi kesalahan saat menghapus fasilitas.');
+          }
+        }
       }
-    } catch (err) {
-      console.error('Error deleting facility:', err);
-      if (err.response?.status === 409) {
-        alert('Fasilitas tidak bisa dihapus karena sedang digunakan oleh paket atau request custom.');
-      } else {
-        alert('Terjadi kesalahan saat menghapus fasilitas.');
-      }
-    }
+    );
   };
 
   // Fetch gallery list
@@ -896,7 +920,7 @@ export default function AdminDashboard() {
   const handleSaveGallery = async (e) => {
     e.preventDefault();
     if (!galleryTitle.trim()) {
-      alert('Judul galeri wajib diisi.');
+      showToast('error', 'Judul galeri wajib diisi.');
       return;
     }
 
@@ -940,44 +964,45 @@ export default function AdminDashboard() {
       }
 
       if (response.data?.status === 'success') {
-        alert(selectedGallery ? 'Item galeri berhasil diperbarui!' : 'Item galeri berhasil ditambahkan!');
+        showToast('success', selectedGallery ? 'Item galeri berhasil diperbarui!' : 'Item galeri berhasil ditambahkan!');
         setShowGalleryModal(false);
         fetchGallery();
       } else {
-        alert(response.data?.message || 'Gagal menyimpan galeri.');
+        showToast('error', response.data?.message || 'Gagal menyimpan galeri.');
       }
     } catch (err) {
       console.error('Error saving gallery:', err);
       if (err.response?.data?.errors) {
         const validationErrs = Object.values(err.response.data.errors).flat().join('\n');
-        alert(`Validasi gagal:\n${validationErrs}`);
+        showToast('error', `Validasi gagal:\n${validationErrs}`);
       } else {
-        alert('Terjadi kesalahan saat menyimpan galeri.');
+        showToast('error', 'Terjadi kesalahan saat menyimpan galeri.');
       }
     } finally {
       setIsSubmittingGallery(false);
     }
   };
 
-  const handleDeleteGallery = async (id) => {
-    if (!window.confirm('Apakah Anda yakin ingin menghapus item galeri ini?')) {
-      return;
-    }
-
-    setErrorMsg('');
-
-    try {
-      const response = await window.axios.delete(`/api/admin/galeri/${id}`);
-      if (response.data?.status === 'success') {
-        alert('Item galeri berhasil dihapus!');
-        fetchGallery();
-      } else {
-        alert(response.data?.message || 'Gagal menghapus galeri.');
+  const handleDeleteGallery = (id, judul) => {
+    askConfirm(
+      `Yakin ingin menghapus item galeri "${judul}"? Tindakan ini tidak bisa dibatalkan.`,
+      async () => {
+        setConfirmModal(null);
+        setErrorMsg('');
+        try {
+          const response = await window.axios.delete(`/api/admin/galeri/${id}`);
+          if (response.data?.status === 'success') {
+            showToast('success', 'Item galeri berhasil dihapus!');
+            fetchGallery();
+          } else {
+            showToast('error', response.data?.message || 'Gagal menghapus galeri.');
+          }
+        } catch (err) {
+          console.error('Error deleting gallery:', err);
+          showToast('error', 'Terjadi kesalahan saat menghapus galeri.');
+        }
       }
-    } catch (err) {
-      console.error('Error deleting gallery:', err);
-      alert('Terjadi kesalahan saat menghapus galeri.');
-    }
+    );
   };
 
   // Fetch admin profile
@@ -1066,16 +1091,21 @@ export default function AdminDashboard() {
   };
 
   // Trigger facilities list fetch when tab starts with 'fasilitas-'
+  // ('fasilitas-layanan' itself is the dropdown parent — it's a menu-only id that
+  // never becomes activeTab — but excluded here too to mirror getTabLabel's guard)
   useEffect(() => {
-    if (activeTab.startsWith('fasilitas-')) {
+    if (activeTab.startsWith('fasilitas-') && activeTab !== 'fasilitas-layanan') {
       const catId = parseInt(activeTab.replace('fasilitas-', '')) || 1;
       fetchFacilities(catId);
     }
   }, [activeTab]);
 
   // Trigger package list fetch when tab starts with 'kategori-'
+  // 'kategori-crud' (the Kategori Event CRUD page) shares this prefix but isn't a
+  // per-category package view, so it must be excluded — otherwise this fires with
+  // a meaningless fallback catId whenever the Kategori Event tab is opened.
   useEffect(() => {
-    if (activeTab.startsWith('kategori-')) {
+    if (activeTab.startsWith('kategori-') && activeTab !== 'kategori-crud') {
       const catId = parseInt(activeTab.replace('kategori-', '')) || 1;
       fetchPackages(catId);
     }
@@ -1360,7 +1390,7 @@ export default function AdminDashboard() {
         {/* Filter Card */}
         <div className="zy-section-card fade-in" style={{ marginBottom: '1.5rem' }}>
           <h2 className="zy-section-card-title" style={{ marginBottom: '1.5rem' }}>Pilih Periode Laporan</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+          <div className="zy-laporan-period-grid">
             <div className="zy-form-group">
               <label className="zy-form-label">Bulan</label>
               <select
@@ -1424,7 +1454,7 @@ export default function AdminDashboard() {
                     link.remove();
                   })
                   .catch(err => {
-                    alert('Gagal mengunduh laporan PDF.');
+                    showToast('error', 'Gagal mengunduh laporan PDF.');
                     console.error(err);
                   });
               }}
@@ -1468,7 +1498,7 @@ export default function AdminDashboard() {
                     link.remove();
                   })
                   .catch(err => {
-                    alert('Gagal mengunduh laporan Excel.');
+                    showToast('error', 'Gagal mengunduh laporan Excel.');
                     console.error(err);
                   });
               }}
@@ -1955,7 +1985,7 @@ export default function AdminDashboard() {
                               <button
                                 className="zy-btn-submit"
                                 style={{ backgroundColor: '#FFF0F0', color: '#C92A2A', border: '1px solid #FFC9C9', padding: '0.4rem 1rem', fontSize: '0.85rem', minWidth: 'auto', height: 'auto' }}
-                                onClick={() => handleDeleteCategory(cat.id_kategori)}
+                                onClick={() => handleDeleteCategory(cat.id_kategori, cat.nama_kategori)}
                               >
                                 Hapus
                               </button>
@@ -2167,7 +2197,7 @@ export default function AdminDashboard() {
                             <button className="zy-btn-close" style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }} onClick={() => handleOpenEditModal(pkg)}>
                               Edit
                             </button>
-                            <button className="zy-btn-submit" style={{ backgroundColor: '#FFF0F0', color: '#C92A2A', border: '1px solid #FFC9C9', padding: '0.4rem 1rem', fontSize: '0.85rem', minWidth: 'auto', height: 'auto' }} onClick={() => handleDeletePackage(pkg.id_paket)}>
+                            <button className="zy-btn-submit" style={{ backgroundColor: '#FFF0F0', color: '#C92A2A', border: '1px solid #FFC9C9', padding: '0.4rem 1rem', fontSize: '0.85rem', minWidth: 'auto', height: 'auto' }} onClick={() => handleDeletePackage(pkg.id_paket, pkg.nama_paket)}>
                               Hapus
                             </button>
                           </div>
@@ -2340,7 +2370,7 @@ export default function AdminDashboard() {
                               <button
                                 className="zy-btn-submit"
                                 style={{ backgroundColor: '#FFF0F0', color: '#C92A2A', border: '1px solid #FFC9C9', padding: '0.4rem 1rem', fontSize: '0.85rem', minWidth: 'auto', height: 'auto' }}
-                                onClick={() => handleDeleteFacility(fac.id_fasilitas)}
+                                onClick={() => handleDeleteFacility(fac.id_fasilitas, fac.nama_fasilitas)}
                               >
                                 Hapus
                               </button>
@@ -2430,7 +2460,7 @@ export default function AdminDashboard() {
                           <button className="zy-btn-close" style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }} onClick={() => handleOpenEditGallery(item)}>
                             Edit
                           </button>
-                          <button className="zy-btn-submit" style={{ backgroundColor: '#FFF0F0', color: '#C92A2A', border: '1px solid #FFC9C9', padding: '0.4rem 1rem', fontSize: '0.85rem', minWidth: 'auto', height: 'auto' }} onClick={() => handleDeleteGallery(item.id_galeri)}>
+                          <button className="zy-btn-submit" style={{ backgroundColor: '#FFF0F0', color: '#C92A2A', border: '1px solid #FFC9C9', padding: '0.4rem 1rem', fontSize: '0.85rem', minWidth: 'auto', height: 'auto' }} onClick={() => handleDeleteGallery(item.id_galeri, item.judul)}>
                             Hapus
                           </button>
                         </div>
@@ -3733,6 +3763,77 @@ export default function AdminDashboard() {
             }
           }}
         />
+      )}
+
+      {/* Toast notification — pengganti alert() bawaan browser */}
+      {toast && (
+        <div
+          role="status"
+          style={{
+            position: 'fixed',
+            top: '20px',
+            right: '20px',
+            zIndex: 10000,
+            minWidth: '280px',
+            maxWidth: '420px',
+            background: toast.type === 'success' ? '#F0FFF4' : '#FFF0F0',
+            border: `1px solid ${toast.type === 'success' ? '#B9E8C4' : '#FFC9C9'}`,
+            color: toast.type === 'success' ? '#1B7A3D' : '#C92A2A',
+            borderRadius: '10px',
+            padding: '0.9rem 1.1rem',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.16)',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '0.75rem',
+            fontSize: '0.9rem',
+            lineHeight: 1.5,
+            whiteSpace: 'pre-line',
+          }}
+        >
+          <span style={{ flex: 1 }}>{toast.message}</span>
+          <button
+            type="button"
+            onClick={() => setToast(null)}
+            aria-label="Tutup notifikasi"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontSize: '1rem', lineHeight: 1, padding: 0 }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* Confirm modal — pengganti window.confirm() bawaan browser */}
+      {confirmModal && (
+        <div className="zy-modal-overlay" onClick={() => setConfirmModal(null)}>
+          <div className="zy-modal" style={{ maxWidth: '440px' }} onClick={(e) => e.stopPropagation()}>
+            <div className="zy-modal-header">
+              <h3>{confirmModal.title}</h3>
+              <button type="button" className="zy-modal-close-btn" onClick={() => setConfirmModal(null)}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="zy-modal-body">
+              <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: 1.6 }}>
+                {confirmModal.message}
+              </p>
+            </div>
+            <div className="zy-modal-footer">
+              <button
+                type="button"
+                className="zy-btn-submit"
+                style={{ backgroundColor: '#C92A2A', borderColor: '#C92A2A' }}
+                onClick={confirmModal.onConfirm}
+              >
+                Hapus
+              </button>
+              <button type="button" className="zy-btn-close" onClick={() => setConfirmModal(null)}>
+                Batal
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

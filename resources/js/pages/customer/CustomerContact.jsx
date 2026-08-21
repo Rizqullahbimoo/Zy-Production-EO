@@ -2,12 +2,21 @@
  * CustomerContact.jsx — Halaman /contact customer.
  * Berisi: Informasi kontak + form pesan langsung.
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function CustomerContact() {
   const [formState, setFormState] = useState({ nama: '', kontak: '', pesan: '' });
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  /* ── Toast notification (pengganti alert() bawaan browser) ── */
+  const [toast, setToast] = useState(null); // { type: 'success' | 'error', message }
+  const showToast = (type, message) => setToast({ type, message });
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(null), 3500);
+    return () => clearTimeout(timer);
+  }, [toast]);
 
   const handleChange = e => {
     setFormState(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -28,11 +37,11 @@ export default function CustomerContact() {
         setIsSubmitted(true);
         setFormState({ nama: '', kontak: '', pesan: '' });
       } else {
-        alert('Gagal mengirim pesan, silakan coba lagi.');
+        showToast('error', 'Gagal mengirim pesan, silakan coba lagi.');
       }
     } catch (err) {
       console.error('Error submitting pesan:', err);
-      alert('Terjadi kesalahan saat mengirim pesan.');
+      showToast('error', 'Terjadi kesalahan saat mengirim pesan.');
     } finally {
       setIsSubmitting(false);
     }
@@ -311,6 +320,43 @@ export default function CustomerContact() {
           </div>
         </div>
       </section>
+
+      {/* Toast notification — pengganti alert() bawaan browser */}
+      {toast && (
+        <div
+          role="status"
+          style={{
+            position: 'fixed',
+            top: '20px',
+            right: '20px',
+            zIndex: 10000,
+            minWidth: '280px',
+            maxWidth: '420px',
+            background: '#FFFFFF',
+            border: `1px solid ${toast.type === 'success' ? 'rgba(226,154,0,0.35)' : '#FFC9C9'}`,
+            borderLeft: `4px solid ${toast.type === 'success' ? 'var(--color-primary, #E29A00)' : '#C92A2A'}`,
+            color: 'var(--color-text-main)',
+            borderRadius: '10px',
+            padding: '0.9rem 1.1rem',
+            boxShadow: '0 20px 50px rgba(30,22,6,0.18)',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '0.75rem',
+            fontSize: '0.9rem',
+            lineHeight: 1.5,
+          }}
+        >
+          <span style={{ flex: 1 }}>{toast.message}</span>
+          <button
+            type="button"
+            onClick={() => setToast(null)}
+            aria-label="Tutup notifikasi"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', fontSize: '1rem', lineHeight: 1, padding: 0 }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
     </>
   );
 }

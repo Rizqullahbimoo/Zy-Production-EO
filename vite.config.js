@@ -10,6 +10,8 @@ export default defineConfig({
                 'resources/js/app.js',
                 'resources/js/login.jsx',
                 'resources/js/register.jsx',
+                'resources/js/forgot-password.jsx',
+                'resources/js/reset-password.jsx',
                 'resources/js/admin-dashboard.jsx',
                 'resources/js/home.jsx',
             ],

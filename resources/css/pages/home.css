@@ -788,6 +788,61 @@
   border-bottom: 1px solid var(--color-border);
 }
 
+/* About page — responsive grids (mobile-first, matching .grid-two-cols convention).
+   Fixed columns below 768px squeezed these into unreadably narrow tracks on phones. */
+.about-visi-misi-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .about-visi-misi-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.about-tentang-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3rem;
+  align-items: center;
+}
+
+@media (min-width: 768px) {
+  .about-tentang-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.about-services-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .about-services-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  .about-services-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Team cards have a fixed min-width per card (see CustomerAbout.jsx) — wrapping
+   is what keeps a card from being pushed off-canvas on narrow phones instead of
+   forcing both cards onto one row. */
+.about-team-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2.5rem;
+}
+
 .about-visual {
   width: 100%;
 }
@@ -1425,6 +1480,9 @@
 /* ── FOOTER ── */
 /* Footer sengaja gelap (off-black) sebagai aksen kontras yang disengaja, konsisten dengan palette #E29A00 / #000000 / #FFFFFF */
 .home-footer {
+  --footer-logo-size: 160px;
+  --footer-logo-gap: 32px;
+  position: relative;
   background-color: #111111;
   color: rgba(255, 255, 255, 0.55);
   padding: 60px 0 0 0;
@@ -1432,6 +1490,7 @@
 }
 
 .footer-grid {
+  position: relative;
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--spacing-2xl);
@@ -1451,8 +1510,44 @@
   gap: var(--spacing-md);
 }
 
-.home-footer .logo-text {
-  color: rgba(255, 255, 255, 0.9);
+/* Di layar sempit ia tampil sebagai grid item biasa yang membentang penuh
+   (grid-column: 1/-1) di atas ketiga kolom, supaya tidak ikut memakan slot
+   kolom brand-col/Navigasi/Kontak. Di layar lebar ia direset ke grid-column:
+   auto lalu position:absolute — dengan KEDUA sumbu grid-column/grid-row
+   auto, containing block-nya adalah padding box .footer-grid sendiri
+   (bukan grid area sempit, bukan pula 100vw viewport yang nilainya bisa
+   meleset akibat lebar scrollbar). Ini membuat posisinya presisi menempel
+   ke tepi kiri container yang sebenarnya, di ukuran layar berapa pun. */
+.footer-logo-img {
+  grid-column: 1 / -1;
+  display: block;
+  height: 72px;
+  width: auto;
+  border-radius: 8px;
+  margin: 0 auto var(--spacing-md);
+}
+
+/* Layar lebar: pindahkan logo ke sisi kiri container, sejajar baris atas
+   kolom-kolom footer, tanpa menambah tinggi footer. .footer-grid diberi
+   padding-left sebesar var(--footer-logo-size) + var(--footer-logo-gap)
+   (plus inset var(--spacing-lg) yang sama dengan posisi logo) supaya
+   brand-col/Navigasi/Kontak otomatis tergeser ke kanan dan tidak pernah
+   tertimpa logo — dijamin oleh konstruksi, bukan oleh perhitungan gutter
+   viewport yang rawan meleset. */
+@media (min-width: 1500px) {
+  .footer-logo-img {
+    grid-column: auto;
+    grid-row: auto;
+    position: absolute;
+    top: 0;
+    left: var(--spacing-lg);
+    height: var(--footer-logo-size);
+    margin: 0;
+  }
+
+  .footer-grid {
+    padding-left: calc(var(--spacing-lg) + var(--footer-logo-size) + var(--footer-logo-gap));
+  }
 }
 
 .footer-brand-desc {

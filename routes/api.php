@@ -40,6 +40,8 @@ Route::post('/pesan', [PesanKontakController::class, 'store']);
 // ─── AUTH ──────────────────────────────────────────────────────────────────────
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
 // Route yang butuh login (semua role)
 Route::middleware('auth:sanctum')->group(function () {

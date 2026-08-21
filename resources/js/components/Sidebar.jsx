@@ -5,6 +5,9 @@ export default function Sidebar({ activeItem: propActiveItem, defaultActive = 'd
   // Sidebar states
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [localActiveItem, setLocalActiveItem] = useState(defaultActive);
+  // Mobile drawer state — sidebar is hidden off-canvas below the mobile breakpoint
+  // (see sidebar.css) and opened on demand via the hamburger button.
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   // Use prop if provided, otherwise fallback to local state
   const activeItem = propActiveItem !== undefined ? propActiveItem : localActiveItem;
@@ -17,6 +20,8 @@ export default function Sidebar({ activeItem: propActiveItem, defaultActive = 'd
     if (onSelect) {
       onSelect(itemId);
     }
+    // Selecting a menu item closes the mobile drawer (no-op on desktop)
+    setIsMobileOpen(false);
   };
 
   // Notify parent of active item changes
@@ -44,6 +49,10 @@ export default function Sidebar({ activeItem: propActiveItem, defaultActive = 'd
   const handleSidebarCollapse = () => {
     setIsCollapsed(!isCollapsed);
   };
+
+  // Open/close the mobile drawer
+  const handleMobileToggle = () => setIsMobileOpen((prev) => !prev);
+  const closeMobileSidebar = () => setIsMobileOpen(false);
 
   // Close profile dropdown when clicking outside
   useEffect(() => {
@@ -142,6 +151,19 @@ export default function Sidebar({ activeItem: propActiveItem, defaultActive = 'd
         <path d="M9 3v18" />
         <path d="m13 15 3-3-3-3" />
       </svg>
+    ),
+    hamburger: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="3" y1="6" x2="21" y2="6" />
+        <line x1="3" y1="12" x2="21" y2="12" />
+        <line x1="3" y1="18" x2="21" y2="18" />
+      </svg>
+    ),
+    close: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18" />
+        <line x1="6" y1="6" x2="18" y2="18" />
+      </svg>
     )
   };
 
@@ -226,24 +248,53 @@ export default function Sidebar({ activeItem: propActiveItem, defaultActive = 'd
   };
 
   return (
-    <div className="zy-sidebar-wrapper theme-light">
-      <aside className={`zy-sidebar ${isCollapsed ? 'collapsed' : ''}`}>
+    <>
+      {/* Mobile hamburger trigger — hidden above the mobile breakpoint via CSS, and
+          unmounted while the drawer is open since the drawer's own close button takes over */}
+      {!isMobileOpen && (
+        <button
+          type="button"
+          className="zy-mobile-toggle-btn"
+          onClick={handleMobileToggle}
+          aria-label="Buka menu navigasi"
+        >
+          {icons.hamburger}
+        </button>
+      )}
 
-        {/* TOP BRAND SECTION */}
-        <div className="zy-sidebar-header">
-          <div className="zy-brand">
-            <img
-              src="/images/logo.jpg"
-              alt="ZY"
-              className="zy-brand-logo"
-              style={{ objectFit: 'contain', backgroundColor: 'transparent' }}
-            />
-            <span className="zy-brand-text">ZY Production</span>
+      {/* Backdrop overlay — only rendered visible while the mobile drawer is open */}
+      <div
+        className={`zy-sidebar-backdrop ${isMobileOpen ? 'show' : ''}`}
+        onClick={closeMobileSidebar}
+        aria-hidden="true"
+      />
+
+      <div className={`zy-sidebar-wrapper theme-light ${isMobileOpen ? 'mobile-open' : ''}`}>
+        <aside className={`zy-sidebar ${isCollapsed ? 'collapsed' : ''}`}>
+
+          {/* TOP BRAND SECTION */}
+          <div className="zy-sidebar-header">
+            <div className="zy-brand">
+              <img
+                src="/images/logo.jpg"
+                alt="ZY"
+                className="zy-brand-logo"
+                style={{ objectFit: 'contain', backgroundColor: 'transparent' }}
+              />
+              <span className="zy-brand-text">ZY Production</span>
+            </div>
+            <button className="zy-collapse-btn" onClick={handleSidebarCollapse} aria-label="Toggle Sidebar">
+              {isCollapsed ? icons.expand : icons.collapse}
+            </button>
+            <button
+              type="button"
+              className="zy-mobile-close-btn"
+              onClick={closeMobileSidebar}
+              aria-label="Tutup menu navigasi"
+            >
+              {icons.close}
+            </button>
           </div>
-          <button className="zy-collapse-btn" onClick={handleSidebarCollapse} aria-label="Toggle Sidebar">
-            {isCollapsed ? icons.expand : icons.collapse}
-          </button>
-        </div>
 
         {/* SEARCH BAR */}
         <div className="zy-sidebar-search-box">
@@ -367,7 +418,7 @@ export default function Sidebar({ activeItem: propActiveItem, defaultActive = 'd
                 {icons.admin}
                 <span>Profil Detail</span>
               </button>
-              <button className="zy-profile-popover-item danger" onClick={() => onLogout ? onLogout() : alert('Logout action triggered.')}>
+              <button className="zy-profile-popover-item danger" onClick={() => onLogout && onLogout()}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                   <polyline points="16 17 21 12 16 7" />
@@ -380,6 +431,7 @@ export default function Sidebar({ activeItem: propActiveItem, defaultActive = 'd
         </div>
 
       </aside>
-    </div>
+      </div>
+    </>
   );
 }

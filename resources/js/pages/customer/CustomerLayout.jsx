@@ -12,6 +12,12 @@ export default function CustomerLayout() {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  // Confirm modal (pengganti confirm() bawaan browser)
+  const [confirmModal, setConfirmModal] = useState(null); // { title, message, onConfirm }
+  const askConfirm = (message, onConfirm, title = 'Konfirmasi') => {
+    setConfirmModal({ title, message, onConfirm });
+  };
+
   const navigate = useNavigate();
 
   // Load auth state dari localStorage
@@ -27,7 +33,8 @@ export default function CustomerLayout() {
 
   // Logout
   const handleLogout = () => {
-    if (confirm('Apakah Anda yakin ingin keluar dari akun Anda?')) {
+    askConfirm('Apakah Anda yakin ingin keluar dari akun Anda?', () => {
+      setConfirmModal(null);
       window.axios.post('/api/logout')
         .then(() => {
           localStorage.removeItem('auth_token');
@@ -45,7 +52,7 @@ export default function CustomerLayout() {
           setToken(null);
           navigate('/');
         });
-    }
+    }, 'Konfirmasi Keluar');
   };
 
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
@@ -191,12 +198,11 @@ export default function CustomerLayout() {
       {/* ── FOOTER ── */}
       <footer className="home-footer">
         <div className="container footer-grid">
+          {/* Logo — di layar lebar duduk di sisi kiri container, kolom lain digeser ke kanan */}
+          <img src="/images/logo.jpg" alt="ZY Production" className="footer-logo-img" />
+
           {/* Col 1 */}
           <div className="footer-col brand-col">
-            <div className="logo-brand">
-              <img src="/images/logo.jpg" alt="ZY Logo" className="logo-img" />
-              <span className="logo-text">ZY <span className="text-gold">Production</span></span>
-            </div>
             <p className="footer-brand-desc">
               Mitra andalan penyelenggara event berkualitas. Menyediakan layanan paket standard dan custom terlengkap untuk mewujudkan kesuksesan event Anda.
             </p>
@@ -266,6 +272,30 @@ export default function CustomerLayout() {
           </div>
         </div>
       </footer>
+
+      {/* Confirm modal — pengganti confirm() bawaan browser */}
+      {confirmModal && (
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(5px)' }}
+          onClick={() => setConfirmModal(null)}
+        >
+          <div
+            style={{ background: '#FFFFFF', padding: '2rem', borderRadius: '15px', width: '90%', maxWidth: '420px', border: '1px solid var(--color-border, #E7E7E7)', boxShadow: '0 20px 50px rgba(30,22,6,0.18)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{ color: 'var(--color-text-main)', marginBottom: '1rem' }}>{confirmModal.title}</h3>
+            <p style={{ color: 'var(--color-text-muted)', marginBottom: '1.5rem', lineHeight: 1.6 }}>{confirmModal.message}</p>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button type="button" className="btn btn-primary" style={{ flex: 1 }} onClick={confirmModal.onConfirm}>
+                Ya, Keluar
+              </button>
+              <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={() => setConfirmModal(null)}>
+                Batal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

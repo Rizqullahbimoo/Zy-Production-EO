@@ -8,7 +8,7 @@ import '../../css/pages/register.css';
  * Responsibilities:
  *  - Page layout (hero banner, decorative background)
  *  - Async POST /api/register
- *  - Alert: success → redirect to /login, fail → show error
+ *  - Success → redirect to /login, fail → show inline error banner
  */
 export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -37,15 +37,12 @@ export default function RegisterPage() {
         const firstMsg = Object.values(backendErrors).flat()[0];
         setServerError(firstMsg || 'Validasi gagal. Periksa kembali isian Anda.');
 
-        alert(`❌ Registrasi Gagal!\n\n${firstMsg || 'Periksa kembali isian form.'}`);
-
       } else {
         // Network or server error
         const message =
           err?.response?.data?.message ||
           'Terjadi kesalahan. Silakan coba lagi.';
         setServerError(message);
-        alert(`❌ Registrasi Gagal!\n\n${message}`);
       }
     } finally {
       setIsLoading(false);

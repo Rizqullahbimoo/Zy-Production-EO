@@ -42,6 +42,9 @@
 @media (max-width: 768px) {
   .zy-admin-main {
     padding: 1rem;
+    /* Extra top clearance so page content doesn't sit under the fixed
+       hamburger button (Sidebar.jsx) that opens the mobile drawer. */
+    padding-top: 4.5rem;
   }
 }
 
@@ -251,6 +254,50 @@
 .zy-table-custom-request th:nth-child(9),
 .zy-table-custom-request td:nth-child(9) { width: 8%; }    /* Aksi */
 
+/* Laporan Keuangan — Bulan/Tahun period picker */
+.zy-laporan-period-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+/* Responsive tables — below 768px the fixed-percentage columns get crushed to
+   near-zero width (table-layout: fixed + overflow-x: hidden), which breaks text
+   one letter per line. Switch to a horizontally scrollable table instead of
+   squeezing columns, with a min-width so cells keep a readable size and a
+   right-edge shadow hinting that more content is scrollable. Desktop (> 768px)
+   keeps the existing fixed-width, no-scroll layout untouched. */
+@media (max-width: 768px) {
+  .zy-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+  }
+
+  .zy-table-wrapper::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 28px;
+    pointer-events: none;
+    background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.1));
+  }
+
+  .zy-table {
+    min-width: 640px;
+  }
+
+  .zy-table-pemesanan,
+  .zy-table-custom-request {
+    min-width: 820px;
+  }
+
+  .zy-laporan-period-grid {
+    grid-template-columns: 1fr;
+  }
+}
 
 .zy-status-badge {
   display: inline-block;

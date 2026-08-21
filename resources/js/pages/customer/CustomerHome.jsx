@@ -5,38 +5,85 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
+// Fallback statis dipakai selagi /api/galeri belum merespons, atau kalau
+// fetch gagal/kosong — supaya hero tidak pernah tampil kosong.
+const staticHeroSlides = [
+  {
+    id: 'static-wedding',
+    image: '/images/wedding.png',
+    title: 'Pernikahan Megah & Elegan',
+    desc: 'Wujudkan momen sakral sekali seumur hidup Anda dengan dekorasi eksklusif dan koordinasi tanpa cela.'
+  },
+  {
+    id: 'static-launching',
+    image: '/images/launching.png',
+    title: 'Peluncuran Produk Spektakuler',
+    desc: 'Curi perhatian pasar dengan konsep branding kreatif dan eksekusi event launching yang berkelas.'
+  },
+  {
+    id: 'static-outbound',
+    image: '/images/outbound.png',
+    title: 'Outbound & Team Building Seru',
+    desc: 'Tingkatkan soliditas dan performa tim Anda melalui aktivitas outdoor interaktif yang dirancang khusus.'
+  },
+  {
+    id: 'static-birthday',
+    image: '/images/birthday.png',
+    title: 'Pesta Ulang Tahun Berkesan',
+    desc: 'Ciptakan momen spesial hari jadi Anda dengan dekorasi tematik dan rangkaian hiburan yang meriah.'
+  },
+  {
+    id: 'static-gathering',
+    image: '/images/gathering.png',
+    title: 'Company Gathering & Gala Dinner',
+    desc: 'Pererat kebersamaan keluarga besar perusahaan Anda dalam suasana formal maupun santai penuh kehangatan.'
+  },
+  {
+    id: 'static-study',
+    image: '/images/study.png',
+    title: 'Kunjungan Studi & Edukasi Terkoordinasi',
+    desc: 'Kelola kegiatan studi lapangan sekolah maupun instansi dengan koordinasi peserta dan alur kunjungan yang tertata rapi.'
+  }
+];
+
 export default function CustomerHome() {
   const [currentHeroSlide, setCurrentHeroSlide] = useState(0);
+  const [heroSlides, setHeroSlides] = useState(staticHeroSlides);
 
-  const heroSlides = [
-    {
-      image: '/images/wedding.png',
-      title: 'Pernikahan Megah & Elegan',
-      desc: 'Wujudkan momen sakral sekali seumur hidup Anda dengan dekorasi eksklusif dan koordinasi tanpa cela.'
-    },
-    {
-      image: '/images/launching.png',
-      title: 'Peluncuran Produk Spektakuler',
-      desc: 'Curi perhatian pasar dengan konsep branding kreatif dan eksekusi event launching yang berkelas.'
-    },
-    {
-      image: '/images/outbound.png',
-      title: 'Outbound & Team Building Seru',
-      desc: 'Tingkatkan soliditas dan performa tim Anda melalui aktivitas outdoor interaktif yang dirancang khusus.'
-    },
-    {
-      image: '/images/gathering.png',
-      title: 'Company Gathering & Gala Dinner',
-      desc: 'Pererat kebersamaan keluarga besar perusahaan Anda dalam suasana formal maupun santai penuh kehangatan.'
-    }
-  ];
-
+  // Ambil data galeri yang sama dengan yang dipakai halaman Portfolio, supaya
+  // showcase di Home otomatis ikut berubah saat admin menambah/mengedit/
+  // menghapus foto lewat form Galeri Event — tidak perlu edit kode lagi.
   useEffect(() => {
+    window.axios.get('/api/galeri')
+      .then(res => {
+        if (res.data.status === 'success' && res.data.data?.length > 0) {
+          // Urutkan berdasarkan "Urutan Tampil" (ascending, terkecil duluan),
+          // lalu batasi maksimal 6 slide untuk showcase.
+          const sorted = [...res.data.data].sort((a, b) => (a.urutan ?? 0) - (b.urutan ?? 0));
+          setHeroSlides(sorted.slice(0, 6).map(item => ({
+            id: item.id_galeri,
+            image: item.foto || '/images/login-hero.jpg',
+            title: item.judul,
+            desc: item.deskripsi || ''
+          })));
+          setCurrentHeroSlide(0);
+        }
+        // Sukses tapi kosong: biarkan fallback statis yang sudah tampil.
+      })
+      .catch(() => {
+        // Gagal fetch: biarkan fallback statis yang sudah tampil.
+      });
+  }, []);
+
+  // Bergantung pada heroSlides.length supaya interval selalu selaras dengan
+  // jumlah slide saat ini — termasuk saat data live menggantikan fallback.
+  useEffect(() => {
+    if (heroSlides.length === 0) return;
     const interval = setInterval(() => {
       setCurrentHeroSlide(prev => (prev + 1) % heroSlides.length);
     }, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [heroSlides.length]);
 
   const credentials = [
     {
@@ -162,7 +209,7 @@ export default function CustomerHome() {
               <div className="slider-wrapper">
                 {heroSlides.map((slide, idx) => (
                   <div
-                    key={idx}
+                    key={slide.id}
                     className={`slider-slide ${idx === currentHeroSlide ? 'active' : ''}`}
                     style={{ backgroundImage: `url(${slide.image})` }}
                   >
@@ -177,9 +224,9 @@ export default function CustomerHome() {
                 ))}
               </div>
               <div className="slider-dots">
-                {heroSlides.map((_, idx) => (
+                {heroSlides.map((slide, idx) => (
                   <button
-                    key={idx}
+                    key={slide.id}
                     className={`slider-dot ${idx === currentHeroSlide ? 'active' : ''}`}
                     onClick={() => setCurrentHeroSlide(idx)}
                   />

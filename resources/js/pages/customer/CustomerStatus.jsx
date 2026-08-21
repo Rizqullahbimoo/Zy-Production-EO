@@ -51,6 +51,15 @@ export default function CustomerStatus() {
   const [ulasanData, setUlasanData] = useState({ id_pemesanan: null, id_request: null, rating: 5, komentar: '' });
   const [isSubmittingUlasan, setIsSubmittingUlasan] = useState(false);
 
+  /* ── Toast notification (pengganti alert() bawaan browser) ── */
+  const [toast, setToast] = useState(null); // { type: 'success' | 'error', message }
+  const showToast = (type, message) => setToast({ type, message });
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(null), 3500);
+    return () => clearTimeout(timer);
+  }, [toast]);
+
   const formatIDR = num => { if (!num) return "-"; return "Rp " + parseFloat(num).toLocaleString("id-ID", { maximumFractionDigits: 0 }); };
   const formatDateIndo = dateStr => { if (!dateStr) return "-"; const d = new Date(dateStr); const months = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"]; return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`; };
 
@@ -164,12 +173,12 @@ export default function CustomerStatus() {
             await window.axios.post(`/api/customer/payment/sync/${result.order_id}`);
             fetchPemesanan();
           },
-          onPending: () => { alert("Pembayaran tertunda. Status akan diperbarui otomatis."); fetchPemesanan(); },
-          onError: () => { alert("Pembayaran gagal. Silakan coba lagi."); },
+          onPending: () => { showToast('success', "Pembayaran tertunda. Status akan diperbarui otomatis."); fetchPemesanan(); },
+          onError: () => { showToast('error', "Pembayaran gagal. Silakan coba lagi."); },
           onClose: () => {},
         });
       }
-    } catch (err) { alert("Gagal membuka pembayaran: " + (err?.response?.data?.message || err.message)); }
+    } catch (err) { showToast('error', "Gagal membuka pembayaran: " + (err?.response?.data?.message || err.message)); }
     finally { setIsPayingPemesanan(false); }
   };
 
@@ -185,12 +194,12 @@ export default function CustomerStatus() {
             await window.axios.post(`/api/customer/payment/sync/${result.order_id}`);
             fetchMyRequests();
           },
-          onPending: () => { alert("Pembayaran tertunda. Status akan diperbarui otomatis."); fetchMyRequests(); },
-          onError: () => { alert("Pembayaran gagal. Silakan coba lagi."); },
+          onPending: () => { showToast('success', "Pembayaran tertunda. Status akan diperbarui otomatis."); fetchMyRequests(); },
+          onError: () => { showToast('error', "Pembayaran gagal. Silakan coba lagi."); },
           onClose: () => {},
         });
       }
-    } catch (err) { alert("Gagal membuka pembayaran: " + (err?.response?.data?.message || err.message)); }
+    } catch (err) { showToast('error', "Gagal membuka pembayaran: " + (err?.response?.data?.message || err.message)); }
     finally { setIsPayingCustom(false); }
   };
 
@@ -207,7 +216,7 @@ export default function CustomerStatus() {
         link.remove();
       })
       .catch(err => {
-        alert('Gagal mengunduh invoice PDF.');
+        showToast('error', 'Gagal mengunduh invoice PDF.');
         console.error(err);
       });
   };
@@ -218,14 +227,14 @@ export default function CustomerStatus() {
     window.axios.post('/api/customer/ulasan', ulasanData)
       .then(res => {
         if (res.data.status === 'success') {
-          alert('Ulasan berhasil dikirim! Terima kasih atas penilaian Anda.');
+          showToast('success', 'Ulasan berhasil dikirim! Terima kasih atas penilaian Anda.');
           setShowUlasanModal(false);
           setUlasanData({ id_pemesanan: null, id_request: null, rating: 5, komentar: '' });
           fetchPemesanan();
           fetchMyRequests();
         }
       })
-      .catch(err => alert(err.response?.data?.message || 'Gagal mengirim ulasan'))
+      .catch(err => showToast('error', err.response?.data?.message || 'Gagal mengirim ulasan'))
       .finally(() => setIsSubmittingUlasan(false));
   };
 
@@ -741,6 +750,43 @@ export default function CustomerStatus() {
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* Toast notification — pengganti alert() bawaan browser */}
+      {toast && (
+        <div
+          role="status"
+          style={{
+            position: 'fixed',
+            top: '20px',
+            right: '20px',
+            zIndex: 10000,
+            minWidth: '280px',
+            maxWidth: '420px',
+            background: '#FFFFFF',
+            border: `1px solid ${toast.type === 'success' ? 'rgba(226,154,0,0.35)' : '#FFC9C9'}`,
+            borderLeft: `4px solid ${toast.type === 'success' ? 'var(--color-primary, #E29A00)' : '#C92A2A'}`,
+            color: 'var(--color-text-main)',
+            borderRadius: '10px',
+            padding: '0.9rem 1.1rem',
+            boxShadow: '0 20px 50px rgba(30,22,6,0.18)',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '0.75rem',
+            fontSize: '0.9rem',
+            lineHeight: 1.5,
+          }}
+        >
+          <span style={{ flex: 1 }}>{toast.message}</span>
+          <button
+            type="button"
+            onClick={() => setToast(null)}
+            aria-label="Tutup notifikasi"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', fontSize: '1rem', lineHeight: 1, padding: 0 }}
+          >
+            ✕
+          </button>
         </div>
       )}
     </>

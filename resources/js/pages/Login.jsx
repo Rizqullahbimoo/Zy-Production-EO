@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import LoginForm from '../components/LoginForm';
 import '../../css/pages/login.css';
 
@@ -16,6 +16,35 @@ import '../../css/pages/login.css';
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [serverError, setServerError] = useState('');
+
+  /* ── Toast notification (pengganti alert() bawaan browser) ── */
+  const [toast, setToast] = useState(null); // { type: 'success' | 'error', message }
+  const showToast = (type, message) => setToast({ type, message });
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(null), 3500);
+    return () => clearTimeout(timer);
+  }, [toast]);
+
+  // Setelah reset password sukses, ResetPassword.jsx redirect ke sini dengan
+  // ?reset=success — tampilkan toast, lalu bersihkan URL supaya tidak muncul
+  // lagi kalau halaman di-refresh.
+  //
+  // Dibaca sekali lewat lazy initializer (murni, tanpa efek samping) alih-alih
+  // langsung di dalam useEffect — di React 18 StrictMode (dev), effect dengan
+  // dependency [] dijalankan dua kali; kalau baca+tulis URL digabung di situ,
+  // pemanggilan pertama sudah menghapus query string sebelum pemanggilan kedua
+  // (yang benar-benar bertahan) sempat membacanya, jadi toast tidak pernah
+  // muncul di alur yang sebenarnya dipakai user.
+  const [showResetToast] = useState(
+    () => new URLSearchParams(window.location.search).get('reset') === 'success'
+  );
+  useEffect(() => {
+    if (showResetToast) {
+      showToast('success', 'Password berhasil direset! Silakan login dengan password baru Anda.');
+      window.history.replaceState({}, '', '/login');
+    }
+  }, [showResetToast]);
 
   /**
    * Handle form submission — hits the real Laravel API endpoint.
@@ -60,8 +89,7 @@ export default function LoginPage() {
   };
 
   const handleForgotPassword = () => {
-    // TODO: Navigate to forgot-password flow
-    alert('Fitur lupa password belum tersedia. Hubungi administrator.');
+    window.location.href = '/forgot-password';
   };
 
   return (
@@ -107,6 +135,43 @@ export default function LoginPage() {
           serverError={serverError}
         />
       </main>
+
+      {/* Toast notification — pengganti alert() bawaan browser */}
+      {toast && (
+        <div
+          role="status"
+          style={{
+            position: 'fixed',
+            top: '20px',
+            right: '20px',
+            zIndex: 10000,
+            minWidth: '280px',
+            maxWidth: '420px',
+            background: '#FFFFFF',
+            border: `1px solid ${toast.type === 'success' ? 'rgba(226,154,0,0.35)' : '#FFC9C9'}`,
+            borderLeft: `4px solid ${toast.type === 'success' ? 'var(--color-primary, #E29A00)' : '#C92A2A'}`,
+            color: 'var(--color-text-main)',
+            borderRadius: '10px',
+            padding: '0.9rem 1.1rem',
+            boxShadow: '0 20px 50px rgba(30,22,6,0.18)',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '0.75rem',
+            fontSize: '0.9rem',
+            lineHeight: 1.5,
+          }}
+        >
+          <span style={{ flex: 1 }}>{toast.message}</span>
+          <button
+            type="button"
+            onClick={() => setToast(null)}
+            aria-label="Tutup notifikasi"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', fontSize: '1rem', lineHeight: 1, padding: 0 }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
     </div>
   );
 }
