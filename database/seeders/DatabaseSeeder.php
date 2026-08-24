@@ -21,7 +21,7 @@ class DatabaseSeeder extends Seeder
     {
         // ── Admin Account ───────────────────────────────────────────────
         $admin = User::updateOrCreate(
-            ['email' => 'admin@zyproduction.com'],
+            ['email' => 'zyproduction15@gmail.com'],
             [
                 'nama' => 'Admin ZY Production',
                 'password' => Hash::make('admin123'),

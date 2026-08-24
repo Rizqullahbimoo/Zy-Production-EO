@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Pembayaran;
 use App\Models\Pemesanan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -68,6 +69,9 @@ class PemesananController extends Controller
             ], 404);
         }
 
+        $harga = (float) ($order->paketLayanan->harga ?? 0);
+        $totalDibayar = (float) $order->pembayaran->where('status_konfirmasi', 'dikonfirmasi')->sum('jumlah_bayar');
+
         return response()->json([
             'status' => 'success',
             'data' => [
@@ -89,10 +93,77 @@ class PemesananController extends Controller
                     'kategori' => $order->paketLayanan->kategoriEvent ? $order->paketLayanan->kategoriEvent->nama_kategori : '-',
                 ] : null,
                 'pembayaran' => $order->pembayaran,
+                'total_dibayar' => $totalDibayar,
+                'sisa_pembayaran' => max(0, $harga - $totalDibayar),
                 'mou' => $order->dokumenMou ? [
                     'id_mou' => $order->dokumenMou->id_mou,
                     'status_mou' => $order->dokumenMou->status_mou,
                 ] : null,
+            ],
+        ]);
+    }
+
+    /**
+     * Catat pembayaran manual (pelunasan) untuk pemesanan yang DP-nya sudah
+     * lunas. Kalau total yang tercatat sudah menutupi harga paket, status
+     * pembayaran otomatis naik jadi 'paid' (Lunas).
+     */
+    public function recordPayment(Request $request, int $id): JsonResponse
+    {
+        $request->validate([
+            'jumlah_bayar' => ['required', 'numeric', 'min:1'],
+            'tanggal_bayar' => ['nullable', 'date'],
+            'catatan_admin' => ['nullable', 'string', 'max:1000'],
+            'bukti_pembayaran' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
+        ]);
+
+        $order = Pemesanan::with('paketLayanan')->find($id);
+
+        if (! $order) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Pemesanan tidak ditemukan.',
+            ], 404);
+        }
+
+        if ($order->payment_status !== 'dp_paid') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Pembayaran manual hanya bisa dicatat setelah DP lunas dan sebelum pemesanan lunas penuh.',
+            ], 422);
+        }
+
+        $buktiPath = $request->hasFile('bukti_pembayaran')
+            ? $request->file('bukti_pembayaran')->store('pembayaran', 'public')
+            : null;
+
+        Pembayaran::create([
+            'id_pemesanan' => $order->id_pemesanan,
+            'created_id' => $request->user()->id_user,
+            'tanggal_bayar' => $request->input('tanggal_bayar', now()->toDateString()),
+            'jumlah_bayar' => $request->jumlah_bayar,
+            'bukti_pembayaran' => $buktiPath,
+            'status_konfirmasi' => 'dikonfirmasi',
+            'catatan_admin' => $request->catatan_admin,
+        ]);
+
+        $harga = (float) ($order->paketLayanan->harga ?? 0);
+        $totalDibayar = (float) $order->pembayaran()->where('status_konfirmasi', 'dikonfirmasi')->sum('jumlah_bayar');
+
+        if ($totalDibayar >= $harga) {
+            $order->update(['payment_status' => 'paid']);
+        }
+
+        $order->load('pembayaran');
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Pembayaran berhasil dicatat.',
+            'data' => [
+                'payment_status' => $order->payment_status,
+                'pembayaran' => $order->pembayaran,
+                'total_dibayar' => $totalDibayar,
+                'sisa_pembayaran' => max(0, $harga - $totalDibayar),
             ],
         ]);
     }

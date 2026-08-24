@@ -408,7 +408,7 @@ export default function Sidebar({ activeItem: propActiveItem, defaultActive = 'd
               )}
               <div className="zy-profile-info">
                 <span className="zy-profile-name">{user ? user.nama : 'Bimo TA'}</span>
-                <span className="zy-profile-role">{user ? (user.role === 'admin' ? 'Super Admin' : user.role.toUpperCase()) : 'Super Admin'}</span>
+                <span className="zy-profile-role">{user ? (user.role === 'admin' ? 'Admin' : user.role.toUpperCase()) : 'Admin'}</span>
               </div>
             </div>
 

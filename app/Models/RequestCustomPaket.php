@@ -16,6 +16,7 @@ class RequestCustomPaket extends Model
     protected $fillable = [
         'id_user',
         'id_kategori',
+        'kode_request',
         'tanggal_request',
         'tanggal_acara',
         'lokasi_acara',

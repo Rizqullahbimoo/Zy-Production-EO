@@ -184,7 +184,7 @@ class MoUController extends Controller
                 'tipe' => 'custom',
                 'id' => $r->id_request,
                 'id_mou' => $r->dokumenMou->id_mou ?? null,
-                'kode' => 'REQ-'.str_pad($r->id_request, 3, '0', STR_PAD_LEFT),
+                'kode' => $r->kode_request,
                 'nama_pemesan' => $r->user->nama ?? '-',
                 'label' => 'Custom Paket ('.($r->kategoriEvent->nama_kategori ?? 'Custom').')',
                 'status_mou' => $r->dokumenMou->status_mou ?? 'belum_ada',
@@ -313,7 +313,7 @@ class MoUController extends Controller
 
             $data['request_custom'] = $mou->relationLoaded('requestCustomPaket') && $mou->requestCustomPaket ? [
                 'id_request' => $mou->requestCustomPaket->id_request,
-                'kode' => 'REQ-'.str_pad($mou->requestCustomPaket->id_request, 3, '0', STR_PAD_LEFT),
+                'kode' => $mou->requestCustomPaket->kode_request,
                 'kategori' => $mou->requestCustomPaket->kategoriEvent->nama_kategori ?? '-',
                 'nama_customer' => $mou->requestCustomPaket->user->nama ?? '-',
             ] : null;

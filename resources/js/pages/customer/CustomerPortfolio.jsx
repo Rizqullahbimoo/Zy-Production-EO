@@ -133,9 +133,9 @@ export default function CustomerPortfolio() {
             border: '1px solid var(--color-border, #E7E7E7)'
           }}>
             {[
-              { val: '500+', lbl: 'Event Terdokumentasi' },
-              { val: '50+',  lbl: 'Fotografer Partner' },
-              { val: '100%', lbl: 'Momen Terabadikan' },
+              { val: 'Berpengalaman', lbl: 'Bertahun-tahun' },
+              { val: 'Terpercaya',    lbl: 'Layanan Kami' },
+              { val: 'Profesional',   lbl: '& Terpercaya' },
             ].map((s, i) => (
               <div key={i} style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--color-primary, #E29A00)' }}>{s.val}</div>

@@ -15,6 +15,7 @@ class PenawaranCustom extends Model
 
     protected $fillable = [
         'id_request',
+        'kode_penawaran',
         'tanggal_penawaran',
         'total_penawaran',
         'dp_awal',

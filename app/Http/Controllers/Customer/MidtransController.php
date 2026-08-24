@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Customer;
 use App\Http\Controllers\Controller;
 use App\Mail\PembayaranBerhasilMail;
 use App\Models\DokumenMou;
+use App\Models\Pembayaran;
 use App\Models\Pemesanan;
 use App\Models\PenawaranCustom;
 use App\Support\DpCalculator;
@@ -48,8 +49,8 @@ class MidtransController extends Controller
             ], 422);
         }
 
-        if ($pemesanan->payment_status === 'paid') {
-            return response()->json(['status' => 'error', 'message' => 'Pemesanan sudah dibayar.'], 422);
+        if (in_array($pemesanan->payment_status, ['dp_paid', 'paid'])) {
+            return response()->json(['status' => 'error', 'message' => 'DP untuk pemesanan ini sudah dibayar. Sisa pembayaran dicatat oleh admin.'], 422);
         }
 
         // Jika sudah ada snap token yang valid, return saja
@@ -200,10 +201,11 @@ class MidtransController extends Controller
             $transactionStatus = $notification->transaction_status;
             $fraudStatus = $notification->fraud_status;
 
-            // Tentukan payment_status kita
-            $paymentStatus = match (true) {
-                $transactionStatus === 'capture' && $fraudStatus === 'accept' => 'paid',
-                $transactionStatus === 'settlement' => 'paid',
+            // Status "mentah" dari Midtrans, terlepas dari makna 'paid' yang beda
+            // antara pemesanan (selalu DP saja) dan penawaran custom.
+            $settledStatus = match (true) {
+                $transactionStatus === 'capture' && $fraudStatus === 'accept' => 'settled',
+                $transactionStatus === 'settlement' => 'settled',
                 $transactionStatus === 'pending' => 'pending',
                 in_array($transactionStatus, ['deny', 'cancel', 'failure']) => 'failed',
                 $transactionStatus === 'expire' => 'expired',
@@ -211,12 +213,29 @@ class MidtransController extends Controller
                 default => 'pending',
             };
 
-            // Update pemesanan paket bawaan
-            $pemesanan = Pemesanan::where('midtrans_order_id', $orderId)->first();
+            // Update pemesanan paket bawaan — Midtrans di sini SELALU cuma nge-charge
+            // DP, jadi transaksi settle berarti 'dp_paid' (menunggu pelunasan manual
+            // oleh admin), bukan 'paid' (lunas penuh).
+            $pemesanan = Pemesanan::with('paketLayanan')->where('midtrans_order_id', $orderId)->first();
             if ($pemesanan) {
-                $pemesanan->update(['payment_status' => $paymentStatus]);
-                if ($paymentStatus === 'paid') {
+                $sudahDpSebelumnya = in_array($pemesanan->payment_status, ['dp_paid', 'paid']);
+                $pemesananStatus = $settledStatus === 'settled' ? 'dp_paid' : $settledStatus;
+                $pemesanan->update(['payment_status' => $pemesananStatus]);
+
+                if ($pemesananStatus === 'dp_paid') {
                     $pemesanan->update(['status_pemesanan' => 'dikonfirmasi']);
+
+                    if (! $sudahDpSebelumnya) {
+                        Pembayaran::create([
+                            'id_pemesanan' => $pemesanan->id_pemesanan,
+                            'created_id' => null,
+                            'tanggal_bayar' => now()->toDateString(),
+                            'jumlah_bayar' => $pemesanan->dp_amount ?: DpCalculator::hitung((float) $pemesanan->paketLayanan->harga),
+                            'status_konfirmasi' => 'dikonfirmasi',
+                            'catatan_admin' => 'Pembayaran DP otomatis terverifikasi via Midtrans.',
+                        ]);
+                    }
+
                     // Send Email Notification
                     try {
                         Mail::to($pemesanan->user->email)->send(new PembayaranBerhasilMail($pemesanan, 'paket'));
@@ -225,11 +244,13 @@ class MidtransController extends Controller
                 }
             }
 
-            // Update penawaran custom
+            // Update penawaran custom — belum ada mekanisme pelunasan manual di sini,
+            // jadi 'paid' tetap dipakai sebagai penanda "DP settled" seperti sebelumnya.
             $penawaran = PenawaranCustom::where('midtrans_order_id', $orderId)->first();
             if ($penawaran) {
-                $penawaran->update(['payment_status' => $paymentStatus]);
-                if ($paymentStatus === 'paid') {
+                $penawaranStatus = $settledStatus === 'settled' ? 'paid' : $settledStatus;
+                $penawaran->update(['payment_status' => $penawaranStatus]);
+                if ($penawaranStatus === 'paid') {
                     $penawaran->update(['status_penawaran' => 'diterima']);
                     // Update status request juga
                     if ($penawaran->requestCustomPaket) {
@@ -263,9 +284,9 @@ class MidtransController extends Controller
             $transactionStatus = $status->transaction_status;
             $fraudStatus = $status->fraud_status ?? null;
 
-            $paymentStatus = match (true) {
-                $transactionStatus === 'capture' && $fraudStatus === 'accept' => 'paid',
-                $transactionStatus === 'settlement' => 'paid',
+            $settledStatus = match (true) {
+                $transactionStatus === 'capture' && $fraudStatus === 'accept' => 'settled',
+                $transactionStatus === 'settlement' => 'settled',
                 $transactionStatus === 'pending' => 'pending',
                 in_array($transactionStatus, ['deny', 'cancel', 'failure']) => 'failed',
                 $transactionStatus === 'expire' => 'expired',
@@ -273,20 +294,35 @@ class MidtransController extends Controller
                 default => 'pending',
             };
 
-            // Update pemesanan paket bawaan
-            $pemesanan = Pemesanan::where('midtrans_order_id', $orderId)->first();
+            // Update pemesanan paket bawaan (lihat notification() untuk penjelasan
+            // kenapa settle = 'dp_paid', bukan 'paid')
+            $reportedStatus = $settledStatus === 'settled' ? 'dp_paid' : $settledStatus;
+            $pemesanan = Pemesanan::with('paketLayanan')->where('midtrans_order_id', $orderId)->first();
             if ($pemesanan) {
-                $pemesanan->update(['payment_status' => $paymentStatus]);
-                if ($paymentStatus === 'paid') {
+                $sudahDpSebelumnya = in_array($pemesanan->payment_status, ['dp_paid', 'paid']);
+                $pemesanan->update(['payment_status' => $reportedStatus]);
+                if ($reportedStatus === 'dp_paid') {
                     $pemesanan->update(['status_pemesanan' => 'dikonfirmasi']);
+
+                    if (! $sudahDpSebelumnya) {
+                        Pembayaran::create([
+                            'id_pemesanan' => $pemesanan->id_pemesanan,
+                            'created_id' => null,
+                            'tanggal_bayar' => now()->toDateString(),
+                            'jumlah_bayar' => $pemesanan->dp_amount ?: DpCalculator::hitung((float) $pemesanan->paketLayanan->harga),
+                            'status_konfirmasi' => 'dikonfirmasi',
+                            'catatan_admin' => 'Pembayaran DP otomatis terverifikasi via Midtrans (sync manual).',
+                        ]);
+                    }
                 }
             }
 
             // Update penawaran custom
             $penawaran = PenawaranCustom::where('midtrans_order_id', $orderId)->first();
             if ($penawaran) {
-                $penawaran->update(['payment_status' => $paymentStatus]);
-                if ($paymentStatus === 'paid') {
+                $penawaranStatus = $settledStatus === 'settled' ? 'paid' : $settledStatus;
+                $penawaran->update(['payment_status' => $penawaranStatus]);
+                if ($penawaranStatus === 'paid') {
                     $penawaran->update(['status_penawaran' => 'diterima']);
                     if ($penawaran->requestCustomPaket) {
                         $penawaran->requestCustomPaket->update(['status_request' => 'diterima']);
@@ -294,7 +330,7 @@ class MidtransController extends Controller
                 }
             }
 
-            return response()->json(['status' => 'success', 'payment_status' => $paymentStatus]);
+            return response()->json(['status' => 'success', 'payment_status' => $pemesanan?->payment_status ?? $penawaran?->payment_status ?? $reportedStatus]);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',

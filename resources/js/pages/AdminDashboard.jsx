@@ -56,6 +56,11 @@ export default function AdminDashboard() {
   const [isSubmittingStatus, setIsSubmittingStatus] = useState(false);
   const [isLoadingOrders, setIsLoadingOrders] = useState(false);
   const [selectedOrderStatus, setSelectedOrderStatus] = useState('');
+  const [paymentAmount, setPaymentAmount] = useState('');
+  const [paymentNote, setPaymentNote] = useState('');
+  const [paymentProofFile, setPaymentProofFile] = useState(null);
+  const [paymentProofInputKey, setPaymentProofInputKey] = useState(0);
+  const [isRecordingPayment, setIsRecordingPayment] = useState(false);
 
   // Custom Paket state
   const [customRequests, setCustomRequests] = useState([]);
@@ -278,12 +283,48 @@ export default function AdminDashboard() {
       if (response.data?.status === 'success') {
         setSelectedOrder(response.data.data);
         setSelectedOrderStatus(response.data.data.status_pemesanan);
+        setPaymentAmount('');
+        setPaymentNote('');
+        setPaymentProofFile(null);
+        setPaymentProofInputKey((k) => k + 1);
       } else {
         showToast('error', 'Gagal mengambil rincian detail pemesanan.');
       }
     } catch (err) {
       console.error('Error fetching order detail:', err);
       showToast('error', 'Terjadi kesalahan saat mengambil rincian detail pemesanan.');
+    }
+  };
+
+  // Catat pembayaran manual (pelunasan) di dalam modal Detail Pemesanan
+  const handleRecordPayment = async (e) => {
+    e.preventDefault();
+    if (!selectedOrder || !paymentAmount) return;
+
+    setIsRecordingPayment(true);
+    try {
+      const formData = new FormData();
+      formData.append('jumlah_bayar', paymentAmount);
+      if (paymentNote) formData.append('catatan_admin', paymentNote);
+      if (paymentProofFile) formData.append('bukti_pembayaran', paymentProofFile);
+
+      const response = await window.axios.post(`/api/admin/pemesanan/${selectedOrder.id_pemesanan}/pembayaran`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      if (response.data?.status === 'success') {
+        showToast('success', response.data.data.payment_status === 'paid'
+          ? 'Pembayaran dicatat — pemesanan sekarang Lunas!'
+          : 'Pembayaran berhasil dicatat.');
+        fetchOrders(orderSearch, orderStatusFilter);
+        handleShowDetail(selectedOrder.id_pemesanan);
+      } else {
+        showToast('error', response.data?.message || 'Gagal mencatat pembayaran.');
+      }
+    } catch (err) {
+      console.error('Error recording payment:', err);
+      showToast('error', err?.response?.data?.message || 'Terjadi kesalahan saat mencatat pembayaran.');
+    } finally {
+      setIsRecordingPayment(false);
     }
   };
 
@@ -1183,8 +1224,9 @@ export default function AdminDashboard() {
       setUser(JSON.parse(userData));
     }
 
-    // Set auth header globally for Axios
-    window.axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    // Auth header is attached per-request by the axios interceptor in
+    // bootstrap.js (reads auth_token from localStorage), no manual
+    // assignment needed here.
 
     const fetchDashboardData = async () => {
       try {
@@ -1738,6 +1780,8 @@ export default function AdminDashboard() {
                             <td>
                               {order.payment_status === 'paid' ? (
                                 <span className="zy-status-badge status-diproses">Lunas</span>
+                              ) : order.payment_status === 'dp_paid' ? (
+                                <span className="zy-status-badge status-menunggu-konfirmasi">DP Lunas</span>
                               ) : (
                                 <span className="zy-status-badge status-menunggu-verifikasi">Belum Lunas</span>
                               )}
@@ -1859,7 +1903,7 @@ export default function AdminDashboard() {
                     <tbody>
                       {customRequests.map((req) => {
                         const statusObj = getCustomRequestStatusDetails(req.status_request, req.id_request);
-                        const requestCode = `REQ-${String(req.id_request).padStart(3, '0')}`;
+                        const requestCode = req.kode_request;
                         const categoryName = req.kategori_event?.nama_kategori || req.kategoriEvent?.nama_kategori || (req.id_kategori === 1 ? 'Wedding Event' : req.id_kategori === 2 ? 'Outbound' : req.id_kategori === 3 ? 'Launching Product' : req.id_kategori === 4 ? 'Study Field' : req.id_kategori === 5 ? 'Birthday Party' : req.id_kategori === 6 ? 'Gathering' : '-');
                         return (
                           <tr key={req.id_request}>
@@ -2524,7 +2568,7 @@ export default function AdminDashboard() {
                 />
                 <h3 className="zy-profile-name">{profileNama || 'Administrator'}</h3>
                 <span className="zy-profile-role-badge">
-                  {user ? (user.role === 'admin' ? 'SUPER ADMIN' : user.role.toUpperCase()) : 'SUPER ADMIN'}
+                  {user ? (user.role === 'admin' ? 'ADMIN' : user.role.toUpperCase()) : 'ADMIN'}
                 </span>
 
                 <button
@@ -2760,11 +2804,20 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              {/* Status Midtrans Pembayaran */}
+              {/* Status Pembayaran */}
               <div className="zy-modal-section" style={{ backgroundColor: selectedOrder.payment_status === 'paid' ? '#f0fdf4' : '#fffbeb', padding: '1rem', borderRadius: '8px', border: `1px solid ${selectedOrder.payment_status === 'paid' ? '#bbf7d0' : '#fef08a'}`, marginBottom: '1.5rem' }}>
                 <h4 style={{ margin: 0, fontSize: '0.95rem', color: selectedOrder.payment_status === 'paid' ? '#166534' : '#854d0e', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  {selectedOrder.payment_status === 'paid' ? '✅ Pembayaran Midtrans: Lunas' : '⏳ Pembayaran Midtrans: Belum Lunas / Pending'}
+                  {selectedOrder.payment_status === 'paid'
+                    ? '✅ Pembayaran: Lunas'
+                    : selectedOrder.payment_status === 'dp_paid'
+                    ? '🟡 Pembayaran DP Midtrans: Lunas — Menunggu Pelunasan'
+                    : '⏳ Pembayaran Midtrans: Belum Lunas / Pending'}
                 </h4>
+                {selectedOrder.payment_status === 'dp_paid' && (
+                  <p style={{ margin: '0.5rem 0 0', fontSize: '0.85rem', color: '#854d0e' }}>
+                    Sisa pembayaran: <strong>{formatRupiah(selectedOrder.sisa_pembayaran ?? (selectedOrder.paket?.harga - (selectedOrder.total_dibayar || 0)))}</strong>
+                  </p>
+                )}
               </div>
 
               {/* Section 3: Detail Event / Acara */}
@@ -2848,6 +2901,64 @@ export default function AdminDashboard() {
                     Belum ada riwayat pembayaran yang tercatat untuk pemesanan ini.
                   </p>
                 )}
+
+                {/* Catat Pelunasan — hanya muncul setelah DP lunas dan sebelum lunas penuh */}
+                {selectedOrder.payment_status === 'dp_paid' && (
+                  <div style={{ marginTop: '1.25rem', background: '#f8f9fa', padding: '1rem', borderRadius: '8px', border: '1px solid var(--neutral-light)' }}>
+                    <h5 style={{ margin: '0 0 0.75rem', fontSize: '0.85rem', fontWeight: 700, color: 'var(--dark)' }}>
+                      Catat Pelunasan
+                    </h5>
+                    <form onSubmit={handleRecordPayment} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                      <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                        <div className="zy-form-group" style={{ flex: '1 1 160px', margin: 0 }}>
+                          <label className="zy-form-label">Jumlah Dibayar</label>
+                          <input
+                            type="number"
+                            className="zy-filter-input"
+                            value={paymentAmount}
+                            onChange={(e) => setPaymentAmount(e.target.value)}
+                            min="1"
+                            step="1"
+                            placeholder="Contoh: 1500000"
+                            required
+                          />
+                        </div>
+                        <div className="zy-form-group" style={{ flex: '2 1 220px', margin: 0 }}>
+                          <label className="zy-form-label">Catatan (opsional)</label>
+                          <input
+                            type="text"
+                            className="zy-filter-input"
+                            value={paymentNote}
+                            onChange={(e) => setPaymentNote(e.target.value)}
+                            placeholder="Transfer BCA a.n. ..."
+                          />
+                        </div>
+                      </div>
+                      <div className="zy-form-group" style={{ margin: 0 }}>
+                        <label className="zy-form-label">Bukti Pembayaran (opsional)</label>
+                        <input
+                          key={paymentProofInputKey}
+                          type="file"
+                          className="zy-filter-input"
+                          accept=".pdf,.jpg,.jpeg,.png"
+                          onChange={(e) => setPaymentProofFile(e.target.files[0] || null)}
+                          style={{ padding: '0.45rem' }}
+                        />
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                          PDF, JPG, atau PNG — maks 5MB. Berguna sebagai arsip bukti transfer kalau nanti diperlukan.
+                        </span>
+                      </div>
+                      <button
+                        type="submit"
+                        className="zy-btn-submit"
+                        disabled={isRecordingPayment || !paymentAmount}
+                        style={{ height: 'auto', minWidth: 'auto', padding: '0.6rem 1.25rem', alignSelf: 'flex-start' }}
+                      >
+                        {isRecordingPayment ? 'Menyimpan...' : 'Catat Pembayaran'}
+                      </button>
+                    </form>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -2908,7 +3019,7 @@ export default function AdminDashboard() {
           <div className="zy-modal" onClick={(e) => e.stopPropagation()}>
             {/* Modal Header */}
             <div className="zy-modal-header">
-              <h3>Detail Request Custom: REQ-{String(selectedCustomRequest.id_request).padStart(3, '0')}</h3>
+              <h3>Detail Request Custom: {selectedCustomRequest.kode_request}</h3>
               <button className="zy-modal-close-btn" onClick={() => setSelectedCustomRequest(null)}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

@@ -10,7 +10,7 @@
         $namaPaket = $isPaket
             ? ($mou->pemesanan->paketLayanan->nama_paket ?? 'Paket Layanan')
             : ('Custom Event (' . ($mou->requestCustomPaket->kategoriEvent->nama_kategori ?? 'Custom') . ')');
-        $kode = $isPaket ? $mou->pemesanan->kode_pemesanan : ('REQ-' . str_pad($mou->id_request, 3, '0', STR_PAD_LEFT));
+        $kode = $isPaket ? $mou->pemesanan->kode_pemesanan : $mou->requestCustomPaket->kode_request;
         $link = rtrim(config('app.url'), '/') . '/status';
     @endphp
 

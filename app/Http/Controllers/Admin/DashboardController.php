@@ -49,7 +49,7 @@ class DashboardController extends Controller
 
                 return [
                     'id' => $r->id_request,
-                    'kode' => 'REQ-'.str_pad($r->id_request, 3, '0', STR_PAD_LEFT),
+                    'kode' => $r->kode_request,
                     'nama_pemesan' => $r->user ? $r->user->nama : '-',
                     'paket' => 'Custom Paket ('.$categoryName.')',
                     'tanggal_acara' => $r->tanggal_acara ? $r->tanggal_acara->format('Y-m-d') : null,

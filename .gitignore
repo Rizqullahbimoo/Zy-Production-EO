@@ -25,3 +25,8 @@ Thumbs.db
 *.stackdump
 .claude/scheduled_tasks.lock
 .claude/settings.local.json
+
+# Database dumps & local-only DB file (never commit real data)
+/database/backups
+/database/*.sqlite
+/database/*.sqlite-journal

@@ -461,7 +461,7 @@ export default function CustomerStatus() {
                       {myRequests.map(req => (
                         <div key={req.id_request} className={`status-item-card ${selectedRequest?.id_request === req.id_request ? "active" : ""}`} onClick={() => setSelectedRequest(req)}>
                           <div className="status-item-header">
-                            <span className="req-code">REQ #{req.id_request}</span>
+                            <span className="req-code">{req.kode_request}</span>
                             <span className={`status-badge ${getStatusBadge(req.status_request)}`}>{req.status_request.toUpperCase()}</span>
                           </div>
                           <h4 className="req-category">{req.kategori_event?.nama_kategori || "Event Custom"}</h4>
@@ -478,7 +478,7 @@ export default function CustomerStatus() {
                       <div className="detail-pane-content">
                         <div className="detail-pane-header">
                           <div>
-                            <h3>Request Custom #{selectedRequest.id_request}</h3>
+                            <h3>Request Custom {selectedRequest.kode_request}</h3>
                             <p className="submit-timestamp">Diajukan: {new Date(selectedRequest.tanggal_request || selectedRequest.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })} WIB</p>
                           </div>
                           <span className={`status-badge-lg ${getStatusBadge(selectedRequest.status_request)}`}>{getStatusLabel(selectedRequest.status_request)}</span>
@@ -571,7 +571,7 @@ export default function CustomerStatus() {
                                   )}
                                   {offer.payment_status !== "paid" && (
                                     <p className="whatsapp-prompt" style={{ marginTop: "10px" }}>
-                                      💡 Untuk negosiasi lebih lanjut, hubungi kami di WhatsApp <strong>+62 821-3456-7890</strong> dengan kode <strong>REQ #{selectedRequest.id_request}</strong>.
+                                      💡 Untuk negosiasi lebih lanjut, hubungi kami di WhatsApp <strong>+62 812-7777-427</strong> dengan kode <strong>{selectedRequest.kode_request}</strong>.
                                     </p>
                                   )}
                                 </div>
@@ -581,7 +581,7 @@ export default function CustomerStatus() {
                         ) : (
                           selectedRequest.status_request === "menunggu" && (
                             <div className="waiting-offer-notice">
-                              <div className="icon-pulse"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 14 14" /></svg></div>
+                              <div><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 14 14" /></svg></div>
                               <div><h5>Menunggu Penawaran Admin</h5><p>Tim planner kami sedang meninjau spesifikasi fasilitas yang Anda pilih untuk menghitung biaya penawaran resmi.</p></div>
                             </div>
                           )
@@ -685,7 +685,7 @@ export default function CustomerStatus() {
                             </div>
                           ) : (
                             <div style={{ marginTop: "1rem", textAlign: "center", padding: "2rem", background: "var(--color-surface-2, #F8F9FA)", borderRadius: "12px", border: "1px dashed var(--color-border)" }}>
-                              <div className="icon-pulse" style={{ marginBottom: "1rem", color: "var(--color-text-muted)" }}><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 14 14" /></svg></div>
+                              <div style={{ marginBottom: "1rem", color: "var(--color-text-muted)" }}><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 14 14" /></svg></div>
                               <p style={{ color: 'var(--color-text-muted)', margin: 0 }}>Mohon kesediaannya menunggu. Tim Planner ZY Production akan segera merespons pertanyaan Anda.</p>
                             </div>
                           )}

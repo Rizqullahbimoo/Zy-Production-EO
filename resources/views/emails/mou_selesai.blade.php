@@ -7,7 +7,7 @@
     @php
         $isPaket = $mou->id_pemesanan !== null;
         $nama = $isPaket ? ($mou->pemesanan->user->nama ?? 'Customer') : ($mou->requestCustomPaket->user->nama ?? 'Customer');
-        $kode = $isPaket ? $mou->pemesanan->kode_pemesanan : ('REQ-' . str_pad($mou->id_request, 3, '0', STR_PAD_LEFT));
+        $kode = $isPaket ? $mou->pemesanan->kode_pemesanan : $mou->requestCustomPaket->kode_request;
         $link = rtrim(config('app.url'), '/') . '/status';
     @endphp
 

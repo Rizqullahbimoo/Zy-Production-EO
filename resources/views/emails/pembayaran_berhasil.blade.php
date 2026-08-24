@@ -7,7 +7,7 @@
     @php
         $nama = $jenis === 'paket' ? $pemesanan->user->nama : $pemesanan->requestCustomPaket->user->nama;
         $total = $jenis === 'paket' ? $pemesanan->paketLayanan->harga : $pemesanan->total_harga;
-        $orderId = $jenis === 'paket' ? $pemesanan->kode_pemesanan : 'REQ-'.$pemesanan->id_request;
+        $orderId = $jenis === 'paket' ? $pemesanan->kode_pemesanan : $pemesanan->kode_penawaran;
     @endphp
 
     <h2>Halo, {{ $nama }}!</h2>

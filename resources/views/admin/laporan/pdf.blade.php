@@ -65,7 +65,7 @@
                 @php $totalCustom += $c->total_harga; @endphp
                 <tr>
                     <td>{{ $c->created_at->format('d/m/Y') }}</td>
-                    <td>REQ-{{ $c->id_request }}</td>
+                    <td>{{ $c->requestCustomPaket->kode_request }}</td>
                     <td>{{ $c->requestCustomPaket->user->nama }}</td>
                     <td>{{ Str::limit($c->catatan_admin, 30) }}</td>
                     <td class="text-right">{{ number_format($c->total_harga, 0, ',', '.') }}</td>

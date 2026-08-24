@@ -21,12 +21,15 @@ class RequestCustomController extends Controller
 
         if ($search) {
             $query->where(function ($q) use ($search) {
+                $q->where('kode_request', 'like', "%{$search}%");
+
                 // Hapus awalan 'REQ-' jika dimasukkan user untuk mencari id_request secara numerik
+                // (fallback untuk data lama / pencarian manual pakai ID mentah)
                 $numericSearch = preg_replace('/^req-/i', '', trim($search));
                 $numericSearch = ltrim($numericSearch, '0');
 
                 if (is_numeric($numericSearch) && $numericSearch !== '') {
-                    $q->where('id_request', $numericSearch);
+                    $q->orWhere('id_request', $numericSearch);
                 }
 
                 $q->orWhereHas('user', function ($uq) use ($search) {

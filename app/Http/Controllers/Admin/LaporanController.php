@@ -84,8 +84,7 @@ class LaporanController extends Controller
             }
 
             foreach ($custom as $c) {
-                $reqId = $c->requestCustomPaket->id_request ?? '-';
-                $sheet->setCellValue('A'.$row, 'REQ-'.str_pad($reqId, 3, '0', STR_PAD_LEFT));
+                $sheet->setCellValue('A'.$row, $c->requestCustomPaket->kode_request ?? '-');
                 $sheet->setCellValue('B'.$row, $c->created_at->format('Y-m-d'));
                 $sheet->setCellValue('C'.$row, $c->requestCustomPaket->user->name ?? '-');
                 $sheet->setCellValue('D'.$row, 'Custom Paket');

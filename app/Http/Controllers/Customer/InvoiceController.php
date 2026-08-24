@@ -39,6 +39,6 @@ class InvoiceController extends Controller
             'jenis' => 'custom',
         ]);
 
-        return $pdf->download("Invoice_Custom_REQ_{$penawaran->id_request}.pdf");
+        return $pdf->download("Invoice_Custom_{$penawaran->kode_penawaran}.pdf");
     }
 }

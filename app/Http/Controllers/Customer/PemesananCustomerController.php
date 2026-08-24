@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\PaketLayanan;
 use App\Models\Pemesanan;
 use App\Support\DpCalculator;
+use App\Support\KodeGenerator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -33,7 +34,7 @@ class PemesananCustomerController extends Controller
             ], 422);
         }
 
-        $kode = 'PMS-'.strtoupper(substr(uniqid(), -6)).'-'.now()->format('ymd');
+        $kode = KodeGenerator::buat('PMS');
 
         $dpAmount = DpCalculator::hitung((float) $paket->harga);
 

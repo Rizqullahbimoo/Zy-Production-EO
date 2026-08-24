@@ -61,6 +61,7 @@ Route::middleware(['auth:sanctum', 'role.admin'])->prefix('admin')->group(functi
     Route::get('/pemesanan', [PemesananController::class, 'index']);
     Route::get('/pemesanan/{id}', [PemesananController::class, 'show']);
     Route::patch('/pemesanan/{id}/status', [PemesananController::class, 'updateStatus']);
+    Route::post('/pemesanan/{id}/pembayaran', [PemesananController::class, 'recordPayment']);
 
     // Kelola Galeri
     Route::apiResource('galeri', GaleriController::class);

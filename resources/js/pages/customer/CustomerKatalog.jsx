@@ -62,6 +62,13 @@ export default function CustomerKatalog() {
 
   const formatIDR = num => { if (!num) return "-"; return "Rp " + parseFloat(num).toLocaleString("id-ID", { maximumFractionDigits: 0 }); };
   const formatDateIndo = dateStr => { if (!dateStr) return "-"; const d = new Date(dateStr); const months = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"]; return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`; };
+  // Tanggal acara minimal besok — sinkron dengan validasi backend (`after:today`),
+  // dihitung dari tanggal lokal (bukan toISOString/UTC) supaya tidak meleset di WIB.
+  const minEventDate = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  })();
   const filteredPackages = selectedCategoryFilter === "all" ? packages : packages.filter(p => p.kategori.id_kategori === parseInt(selectedCategoryFilter));
 
   const openOrderModal = pkg => {
@@ -248,7 +255,7 @@ export default function CustomerKatalog() {
                   </div>
                   {orderError && <div className="error-alert">{orderError}</div>}
                   <div className="form-grid-2">
-                    <div className="form-group"><label className="required-label">Tanggal Acara</label><input type="date" className="form-control" name="tanggal_acara" value={orderForm.tanggal_acara} onChange={handleOrderFormChange} required /></div>
+                    <div className="form-group"><label className="required-label">Tanggal Acara</label><input type="date" className="form-control" name="tanggal_acara" value={orderForm.tanggal_acara} onChange={handleOrderFormChange} min={minEventDate} required /></div>
                     <div className="form-group"><label className="required-label">Jumlah Tamu (Pax)</label><input type="number" className="form-control" name="jumlah_tamu" placeholder="Contoh: 150" value={orderForm.jumlah_tamu} onChange={handleOrderFormChange} min="1" required /></div>
                   </div>
                   <div className="form-group"><label className="required-label">Lokasi Acara</label><input type="text" className="form-control" name="lokasi_acara" placeholder="Contoh: Ballroom Hotel Grand, Jakarta" value={orderForm.lokasi_acara} onChange={handleOrderFormChange} required /></div>
@@ -360,7 +367,7 @@ export default function CustomerKatalog() {
                     <div className="step-content">
                       <div className="form-group"><label className="required-label">Kategori Event</label><select className="form-control" name="id_kategori" value={formData.id_kategori} onChange={handleInputChange} required><option value="">-- Pilih Kategori Event --</option>{categories.map(cat => (<option key={cat.id_kategori} value={cat.id_kategori}>{cat.nama_kategori}</option>))}</select></div>
                       <div className="form-grid-2">
-                        <div className="form-group"><label className="required-label">Tanggal Acara</label><input type="date" className="form-control" name="tanggal_acara" value={formData.tanggal_acara} onChange={handleInputChange} required /></div>
+                        <div className="form-group"><label className="required-label">Tanggal Acara</label><input type="date" className="form-control" name="tanggal_acara" value={formData.tanggal_acara} onChange={handleInputChange} min={minEventDate} required /></div>
                         <div className="form-group"><label className="required-label">Jumlah Tamu (Pax)</label><input type="number" className="form-control" name="jumlah_tamu" placeholder="Contoh: 250" value={formData.jumlah_tamu} onChange={handleInputChange} min="1" required /></div>
                       </div>
                       <div className="form-group"><label className="required-label">Lokasi Acara</label><input type="text" className="form-control" name="lokasi_acara" placeholder="Contoh: Ballroom Hotel Grand, Mampang" value={formData.lokasi_acara} onChange={handleInputChange} required /></div>

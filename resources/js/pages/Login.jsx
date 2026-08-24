@@ -59,12 +59,11 @@ export default function LoginPage() {
       const { data } = response.data; // { user, token, token_type }
       const { user, token } = data;
 
-      // Persist token for subsequent API calls
+      // Persist token for subsequent API calls — the axios request
+      // interceptor in bootstrap.js reads this on every request, so no
+      // manual header assignment is needed here.
       localStorage.setItem('auth_token', token);
       localStorage.setItem('auth_user', JSON.stringify(user));
-
-      // Set Authorization header globally for future axios requests
-      window.axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
       // Redirect based on role
       if (user.role === 'admin') {

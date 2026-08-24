@@ -28,13 +28,13 @@
 <body>
     <div class="header">
         <h1>ZY PRODUCTION</h1>
-        <p>Jl. Contoh Event Organizer No. 123, Kota Anda | Telp: 0812-3456-7890</p>
+        <p>Rumah AIR, Kelurahan Susunan Baru, Bandar Lampung, Lampung 35158 | Telp: 0812-7777-427</p>
     </div>
 
     @php
         $isPaket = $jenis === 'paket';
         $namaPelanggan = $isPaket ? $data->user->nama : $data->requestCustomPaket->user->nama;
-        $orderId = $isPaket ? $data->kode_pemesanan : 'REQ-'.$data->id_request;
+        $orderId = $isPaket ? $data->kode_pemesanan : $data->kode_penawaran;
         $tglAcara = $isPaket ? $data->tanggal_acara->format('d M Y') : $data->requestCustomPaket->tanggal_acara->format('d M Y');
         $lokasi = $isPaket ? $data->lokasi_acara : $data->requestCustomPaket->lokasi_acara;
         $tamu = $isPaket ? $data->jumlah_tamu : $data->requestCustomPaket->jumlah_tamu;

@@ -8,6 +8,7 @@ use App\Mail\PenawaranBaruMail;
 use App\Models\PenawaranCustom;
 use App\Models\RequestCustomPaket;
 use App\Support\DpCalculator;
+use App\Support\KodeGenerator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -33,6 +34,7 @@ class PenawaranController extends Controller
 
             $penawaran = PenawaranCustom::create([
                 'id_request' => $id_request,
+                'kode_penawaran' => KodeGenerator::buat('PNW'),
                 'tanggal_penawaran' => now(),
                 'total_penawaran' => $request->total_penawaran,
                 'dp_awal' => DpCalculator::hitung((float) $request->total_penawaran),

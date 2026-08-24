@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Customer\RequestCustomRequest;
 use App\Models\DetailRequestCustom;
 use App\Models\RequestCustomPaket;
+use App\Support\KodeGenerator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -23,6 +24,7 @@ class RequestCustomController extends Controller
             $customRequest = RequestCustomPaket::create([
                 'id_user' => $request->user()->id_user,
                 'id_kategori' => $request->id_kategori,
+                'kode_request' => KodeGenerator::buat('CST'),
                 'tanggal_request' => now(),
                 'tanggal_acara' => $request->tanggal_acara,
                 'lokasi_acara' => $request->lokasi_acara,
