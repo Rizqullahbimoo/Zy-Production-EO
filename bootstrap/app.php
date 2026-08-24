@@ -14,6 +14,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Percaya semua proxy (Railway dkk. terminate TLS di edge, forward HTTP
+        // internal) supaya X-Forwarded-Proto dibaca dan asset URL ter-generate https.
+        $middleware->trustProxies(at: '*');
+
         // Alias middleware custom
         $middleware->alias([
             'role.admin'    => AdminMiddleware::class,
