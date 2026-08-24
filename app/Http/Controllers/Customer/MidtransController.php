@@ -11,6 +11,7 @@ use App\Models\PenawaranCustom;
 use App\Support\DpCalculator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Midtrans\Config;
 use Midtrans\Notification;
@@ -267,6 +268,30 @@ class MidtransController extends Controller
             return response()->json(['status' => 'success', 'message' => 'Notification processed.']);
 
         } catch (\Exception $e) {
+            Log::error('Midtrans notification gagal diproses.', [
+                'message' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'payload' => $request->all(),
+            ]);
+
+            // Transaction::status() (dipanggil di dalam constructor Notification)
+            // balas 404 "Transaction doesn't exist" untuk order_id yang tidak
+            // pernah benar-benar ada di Midtrans — ini persis yang terjadi kalau
+            // Midtrans kirim "Test Notification" dari dashboard (order_id sintetis
+            // payment_notif_test_...), bukan transaksi asli. Balas 200 supaya
+            // Midtrans berhenti retry, tapi tetap ada jejak log sebagai warning.
+            if ($e->getCode() === 404) {
+                Log::warning('Midtrans notification: transaksi tidak ditemukan di Midtrans — kemungkinan test notification dari dashboard atau order_id tidak dikenal. Diabaikan tanpa diproses.', [
+                    'order_id' => $request->input('order_id'),
+                    'transaction_id' => $request->input('transaction_id'),
+                ]);
+
+                return response()->json([
+                    'status' => 'ignored',
+                    'message' => 'Transaction not found in Midtrans (likely a test notification or unknown order_id) — acknowledged without processing.',
+                ]);
+            }
+
             return response()->json([
                 'status' => 'error',
                 'message' => $e->getMessage(),
