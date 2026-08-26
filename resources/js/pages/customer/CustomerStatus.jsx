@@ -34,6 +34,7 @@ export default function CustomerStatus() {
   const [loadingPemesanan, setLoadingPemesanan] = useState(false);
   const [selectedPemesanan, setSelectedPemesanan] = useState(null);
   const [isPayingPemesanan, setIsPayingPemesanan] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   /* ── Tab: Custom ── */
   const [myRequests, setMyRequests] = useState([]);
@@ -214,6 +215,21 @@ export default function CustomerStatus() {
       }
     } catch (err) { showToast('error', "Gagal membuka pembayaran: " + (err?.response?.data?.message || err.message)); }
     finally { setIsPayingCustom(false); }
+  };
+
+  /* ── Sinkronisasi Status Pembayaran Manual (fallback localhost) ── */
+  const handleSyncStatus = async (orderId, afterSync) => {
+    if (!orderId) { showToast('error', 'Order ID tidak ditemukan. Coba refresh halaman.'); return; }
+    setIsSyncing(true);
+    try {
+      await window.axios.post(`/api/customer/payment/sync/${orderId}`);
+      showToast('success', 'Status pembayaran berhasil disinkronisasi.');
+      afterSync();
+    } catch (err) {
+      showToast('error', err.response?.data?.message || 'Gagal sinkronisasi status.');
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   /* ── TC-20: Approve Penawaran ── */
@@ -473,9 +489,19 @@ export default function CustomerStatus() {
                                 </button>
                               )}
                               {selectedPemesanan.payment_status === "pending" && selectedPemesanan.dokumen_mou?.status_mou === "selesai" && (
-                                <button className="btn-pay-midtrans" onClick={() => handlePayPemesanan(selectedPemesanan)} disabled={isPayingPemesanan}>
-                                  {isPayingPemesanan ? "Membuka..." : "Lanjutkan Pembayaran DP"}
-                                </button>
+                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                                  <button className="btn-pay-midtrans" onClick={() => handlePayPemesanan(selectedPemesanan)} disabled={isPayingPemesanan}>
+                                    {isPayingPemesanan ? "Membuka..." : "Lanjutkan Pembayaran DP"}
+                                  </button>
+                                  <button
+                                    className="btn btn-outline btn-sm"
+                                    onClick={() => handleSyncStatus(selectedPemesanan.midtrans_order_id, fetchPemesanan)}
+                                    disabled={isSyncing}
+                                    title="Sinkronisasi status dari Midtrans"
+                                  >
+                                    {isSyncing ? '⏳ Memuat...' : '🔄 Cek Status Bayar'}
+                                  </button>
+                                </div>
                               )}
                             </div>
                             {(selectedPemesanan.payment_status === "unpaid" || selectedPemesanan.payment_status === "failed" || !selectedPemesanan.payment_status) && selectedPemesanan.status_pemesanan !== "dibatalkan" && selectedPemesanan.dokumen_mou?.status_mou !== "selesai" && (
@@ -657,7 +683,17 @@ export default function CustomerStatus() {
                                       {isPayingCustom ? (<><div className="spinner" style={{ width: 16, height: 16, borderWidth: 2 }} /> Membuka Pembayaran...</>) : (<><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2" /><line x1="1" y1="10" x2="23" y2="10" /></svg> Bayar DP Sekarang via Midtrans</>)}
                                     </button>
                                   ) : offer.payment_status === "pending" && selectedRequest.dokumen_mou?.status_mou === "selesai" ? (
-                                    <button className="btn-pay-midtrans" onClick={() => handlePayCustom(offer)} disabled={isPayingCustom} style={{ width: "100%", justifyContent: "center" }}>Lanjutkan Pembayaran DP</button>
+                                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                                      <button className="btn-pay-midtrans" onClick={() => handlePayCustom(offer)} disabled={isPayingCustom} style={{ flex: 1, justifyContent: 'center' }}>Lanjutkan Pembayaran DP</button>
+                                      <button
+                                        className="btn btn-outline btn-sm"
+                                        onClick={() => handleSyncStatus(offer.midtrans_order_id, fetchMyRequests)}
+                                        disabled={isSyncing}
+                                        title="Sinkronisasi status dari Midtrans"
+                                      >
+                                        {isSyncing ? '⏳ Memuat...' : '🔄 Cek Status Bayar'}
+                                      </button>
+                                    </div>
                                   ) : offer.status_penawaran !== "ditolak" && offer.payment_status !== "paid" && offer.payment_status !== "dp_paid" ? (
                                     <div className="mou-locked-notice">
                                       🔒 Selesaikan proses tanda tangan dokumen MOU terlebih dahulu sebelum dapat membayar DP.
