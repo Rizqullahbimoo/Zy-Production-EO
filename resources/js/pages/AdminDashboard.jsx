@@ -659,6 +659,11 @@ export default function AdminDashboard() {
       return;
     }
 
+    if (!selectedPackage && !packageFoto) {
+      showToast('error', 'Foto paket wajib diunggah.');
+      return;
+    }
+
     const catId = parseInt(activeTab.replace('kategori-', '')) || 1;
     setIsSubmittingPackage(true);
     setErrorMsg('');
@@ -708,7 +713,10 @@ export default function AdminDashboard() {
       }
     } catch (err) {
       console.error('Error saving package:', err);
-      if (err.response?.data?.errors) {
+      if (err.response?.data?.errors?.foto) {
+        // TC-33: pesan konsisten dengan validasi frontend untuk field foto
+        showToast('error', 'Foto paket wajib diunggah.');
+      } else if (err.response?.data?.errors) {
         const validationErrs = Object.values(err.response.data.errors).flat().join('\n');
         showToast('error', `Validasi gagal:\n${validationErrs}`);
       } else {
@@ -3478,7 +3486,7 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="zy-form-group" style={{ minWidth: 'auto' }}>
-                  <label className="zy-form-label" htmlFor="package_foto">Foto Paket (Format: JPG/PNG/WebP, Max 5MB)</label>
+                  <label className="zy-form-label" htmlFor="package_foto">Foto Paket {!selectedPackage && '*'} (Format: JPG/PNG/WebP, Max 5MB)</label>
                   <input
                     type="file"
                     id="package_foto"
