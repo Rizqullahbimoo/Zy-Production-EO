@@ -463,7 +463,10 @@ export default function AdminDashboard() {
 
   // Submit Penawaran (Pricing Proposal) for custom requests — buat baru ATAU simpan
   // perubahan penawaran yang sudah ada (editingPenawaran), tidak pernah keduanya.
-  const isPenawaranTerkunci = editingPenawaran?.payment_status === 'paid';
+  // Harga dikunci jika penawaran sudah disetujui customer ATAU DP sudah dibayar
+  const isPenawaranTerkunci =
+    editingPenawaran?.status_penawaran === 'diterima' ||
+    editingPenawaran?.payment_status === 'paid';
   // DP selalu 30% dari Total Penawaran, dihitung otomatis (tidak bisa diketik manual)
   const totalUntukDp = isPenawaranTerkunci ? Number(editingPenawaran.total_penawaran) : (parseFloat(totalPenawaran) || 0);
   const dpOtomatis = totalUntukDp * 0.3;
@@ -3141,10 +3144,12 @@ export default function AdminDashboard() {
                           <span className="zy-penawaran-date">Tanggal Penawaran: {formatIndoDate(penawaran.tanggal_penawaran || penawaran.created_at)}</span>
                           <span className={`zy-status-badge ${
                             penawaran.status_penawaran === 'diterima' ? 'status-selesai-dicek' :
-                            penawaran.status_penawaran === 'ditolak' ? 'status-dibatalkan' : 'status-menunggu-verifikasi'
+                            penawaran.status_penawaran === 'ditolak' ? 'status-dibatalkan' :
+                            penawaran.status_penawaran === 'direvisi' ? 'status-menunggu-verifikasi' : 'status-menunggu-verifikasi'
                           }`}>
                             {penawaran.status_penawaran === 'diterima' ? 'Diterima Client' :
-                             penawaran.status_penawaran === 'ditolak' ? 'Ditolak Client' : 'Menunggu Review Client'}
+                             penawaran.status_penawaran === 'ditolak' ? 'Ditolak Client' :
+                             penawaran.status_penawaran === 'direvisi' ? 'Diminta Revisi Client' : 'Menunggu Review Client'}
                           </span>
                         </div>
                         <div className="zy-penawaran-body-grid">
@@ -3160,6 +3165,12 @@ export default function AdminDashboard() {
                             <span className="zy-field-label">Catatan Admin</span>
                             <span className="zy-field-val" style={{ whiteSpace: 'pre-line' }}>{penawaran.catatan_admin || 'Tidak ada catatan.'}</span>
                           </div>
+                          {penawaran.status_penawaran === 'direvisi' && penawaran.catatan_revisi_customer && (
+                            <div className="zy-penawaran-field" style={{ gridColumn: 'span 2' }}>
+                              <span className="zy-field-label">Catatan Revisi dari Client</span>
+                              <span className="zy-field-val" style={{ whiteSpace: 'pre-line', color: '#854d0e' }}>{penawaran.catatan_revisi_customer}</span>
+                            </div>
+                          )}
                         </div>
                         {/* Status Midtrans Pembayaran untuk Penawaran Custom */}
                         <div style={{ marginTop: '1rem', backgroundColor: penawaran.payment_status === 'paid' ? '#f0fdf4' : '#fffbeb', padding: '0.75rem 1rem', borderRadius: '6px', border: `1px solid ${penawaran.payment_status === 'paid' ? '#bbf7d0' : '#fef08a'}` }}>
@@ -3183,8 +3194,12 @@ export default function AdminDashboard() {
                     {editingPenawaran ? 'Edit Proposal Penawaran' : 'Buat Proposal Penawaran Baru'}
                   </h5>
                   {isPenawaranTerkunci && (
-                    <p style={{ margin: '0 0 1rem', fontSize: '0.85rem', color: '#854d0e', background: '#fffbeb', border: '1px solid #fef08a', borderRadius: '6px', padding: '0.6rem 0.8rem' }}>
-                      ⚠️ DP untuk penawaran ini sudah dibayar customer. Total Penawaran &amp; DP dikunci agar tidak mismatch dengan pembayaran yang sudah masuk — hanya catatan admin yang bisa diperbarui.
+                    <p style={{ margin: '0 0 1rem', fontSize: '0.85rem', color: '#1e40af', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '6px', padding: '0.6rem 0.8rem' }}>
+                      🔒 Total Penawaran & DP dikunci —
+                      {editingPenawaran?.status_penawaran === 'diterima'
+                        ? ' customer sudah menyetujui penawaran ini.'
+                        : ' DP sudah dibayar customer.'}
+                      {' '}Hanya catatan admin yang dapat diperbarui.
                     </p>
                   )}
                   <div className="zy-penawaran-form-grid">

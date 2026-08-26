@@ -14,6 +14,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Customer\InvoiceController;
 use App\Http\Controllers\Customer\MidtransController;
 use App\Http\Controllers\Customer\PemesananCustomerController;
+use App\Http\Controllers\Customer\PenawaranController as CustomerPenawaranController;
 use App\Http\Controllers\Customer\RequestCustomController as CustomerRequestCustomController;
 use App\Http\Controllers\Guest\PaketController;
 use App\Http\Controllers\MoUController;
@@ -106,6 +107,10 @@ Route::middleware(['auth:sanctum', 'role.customer'])->prefix('customer')->group(
     Route::get('/request-custom', [CustomerRequestCustomController::class, 'index']);
     Route::post('/request-custom', [CustomerRequestCustomController::class, 'store']);
     Route::get('/request-custom/{id}', [CustomerRequestCustomController::class, 'show']);
+
+    // Penawaran Custom Paket — respon customer (Customer)
+    Route::post('/penawaran/{id}/approve', [CustomerPenawaranController::class, 'approve']);
+    Route::post('/penawaran/{id}/revisi', [CustomerPenawaranController::class, 'revisi']);
 
     // Pemesanan Paket Bawaan (Customer)
     Route::get('/pemesanan', [PemesananCustomerController::class, 'index']);

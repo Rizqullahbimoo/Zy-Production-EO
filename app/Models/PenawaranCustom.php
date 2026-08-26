@@ -21,6 +21,7 @@ class PenawaranCustom extends Model
         'dp_awal',
         'status_penawaran',
         'catatan_admin',
+        'catatan_revisi_customer',
         'midtrans_order_id',
         'snap_token',
         'payment_status',

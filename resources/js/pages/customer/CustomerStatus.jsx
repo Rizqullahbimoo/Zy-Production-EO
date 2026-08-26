@@ -41,6 +41,18 @@ export default function CustomerStatus() {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [isPayingCustom, setIsPayingCustom] = useState(false);
 
+  /* ── TC-20: Modal Konfirmasi Approve Penawaran ── */
+  const [showApproveModal, setShowApproveModal] = useState(false);
+  const [pendingApproveOffer, setPendingApproveOffer] = useState(null);
+  const [isApprovingOffer, setIsApprovingOffer] = useState(false);
+
+  /* ── TC-21: Modal Form Revisi Penawaran ── */
+  const [showRevisiModal, setShowRevisiModal] = useState(false);
+  const [pendingRevisiOffer, setPendingRevisiOffer] = useState(null);
+  const [catatanRevisi, setCatatanRevisi] = useState('');
+  const [isSubmittingRevisi, setIsSubmittingRevisi] = useState(false);
+  const [revisiError, setRevisiError] = useState('');
+
   /* ── Tab: Pesan Masuk ── */
   const [myPesan, setMyPesan] = useState([]);
   const [loadingPesan, setLoadingPesan] = useState(false);
@@ -201,6 +213,64 @@ export default function CustomerStatus() {
       }
     } catch (err) { showToast('error', "Gagal membuka pembayaran: " + (err?.response?.data?.message || err.message)); }
     finally { setIsPayingCustom(false); }
+  };
+
+  /* ── TC-20: Approve Penawaran ── */
+  const handleApproveOffer = (offer) => {
+    setPendingApproveOffer(offer);
+    setShowApproveModal(true);
+  };
+
+  const confirmApproveOffer = () => {
+    if (!pendingApproveOffer) return;
+    setIsApprovingOffer(true);
+    window.axios.post(`/api/customer/penawaran/${pendingApproveOffer.id_penawaran}/approve`)
+      .then(res => {
+        if (res.data.status === 'success') {
+          showToast('success', 'Penawaran berhasil disetujui! Admin akan segera menghubungi Anda.');
+          setShowApproveModal(false);
+          setPendingApproveOffer(null);
+          fetchMyRequests();
+        }
+      })
+      .catch(err => {
+        showToast('error', err.response?.data?.message || 'Gagal menyetujui penawaran.');
+        setShowApproveModal(false);
+      })
+      .finally(() => setIsApprovingOffer(false));
+  };
+
+  /* ── TC-21: Ajukan Revisi Penawaran ── */
+  const handleRevisiOffer = (offer) => {
+    setPendingRevisiOffer(offer);
+    setCatatanRevisi('');
+    setRevisiError('');
+    setShowRevisiModal(true);
+  };
+
+  const confirmRevisiOffer = () => {
+    if (!catatanRevisi.trim()) {
+      setRevisiError('Catatan revisi wajib diisi.');
+      return;
+    }
+    setIsSubmittingRevisi(true);
+    window.axios.post(`/api/customer/penawaran/${pendingRevisiOffer.id_penawaran}/revisi`, {
+      catatan_revisi: catatanRevisi,
+    })
+      .then(res => {
+        if (res.data.status === 'success') {
+          showToast('success', 'Permintaan revisi berhasil dikirim ke admin.');
+          setShowRevisiModal(false);
+          setPendingRevisiOffer(null);
+          setCatatanRevisi('');
+          fetchMyRequests();
+        }
+      })
+      .catch(err => {
+        showToast('error', err.response?.data?.message || 'Gagal mengirim permintaan revisi.');
+        setShowRevisiModal(false);
+      })
+      .finally(() => setIsSubmittingRevisi(false));
   };
 
   const handleDownloadInvoice = (type, id) => {
@@ -524,10 +594,38 @@ export default function CustomerStatus() {
                                 {offer.catatan_admin && (
                                   <div className="offer-desc"><strong>Catatan Admin:</strong><p>{offer.catatan_admin}</p></div>
                                 )}
+                                {offer.catatan_revisi_customer && (
+                                  <div className="offer-desc" style={{ background: 'rgba(226,154,0,0.06)', border: '1px solid rgba(226,154,0,0.25)', borderRadius: '8px', padding: '0.75rem 1rem', marginTop: '8px' }}>
+                                    <strong style={{ color: 'var(--color-primary)' }}>📝 Catatan Revisi Anda:</strong>
+                                    <p style={{ margin: '4px 0 0' }}>{offer.catatan_revisi_customer}</p>
+                                  </div>
+                                )}
                                 <div className="offer-status-label">
                                   <span>Status Penawaran: </span>
                                   <strong>{offer.status_penawaran.toUpperCase()}</strong>
                                 </div>
+
+                                {/* TC-20 & TC-21: Tombol Setujui/Revisi — hanya muncul saat status 'menunggu' */}
+                                {offer.status_penawaran === 'menunggu' && (
+                                  <div style={{ display: 'flex', gap: '10px', marginTop: '14px', flexWrap: 'wrap' }}>
+                                    <button
+                                      id={`btn-approve-offer-${offer.id_penawaran}`}
+                                      className="btn btn-primary btn-sm"
+                                      onClick={() => handleApproveOffer(offer)}
+                                      style={{ flex: 1, minWidth: '140px' }}
+                                    >
+                                      ✅ Setujui Penawaran
+                                    </button>
+                                    <button
+                                      id={`btn-revisi-offer-${offer.id_penawaran}`}
+                                      className="btn btn-outline btn-sm"
+                                      onClick={() => handleRevisiOffer(offer)}
+                                      style={{ flex: 1, minWidth: '140px' }}
+                                    >
+                                      ✏️ Ajukan Revisi
+                                    </button>
+                                  </div>
+                                )}
 
                                 {/* Payment Status + Pay Button */}
                                 {offer.payment_status && (
@@ -710,6 +808,86 @@ export default function CustomerStatus() {
           </div>
         </div>
       </section>
+
+      {/* ── TC-20: Modal Konfirmasi Setujui Penawaran ── */}
+      {showApproveModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(5px)' }}>
+          <div style={{ background: '#FFFFFF', padding: '2rem', borderRadius: '15px', width: '90%', maxWidth: '420px', border: '1px solid var(--color-border, #E7E7E7)', boxShadow: '0 20px 50px rgba(30,22,6,0.18)' }}>
+            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+              <div style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>✅</div>
+              <h3 style={{ color: 'var(--color-text-main)', marginBottom: '0.5rem' }}>Setujui Penawaran?</h3>
+              <p style={{ color: 'var(--color-text-muted)', lineHeight: 1.6 }}>
+                Dengan menyetujui, Anda menyatakan sepakat atas harga penawaran yang diajukan admin. Proses selanjutnya akan dilanjutkan ke tahap MOU dan pembayaran DP.
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button
+                id="btn-confirm-approve"
+                className="btn btn-primary"
+                style={{ flex: 1 }}
+                onClick={confirmApproveOffer}
+                disabled={isApprovingOffer}
+              >
+                {isApprovingOffer ? 'Memproses...' : 'Ya, Setujui'}
+              </button>
+              <button
+                className="btn btn-outline"
+                style={{ flex: 1 }}
+                onClick={() => { setShowApproveModal(false); setPendingApproveOffer(null); }}
+                disabled={isApprovingOffer}
+              >
+                Batal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── TC-21: Modal Form Ajukan Revisi Penawaran ── */}
+      {showRevisiModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(5px)' }}>
+          <div style={{ background: '#FFFFFF', padding: '2rem', borderRadius: '15px', width: '90%', maxWidth: '440px', border: '1px solid var(--color-border, #E7E7E7)', boxShadow: '0 20px 50px rgba(30,22,6,0.18)' }}>
+            <h3 style={{ color: 'var(--color-text-main)', marginBottom: '0.5rem' }}>✏️ Ajukan Revisi</h3>
+            <p style={{ color: 'var(--color-text-muted)', marginBottom: '1.5rem', lineHeight: 1.6, fontSize: '0.9rem' }}>
+              Jelaskan bagian mana yang perlu direvisi. Admin akan meninjau dan mengajukan penawaran baru.
+            </p>
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'block', color: 'var(--color-text-muted)', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Catatan Revisi <span style={{ color: '#C92A2A' }}>*</span></label>
+              <textarea
+                id="input-catatan-revisi"
+                className="form-control"
+                rows="4"
+                placeholder="Contoh: Mohon ditambahkan dekorasi tambahan dan sesuaikan DP menjadi 20%..."
+                value={catatanRevisi}
+                onChange={e => { setCatatanRevisi(e.target.value); if (revisiError) setRevisiError(''); }}
+                style={{ width: '100%', padding: '0.8rem', background: '#F8F9FA', border: `1px solid ${revisiError ? '#C92A2A' : 'var(--color-border, #E7E7E7)'}`, color: 'var(--color-text-main)', borderRadius: '8px', resize: 'vertical', boxSizing: 'border-box' }}
+              />
+              {revisiError && (
+                <p style={{ color: '#C92A2A', fontSize: '0.8rem', marginTop: '4px' }}>{revisiError}</p>
+              )}
+            </div>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button
+                id="btn-confirm-revisi"
+                className="btn btn-primary"
+                style={{ flex: 1 }}
+                onClick={confirmRevisiOffer}
+                disabled={isSubmittingRevisi}
+              >
+                {isSubmittingRevisi ? 'Mengirim...' : 'Kirim Revisi'}
+              </button>
+              <button
+                className="btn btn-outline"
+                style={{ flex: 1 }}
+                onClick={() => { setShowRevisiModal(false); setPendingRevisiOffer(null); setCatatanRevisi(''); setRevisiError(''); }}
+                disabled={isSubmittingRevisi}
+              >
+                Batal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Ulasan Modal */}
       {showUlasanModal && (
