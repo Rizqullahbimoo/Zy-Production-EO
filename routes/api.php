@@ -88,6 +88,7 @@ Route::middleware(['auth:sanctum', 'role.admin'])->prefix('admin')->group(functi
     Route::delete('/penawaran/{id}', [PenawaranController::class, 'destroy']);
 
     // Laporan (Admin)
+    Route::get('/laporan/ringkasan', [LaporanController::class, 'ringkasan']);
     Route::get('/laporan', [LaporanController::class, 'generateLaporan']);
 
     // Pesan Kontak (Admin)

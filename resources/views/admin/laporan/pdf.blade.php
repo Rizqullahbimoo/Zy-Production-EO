@@ -62,13 +62,13 @@
         <tbody>
             @php $totalCustom = 0; @endphp
             @forelse($custom as $c)
-                @php $totalCustom += $c->total_harga; @endphp
+                @php $totalCustom += $c->total_penawaran; @endphp
                 <tr>
                     <td>{{ $c->created_at->format('d/m/Y') }}</td>
                     <td>{{ $c->requestCustomPaket->kode_request }}</td>
                     <td>{{ $c->requestCustomPaket->user->nama }}</td>
                     <td>{{ Str::limit($c->catatan_admin, 30) }}</td>
-                    <td class="text-right">{{ number_format($c->total_harga, 0, ',', '.') }}</td>
+                    <td class="text-right">{{ number_format($c->total_penawaran, 0, ',', '.') }}</td>
                 </tr>
             @empty
                 <tr><td colspan="5" class="text-center">Tidak ada transaksi</td></tr>
@@ -80,6 +80,35 @@
         </tbody>
     </table>
 
-    <h3 class="text-right" style="margin-top: 20px;">Total Keseluruhan: Rp {{ number_format($totalPemesanan + $totalCustom, 0, ',', '.') }}</h3>
+    @php
+        $totalPendapatan = $totalPemesanan + $totalCustom;
+        $totalCount = $pemesanan->count() + $custom->count();
+        $avgPendapatan = $totalCount > 0 ? $totalPendapatan / $totalCount : 0;
+    @endphp
+
+    @if($totalCount == 0)
+        <div style="background-color: #f8d7da; color: #721c24; padding: 15px; margin-top: 20px; border: 1px solid #f5c6cb; border-radius: 4px; text-align: center;">
+            <strong>Pemberitahuan:</strong> Tidak ada data transaksi pemesanan lunas yang ditemukan pada periode Bulan {{ $bulan }} Tahun {{ $tahun }}.
+        </div>
+    @else
+        <div style="margin-top: 30px; border: 1px solid #ccc; padding: 15px; background-color: #f9f9f9; width: 50%; float: right;">
+            <h3 style="margin-top: 0; text-align: center; border-bottom: 1px solid #ddd; padding-bottom: 10px;">Ringkasan Keuangan</h3>
+            <table style="width: 100%; border: none; margin-top: 10px;">
+                <tr>
+                    <td style="border: none; padding: 5px 0;"><strong>Total Transaksi</strong></td>
+                    <td style="border: none; padding: 5px 0;" class="text-right">{{ $totalCount }} Pesanan</td>
+                </tr>
+                <tr>
+                    <td style="border: none; padding: 5px 0;"><strong>Rata-rata Pendapatan</strong></td>
+                    <td style="border: none; padding: 5px 0;" class="text-right">Rp {{ number_format($avgPendapatan, 0, ',', '.') }}</td>
+                </tr>
+                <tr>
+                    <td style="border: none; padding: 10px 0 5px 0; border-top: 2px solid #ccc;"><strong>Total Pemasukan Bersih</strong></td>
+                    <td style="border: none; padding: 10px 0 5px 0; border-top: 2px solid #ccc;" class="text-right"><strong>Rp {{ number_format($totalPendapatan, 0, ',', '.') }}</strong></td>
+                </tr>
+            </table>
+        </div>
+        <div style="clear: both;"></div>
+    @endif
 </body>
 </html>

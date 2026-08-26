@@ -147,6 +147,8 @@ export default function AdminDashboard() {
   // Laporan states
   const [laporanBulan, setLaporanBulan] = useState(new Date().getMonth() + 1);
   const [laporanTahun, setLaporanTahun] = useState(new Date().getFullYear());
+  const [laporanRingkasan, setLaporanRingkasan] = useState(null);
+  const [isLoadingRingkasan, setIsLoadingRingkasan] = useState(false);
   const [isDownloadingLaporan, setIsDownloadingLaporan] = useState(false);
 
   // Pesan Masuk state
@@ -200,6 +202,21 @@ export default function AdminDashboard() {
       console.error('Error fetching pesan masuk:', err);
     } finally {
       setIsLoadingPesan(false);
+    }
+  };
+
+  const fetchLaporanRingkasan = async (bulan, tahun) => {
+    setIsLoadingRingkasan(true);
+    try {
+      const response = await window.axios.get(`/api/admin/laporan/ringkasan?bulan=${bulan}&tahun=${tahun}`);
+      if (response.data?.status === 'success') {
+        setLaporanRingkasan(response.data.data);
+      }
+    } catch (err) {
+      console.error('Error fetching laporan ringkasan:', err);
+      setLaporanRingkasan(null);
+    } finally {
+      setIsLoadingRingkasan(false);
     }
   };
 
@@ -1183,6 +1200,14 @@ export default function AdminDashboard() {
     }
   }, [activeTab]);
 
+  // Trigger laporan ringkasan fetch when tab changes to 'laporan', or when the
+  // selected bulan/tahun changes while already on that tab
+  useEffect(() => {
+    if (activeTab === 'laporan') {
+      fetchLaporanRingkasan(laporanBulan, laporanTahun);
+    }
+  }, [activeTab, laporanBulan, laporanTahun]);
+
 
   // Map custom request status values into UI labels & classes
   const getCustomRequestStatusDetails = (status, id) => {
@@ -1460,6 +1485,32 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
+
+        {/* Ringkasan Keuangan — 3 kartu (atau pesan kosong) untuk periode terpilih */}
+        {isLoadingRingkasan ? (
+          <div className="zy-section-card fade-in" style={{ marginBottom: '1.5rem', textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+            Memuat ringkasan...
+          </div>
+        ) : laporanRingkasan && laporanRingkasan.jumlah_transaksi === 0 ? (
+          <div className="zy-section-card fade-in" style={{ marginBottom: '1.5rem', textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+            Tidak ada data transaksi pada periode ini.
+          </div>
+        ) : laporanRingkasan ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem', marginBottom: '1.5rem' }}>
+            <div className="zy-section-card fade-in" style={{ textAlign: 'center', padding: '1.5rem' }}>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>Total Pendapatan</p>
+              <h3 style={{ color: 'var(--primary)', fontSize: '1.4rem', margin: 0 }}>{formatRupiah(laporanRingkasan.total_pendapatan)}</h3>
+            </div>
+            <div className="zy-section-card fade-in" style={{ textAlign: 'center', padding: '1.5rem' }}>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>Jumlah Transaksi</p>
+              <h3 style={{ color: 'var(--text-main)', fontSize: '1.4rem', margin: 0 }}>{laporanRingkasan.jumlah_transaksi}</h3>
+            </div>
+            <div className="zy-section-card fade-in" style={{ textAlign: 'center', padding: '1.5rem' }}>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>Rata-rata per Transaksi</p>
+              <h3 style={{ color: 'var(--text-main)', fontSize: '1.4rem', margin: 0 }}>{formatRupiah(laporanRingkasan.rata_rata)}</h3>
+            </div>
+          </div>
+        ) : null}
 
         {/* 2 Cards Grid for Download Options */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
