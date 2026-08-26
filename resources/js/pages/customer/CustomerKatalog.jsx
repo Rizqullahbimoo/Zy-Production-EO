@@ -105,14 +105,33 @@ export default function CustomerKatalog() {
     });
   };
 
-  const handleOrderFormChange = e => setOrderForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  const [orderFieldErrors, setOrderFieldErrors] = useState({});
+
+  const handleOrderFormChange = e => {
+    const { name, value } = e.target;
+    setOrderForm(prev => ({ ...prev, [name]: value }));
+    if (orderFieldErrors[name]) setOrderFieldErrors(prev => ({ ...prev, [name]: '' }));
+  };
+
+  // TC-11: tampilkan "Field ini wajib diisi." saat field wajib di-blur dalam keadaan kosong
+  const handleOrderFieldBlur = e => {
+    const { name, value } = e.target;
+    if (!String(value).trim()) {
+      setOrderFieldErrors(prev => ({ ...prev, [name]: 'Field ini wajib diisi.' }));
+    }
+  };
 
   const handleSubmitOrder = async e => {
     e.preventDefault();
-    if (!orderForm.tanggal_acara) { setOrderError("Tanggal acara harus ditentukan."); return; }
-    if (new Date(orderForm.tanggal_acara) <= new Date()) { setOrderError("Tanggal acara harus di masa mendatang."); return; }
-    if (!orderForm.lokasi_acara.trim()) { setOrderError("Lokasi acara harus diisi."); return; }
-    if (!orderForm.jumlah_tamu || parseInt(orderForm.jumlah_tamu) < 1) { setOrderError("Jumlah tamu minimal 1 orang."); return; }
+    const errors = {};
+    if (!orderForm.tanggal_acara) errors.tanggal_acara = "Tanggal acara harus ditentukan.";
+    else if (new Date(orderForm.tanggal_acara) <= new Date()) errors.tanggal_acara = "Tanggal acara harus di masa mendatang.";
+    if (!orderForm.lokasi_acara.trim()) errors.lokasi_acara = "Lokasi acara harus diisi.";
+    if (!orderForm.jumlah_tamu || parseInt(orderForm.jumlah_tamu) < 1) errors.jumlah_tamu = "Jumlah tamu minimal 1 orang.";
+    
+    setOrderFieldErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
     setOrderError(""); setIsSubmittingOrder(true);
     try {
       const res = await window.axios.post("/api/customer/pemesanan", { id_paket: orderPackage.id_paket, tanggal_acara: orderForm.tanggal_acara, lokasi_acara: orderForm.lokasi_acara, jumlah_tamu: parseInt(orderForm.jumlah_tamu), catatan: orderForm.catatan || null });
@@ -121,16 +140,31 @@ export default function CustomerKatalog() {
     finally { setIsSubmittingOrder(false); }
   };
 
-  const handleInputChange = e => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  const handleInputChange = e => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    setRequestFieldErrors(prev => (prev[name] ? { ...prev, [name]: '' } : prev));
+  };
   const handleFacilityToggle = facilityId => setFormData(prev => { const exists = prev.fasilitas.find(f => f.id_fasilitas === facilityId); if (exists) return { ...prev, fasilitas: prev.fasilitas.filter(f => f.id_fasilitas !== facilityId) }; else return { ...prev, fasilitas: [...prev.fasilitas, { id_fasilitas: facilityId, keterangan: "" }] }; });
   const handleFacilityDescChange = (facilityId, value) => setFormData(prev => ({ ...prev, fasilitas: prev.fasilitas.map(f => f.id_fasilitas === facilityId ? { ...f, keterangan: value } : f) }));
+  
+  const [requestFieldErrors, setRequestFieldErrors] = useState({});
+
+  // TC-17: tampilkan "Field ini wajib diisi." saat field wajib di langkah Info Event di-blur dalam keadaan kosong
+  const handleRequestFieldBlur = e => {
+    const { name, value } = e.target;
+    if (!String(value).trim()) {
+      setRequestFieldErrors(prev => ({ ...prev, [name]: 'Field ini wajib diisi.' }));
+    }
+  };
+
   const openRequestModal = (prefill = {}) => {
     if (!token) {
       showToast('error', "Silakan login terlebih dahulu.");
       setTimeout(() => { window.location.href = "/login"; }, 1200);
       return;
     }
-    setShowRequestModal(true); setRequestStep(1); setRequestSuccess(false); setRequestError(""); setFormData({ id_kategori: "", tanggal_acara: "", lokasi_acara: "", jumlah_tamu: "", budget_acara: "", catatan: "", fasilitas: [], ...prefill });
+    setShowRequestModal(true); setRequestStep(1); setRequestSuccess(false); setRequestError(""); setRequestFieldErrors({}); setFormData({ id_kategori: "", tanggal_acara: "", lokasi_acara: "", jumlah_tamu: "", budget_acara: "", catatan: "", fasilitas: [], ...prefill });
   };
 
   useEffect(() => {
@@ -141,14 +175,27 @@ export default function CustomerKatalog() {
       navigate('/katalog', { replace: true });
     }
   }, [location.search]);
+
+  const handleNextRequestStep1 = () => {
+    const errors = {};
+    if (!formData.id_kategori) errors.id_kategori = "Kategori event harus dipilih.";
+    if (!formData.tanggal_acara) errors.tanggal_acara = "Tanggal acara harus ditentukan.";
+    else if (new Date(formData.tanggal_acara) <= new Date()) errors.tanggal_acara = "Tanggal acara harus di masa mendatang.";
+    if (!formData.lokasi_acara.trim()) errors.lokasi_acara = "Lokasi acara harus diisi.";
+    if (!formData.jumlah_tamu || parseInt(formData.jumlah_tamu) < 1) errors.jumlah_tamu = "Jumlah tamu minimal 1 orang.";
+    
+    setRequestFieldErrors(errors);
+    if (Object.keys(errors).length === 0) setRequestStep(2);
+  };
+
   const handleSubmitRequest = e => {
     e.preventDefault();
-    if (!formData.id_kategori) { setRequestError("Kategori event harus dipilih."); return; }
-    if (!formData.tanggal_acara) { setRequestError("Tanggal acara harus ditentukan."); return; }
-    if (new Date(formData.tanggal_acara) <= new Date()) { setRequestError("Tanggal acara harus di masa mendatang."); return; }
-    if (!formData.lokasi_acara.trim()) { setRequestError("Lokasi acara harus diisi."); return; }
-    if (!formData.jumlah_tamu || parseInt(formData.jumlah_tamu) < 1) { setRequestError("Jumlah tamu minimal 1 orang."); return; }
-    if (formData.fasilitas.length === 0) { setRequestError("Pilih minimal 1 fasilitas."); return; }
+    const errors = {};
+    if (formData.fasilitas.length === 0) { 
+        setRequestError("Pilih minimal 1 fasilitas."); 
+        return; 
+    }
+    
     setRequestError(""); setIsSubmittingRequest(true);
     window.axios.post("/api/customer/request-custom", { id_kategori: parseInt(formData.id_kategori), tanggal_acara: formData.tanggal_acara, lokasi_acara: formData.lokasi_acara, jumlah_tamu: parseInt(formData.jumlah_tamu), budget_acara: formData.budget_acara ? parseFloat(formData.budget_acara) : null, catatan: formData.catatan, fasilitas: formData.fasilitas })
       .then(res => { if (res.data.status === "success") setRequestSuccess(true); })
@@ -247,7 +294,7 @@ export default function CustomerKatalog() {
                   </div>
                 </div>
               ) : (
-                <form onSubmit={handleSubmitOrder}>
+                <form noValidate onSubmit={handleSubmitOrder}>
                   <div className="order-package-summary">
                     <img src={orderPackage.foto || "/images/login-hero.jpg"} alt={orderPackage.nama_paket} className="order-pkg-img" onError={e => { e.currentTarget.src = "/images/login-hero.jpg"; }} />
                     <div className="order-pkg-info"><div className="order-pkg-name">{orderPackage.nama_paket}</div><div className="order-pkg-cat">{orderPackage.kategori?.nama_kategori}</div></div>
@@ -255,10 +302,22 @@ export default function CustomerKatalog() {
                   </div>
                   {orderError && <div className="error-alert">{orderError}</div>}
                   <div className="form-grid-2">
-                    <div className="form-group"><label className="required-label">Tanggal Acara</label><input type="date" className="form-control" name="tanggal_acara" value={orderForm.tanggal_acara} onChange={handleOrderFormChange} min={minEventDate} required /></div>
-                    <div className="form-group"><label className="required-label">Jumlah Tamu (Pax)</label><input type="number" className="form-control" name="jumlah_tamu" placeholder="Contoh: 150" value={orderForm.jumlah_tamu} onChange={handleOrderFormChange} min="1" required /></div>
+                    <div className="form-group">
+                      <label className="required-label">Tanggal Acara</label>
+                      <input type="date" className={`form-control ${orderFieldErrors.tanggal_acara ? 'is-invalid' : ''}`} style={orderFieldErrors.tanggal_acara ? {borderColor: '#dc3545', backgroundColor: '#fff8f8'} : {}} name="tanggal_acara" value={orderForm.tanggal_acara} onChange={handleOrderFormChange} onBlur={handleOrderFieldBlur} min={minEventDate} required />
+                      {orderFieldErrors.tanggal_acara && <span style={{ color: '#dc3545', fontSize: '0.85rem', marginTop: '4px', display: 'block' }}>{orderFieldErrors.tanggal_acara}</span>}
+                    </div>
+                    <div className="form-group">
+                      <label className="required-label">Jumlah Tamu (Pax)</label>
+                      <input type="number" className={`form-control ${orderFieldErrors.jumlah_tamu ? 'is-invalid' : ''}`} style={orderFieldErrors.jumlah_tamu ? {borderColor: '#dc3545', backgroundColor: '#fff8f8'} : {}} name="jumlah_tamu" placeholder="Contoh: 150" value={orderForm.jumlah_tamu} onChange={handleOrderFormChange} onBlur={handleOrderFieldBlur} min="1" required />
+                      {orderFieldErrors.jumlah_tamu && <span style={{ color: '#dc3545', fontSize: '0.85rem', marginTop: '4px', display: 'block' }}>{orderFieldErrors.jumlah_tamu}</span>}
+                    </div>
                   </div>
-                  <div className="form-group"><label className="required-label">Lokasi Acara</label><input type="text" className="form-control" name="lokasi_acara" placeholder="Contoh: Ballroom Hotel Grand, Jakarta" value={orderForm.lokasi_acara} onChange={handleOrderFormChange} required /></div>
+                  <div className="form-group">
+                    <label className="required-label">Lokasi Acara</label>
+                    <input type="text" className={`form-control ${orderFieldErrors.lokasi_acara ? 'is-invalid' : ''}`} style={orderFieldErrors.lokasi_acara ? {borderColor: '#dc3545', backgroundColor: '#fff8f8'} : {}} name="lokasi_acara" placeholder="Contoh: Ballroom Hotel Grand, Jakarta" value={orderForm.lokasi_acara} onChange={handleOrderFormChange} onBlur={handleOrderFieldBlur} required />
+                    {orderFieldErrors.lokasi_acara && <span style={{ color: '#dc3545', fontSize: '0.85rem', marginTop: '4px', display: 'block' }}>{orderFieldErrors.lokasi_acara}</span>}
+                  </div>
                   <div className="form-group"><label>Catatan Tambahan</label><textarea className="form-control" name="catatan" rows="3" placeholder="Tema, permintaan khusus, atau informasi lainnya..." value={orderForm.catatan} onChange={handleOrderFormChange} /></div>
                   <div style={{ background: "rgba(226,154,0,0.06)", border: "1px solid rgba(226,154,0,0.2)", borderRadius: "10px", padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
                     <span style={{ color: "var(--color-text-muted)", fontSize: "0.875rem" }}>Total Pembayaran</span>
@@ -266,7 +325,7 @@ export default function CustomerKatalog() {
                   </div>
                   <div className="modal-footer-actions" style={{ borderTop: "none", paddingTop: 0, marginTop: 0 }}>
                     <button type="button" className="btn btn-outline" onClick={() => setShowOrderModal(false)}>Batal</button>
-                    <button type="submit" className="btn btn-primary" disabled={isSubmittingOrder || !orderForm.tanggal_acara || !orderForm.lokasi_acara || !orderForm.jumlah_tamu}>{isSubmittingOrder ? "Memproses..." : "Konfirmasi Pemesanan"}</button>
+                    <button type="submit" className="btn btn-primary" disabled={isSubmittingOrder}>{isSubmittingOrder ? "Memproses..." : "Konfirmasi Pemesanan"}</button>
                   </div>
                 </form>
               )}
@@ -354,7 +413,7 @@ export default function CustomerKatalog() {
                   </div>
                 </div>
               ) : (
-                <form onSubmit={handleSubmitRequest}>
+                <form noValidate onSubmit={handleSubmitRequest}>
                   {requestError && <div className="error-alert">{requestError}</div>}
                   <div className="stepper-indicator">
                     <div className={`step-dot ${requestStep >= 1 ? "active" : ""}`}>1. Info Event</div>
@@ -365,14 +424,33 @@ export default function CustomerKatalog() {
                   </div>
                   {requestStep === 1 && (
                     <div className="step-content">
-                      <div className="form-group"><label className="required-label">Kategori Event</label><select className="form-control" name="id_kategori" value={formData.id_kategori} onChange={handleInputChange} required><option value="">-- Pilih Kategori Event --</option>{categories.map(cat => (<option key={cat.id_kategori} value={cat.id_kategori}>{cat.nama_kategori}</option>))}</select></div>
-                      <div className="form-grid-2">
-                        <div className="form-group"><label className="required-label">Tanggal Acara</label><input type="date" className="form-control" name="tanggal_acara" value={formData.tanggal_acara} onChange={handleInputChange} min={minEventDate} required /></div>
-                        <div className="form-group"><label className="required-label">Jumlah Tamu (Pax)</label><input type="number" className="form-control" name="jumlah_tamu" placeholder="Contoh: 250" value={formData.jumlah_tamu} onChange={handleInputChange} min="1" required /></div>
+                      <div className="form-group">
+                        <label className="required-label">Kategori Event</label>
+                        <select className={`form-control ${requestFieldErrors.id_kategori ? 'is-invalid' : ''}`} style={requestFieldErrors.id_kategori ? {borderColor: '#dc3545', backgroundColor: '#fff8f8'} : {}} name="id_kategori" value={formData.id_kategori} onChange={handleInputChange} onBlur={handleRequestFieldBlur}>
+                          <option value="">-- Pilih Kategori Event --</option>
+                          {categories.map(cat => (<option key={cat.id_kategori} value={cat.id_kategori}>{cat.nama_kategori}</option>))}
+                        </select>
+                        {requestFieldErrors.id_kategori && <span style={{ color: '#dc3545', fontSize: '0.85rem', marginTop: '4px', display: 'block' }}>{requestFieldErrors.id_kategori}</span>}
                       </div>
-                      <div className="form-group"><label className="required-label">Lokasi Acara</label><input type="text" className="form-control" name="lokasi_acara" placeholder="Contoh: Ballroom Hotel Grand, Mampang" value={formData.lokasi_acara} onChange={handleInputChange} required /></div>
+                      <div className="form-grid-2">
+                        <div className="form-group">
+                          <label className="required-label">Tanggal Acara</label>
+                          <input type="date" className={`form-control ${requestFieldErrors.tanggal_acara ? 'is-invalid' : ''}`} style={requestFieldErrors.tanggal_acara ? {borderColor: '#dc3545', backgroundColor: '#fff8f8'} : {}} name="tanggal_acara" value={formData.tanggal_acara} onChange={handleInputChange} onBlur={handleRequestFieldBlur} min={minEventDate} />
+                          {requestFieldErrors.tanggal_acara && <span style={{ color: '#dc3545', fontSize: '0.85rem', marginTop: '4px', display: 'block' }}>{requestFieldErrors.tanggal_acara}</span>}
+                        </div>
+                        <div className="form-group">
+                          <label className="required-label">Jumlah Tamu (Pax)</label>
+                          <input type="number" className={`form-control ${requestFieldErrors.jumlah_tamu ? 'is-invalid' : ''}`} style={requestFieldErrors.jumlah_tamu ? {borderColor: '#dc3545', backgroundColor: '#fff8f8'} : {}} name="jumlah_tamu" placeholder="Contoh: 250" value={formData.jumlah_tamu} onChange={handleInputChange} onBlur={handleRequestFieldBlur} min="1" />
+                          {requestFieldErrors.jumlah_tamu && <span style={{ color: '#dc3545', fontSize: '0.85rem', marginTop: '4px', display: 'block' }}>{requestFieldErrors.jumlah_tamu}</span>}
+                        </div>
+                      </div>
+                      <div className="form-group">
+                        <label className="required-label">Lokasi Acara</label>
+                        <input type="text" className={`form-control ${requestFieldErrors.lokasi_acara ? 'is-invalid' : ''}`} style={requestFieldErrors.lokasi_acara ? {borderColor: '#dc3545', backgroundColor: '#fff8f8'} : {}} name="lokasi_acara" placeholder="Contoh: Ballroom Hotel Grand, Mampang" value={formData.lokasi_acara} onChange={handleInputChange} onBlur={handleRequestFieldBlur} />
+                        {requestFieldErrors.lokasi_acara && <span style={{ color: '#dc3545', fontSize: '0.85rem', marginTop: '4px', display: 'block' }}>{requestFieldErrors.lokasi_acara}</span>}
+                      </div>
                       <div className="form-group"><label>Rencana Budget Maksimal (Rp)</label><input type="number" className="form-control" name="budget_acara" placeholder="Masukkan angka, contoh: 50000000" value={formData.budget_acara} onChange={handleInputChange} /><span className="input-tip">Kosongkan jika ingin dihitung otomatis.</span></div>
-                      <div className="modal-footer-actions"><span className="step-info">Langkah 1 dari 3</span><button type="button" className="btn btn-primary" disabled={!formData.id_kategori || !formData.tanggal_acara || !formData.lokasi_acara || !formData.jumlah_tamu} onClick={() => setRequestStep(2)}>Lanjut: Pilih Fasilitas</button></div>
+                      <div className="modal-footer-actions"><span className="step-info">Langkah 1 dari 3</span><button type="button" className="btn btn-primary" onClick={handleNextRequestStep1}>Lanjut: Pilih Fasilitas</button></div>
                     </div>
                   )}
                   {requestStep === 2 && (
