@@ -15,11 +15,19 @@ class InvoiceController extends Controller
         $pemesanan = Pemesanan::with(['user', 'paketLayanan'])->findOrFail($id);
 
         if ($pemesanan->id_user !== Auth::id()) {
-            return response()->json(['message' => 'Unauthorized'], 403);
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 403);
+        }
+
+        // TC-56: Invoice hanya bisa diterbitkan jika pembayaran sudah terverifikasi
+        if (! in_array($pemesanan->payment_status, ['dp_paid', 'paid'])) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Invoice belum dapat diterbitkan karena pembayaran belum terverifikasi.',
+            ], 422);
         }
 
         $pdf = Pdf::loadView('customer.invoice.pdf', [
-            'data' => $pemesanan,
+            'data'  => $pemesanan,
             'jenis' => 'paket',
         ]);
 
@@ -31,11 +39,19 @@ class InvoiceController extends Controller
         $penawaran = PenawaranCustom::with(['requestCustomPaket.user', 'requestCustomPaket.kategoriEvent'])->findOrFail($id);
 
         if ($penawaran->requestCustomPaket->id_user !== Auth::id()) {
-            return response()->json(['message' => 'Unauthorized'], 403);
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 403);
+        }
+
+        // TC-56: Invoice hanya bisa diterbitkan jika pembayaran sudah terverifikasi
+        if (! in_array($penawaran->payment_status, ['dp_paid', 'paid'])) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Invoice belum dapat diterbitkan karena pembayaran belum terverifikasi.',
+            ], 422);
         }
 
         $pdf = Pdf::loadView('customer.invoice.pdf', [
-            'data' => $penawaran,
+            'data'  => $penawaran,
             'jenis' => 'custom',
         ]);
 

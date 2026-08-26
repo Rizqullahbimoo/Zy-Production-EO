@@ -285,9 +285,19 @@ export default function CustomerStatus() {
         link.click();
         link.remove();
       })
-      .catch(err => {
-        showToast('error', 'Gagal mengunduh invoice PDF.');
-        console.error(err);
+      .catch(async err => {
+        // TC-56: Response error dalam bentuk blob — perlu di-parse dulu ke JSON
+        if (err.response?.data instanceof Blob) {
+          try {
+            const text = await err.response.data.text();
+            const json = JSON.parse(text);
+            showToast('error', json.message || 'Gagal mengunduh invoice.');
+          } catch {
+            showToast('error', 'Gagal mengunduh invoice PDF.');
+          }
+        } else {
+          showToast('error', err.response?.data?.message || 'Gagal mengunduh invoice PDF.');
+        }
       });
   };
 
