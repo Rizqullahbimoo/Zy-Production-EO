@@ -86,6 +86,7 @@ Route::middleware(['auth:sanctum', 'role.admin'])->prefix('admin')->group(functi
     Route::post('/request-custom/{id}/penawaran', [PenawaranController::class, 'store']);
     Route::patch('/penawaran/{id}', [PenawaranController::class, 'update']);
     Route::delete('/penawaran/{id}', [PenawaranController::class, 'destroy']);
+    Route::post('/penawaran/{id}/pembayaran', [PenawaranController::class, 'recordPayment']);
 
     // Laporan (Admin)
     Route::get('/laporan/ringkasan', [LaporanController::class, 'ringkasan']);

@@ -64,7 +64,7 @@ class MidtransController extends Controller
         $dpAmount = $pemesanan->dp_amount
             ? (float) $pemesanan->dp_amount
             : DpCalculator::hitung((float) $pemesanan->paketLayanan->harga);
-        $grossAmount = $dpAmount;
+        $grossAmount = (int) round($dpAmount);
         $user = $pemesanan->user;
 
         $params = [
@@ -131,8 +131,8 @@ class MidtransController extends Controller
             ], 422);
         }
 
-        if ($penawaran->payment_status === 'paid') {
-            return response()->json(['status' => 'error', 'message' => 'Penawaran sudah dibayar.'], 422);
+        if (in_array($penawaran->payment_status, ['dp_paid', 'paid'])) {
+            return response()->json(['status' => 'error', 'message' => 'DP untuk penawaran ini sudah dibayar. Sisa pembayaran dicatat oleh admin.'], 422);
         }
 
         if ($penawaran->snap_token) {
@@ -146,7 +146,7 @@ class MidtransController extends Controller
         $dpAmount = $penawaran->dp_awal
             ? (float) $penawaran->dp_awal
             : DpCalculator::hitung((float) $penawaran->total_penawaran);
-        $grossAmount = $dpAmount;
+        $grossAmount = (int) round($dpAmount);
 
         $params = [
             'transaction_details' => [
@@ -245,18 +245,32 @@ class MidtransController extends Controller
                 }
             }
 
-            // Update penawaran custom — belum ada mekanisme pelunasan manual di sini,
-            // jadi 'paid' tetap dipakai sebagai penanda "DP settled" seperti sebelumnya.
-            $penawaran = PenawaranCustom::where('midtrans_order_id', $orderId)->first();
+            // Update penawaran custom — Midtrans di sini juga SELALU cuma nge-charge
+            // DP, jadi transaksi settle berarti 'dp_paid' (menunggu pelunasan manual
+            // oleh admin), bukan 'paid' (lunas penuh). Sama seperti alur pemesanan.
+            $penawaran = PenawaranCustom::with('requestCustomPaket')->where('midtrans_order_id', $orderId)->first();
             if ($penawaran) {
-                $penawaranStatus = $settledStatus === 'settled' ? 'paid' : $settledStatus;
+                $sudahDpSebelumnya = in_array($penawaran->payment_status, ['dp_paid', 'paid']);
+                $penawaranStatus = $settledStatus === 'settled' ? 'dp_paid' : $settledStatus;
                 $penawaran->update(['payment_status' => $penawaranStatus]);
-                if ($penawaranStatus === 'paid') {
+                if ($penawaranStatus === 'dp_paid') {
                     $penawaran->update(['status_penawaran' => 'diterima']);
                     // Update status request juga
                     if ($penawaran->requestCustomPaket) {
                         $penawaran->requestCustomPaket->update(['status_request' => 'diterima']);
                     }
+
+                    if (! $sudahDpSebelumnya) {
+                        Pembayaran::create([
+                            'id_penawaran' => $penawaran->id_penawaran,
+                            'created_id' => null,
+                            'tanggal_bayar' => now()->toDateString(),
+                            'jumlah_bayar' => $penawaran->dp_awal ?: DpCalculator::hitung((float) $penawaran->total_penawaran),
+                            'status_konfirmasi' => 'dikonfirmasi',
+                            'catatan_admin' => 'Pembayaran DP otomatis terverifikasi via Midtrans.',
+                        ]);
+                    }
+
                     // Send Email Notification
                     try {
                         Mail::to($penawaran->requestCustomPaket->user->email)->send(new PembayaranBerhasilMail($penawaran, 'custom'));
@@ -342,15 +356,28 @@ class MidtransController extends Controller
                 }
             }
 
-            // Update penawaran custom
-            $penawaran = PenawaranCustom::where('midtrans_order_id', $orderId)->first();
+            // Update penawaran custom (lihat notification() untuk penjelasan
+            // kenapa settle = 'dp_paid', bukan 'paid')
+            $penawaran = PenawaranCustom::with('requestCustomPaket')->where('midtrans_order_id', $orderId)->first();
             if ($penawaran) {
-                $penawaranStatus = $settledStatus === 'settled' ? 'paid' : $settledStatus;
+                $sudahDpSebelumnya = in_array($penawaran->payment_status, ['dp_paid', 'paid']);
+                $penawaranStatus = $settledStatus === 'settled' ? 'dp_paid' : $settledStatus;
                 $penawaran->update(['payment_status' => $penawaranStatus]);
-                if ($penawaranStatus === 'paid') {
+                if ($penawaranStatus === 'dp_paid') {
                     $penawaran->update(['status_penawaran' => 'diterima']);
                     if ($penawaran->requestCustomPaket) {
                         $penawaran->requestCustomPaket->update(['status_request' => 'diterima']);
+                    }
+
+                    if (! $sudahDpSebelumnya) {
+                        Pembayaran::create([
+                            'id_penawaran' => $penawaran->id_penawaran,
+                            'created_id' => null,
+                            'tanggal_bayar' => now()->toDateString(),
+                            'jumlah_bayar' => $penawaran->dp_awal ?: DpCalculator::hitung((float) $penawaran->total_penawaran),
+                            'status_konfirmasi' => 'dikonfirmasi',
+                            'catatan_admin' => 'Pembayaran DP otomatis terverifikasi via Midtrans (sync manual).',
+                        ]);
                     }
                 }
             }

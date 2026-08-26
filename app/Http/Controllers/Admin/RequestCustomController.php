@@ -62,7 +62,7 @@ class RequestCustomController extends Controller
             'user',
             'kategoriEvent',
             'detailRequestCustom.fasilitasLayanan',
-            'penawaranCustom',
+            'penawaranCustom.pembayaran',
             'dokumenMou',
         ])->find($id);
 

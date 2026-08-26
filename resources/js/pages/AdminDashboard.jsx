@@ -62,6 +62,13 @@ export default function AdminDashboard() {
   const [paymentProofInputKey, setPaymentProofInputKey] = useState(0);
   const [isRecordingPayment, setIsRecordingPayment] = useState(false);
 
+  // Catat Pelunasan — Penawaran Custom Paket
+  const [paymentAmountCustom, setPaymentAmountCustom] = useState('');
+  const [paymentNoteCustom, setPaymentNoteCustom] = useState('');
+  const [paymentProofFileCustom, setPaymentProofFileCustom] = useState(null);
+  const [paymentProofInputKeyCustom, setPaymentProofInputKeyCustom] = useState(0);
+  const [isRecordingPaymentCustom, setIsRecordingPaymentCustom] = useState(false);
+
   // Custom Paket state
   const [customRequests, setCustomRequests] = useState([]);
   const [customSearch, setCustomSearch] = useState('');
@@ -345,6 +352,42 @@ export default function AdminDashboard() {
     }
   };
 
+  // Catat pembayaran manual (pelunasan) untuk penawaran custom yang DP-nya sudah lunas
+  const handleRecordPaymentCustom = async (e, idPenawaran) => {
+    e.preventDefault();
+    if (!idPenawaran || !paymentAmountCustom) return;
+
+    setIsRecordingPaymentCustom(true);
+    try {
+      const formData = new FormData();
+      formData.append('jumlah_bayar', paymentAmountCustom);
+      if (paymentNoteCustom) formData.append('catatan_admin', paymentNoteCustom);
+      if (paymentProofFileCustom) formData.append('bukti_pembayaran', paymentProofFileCustom);
+
+      const response = await window.axios.post(`/api/admin/penawaran/${idPenawaran}/pembayaran`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      if (response.data?.status === 'success') {
+        showToast('success', response.data.data.payment_status === 'paid'
+          ? 'Pembayaran dicatat — penawaran sekarang Lunas!'
+          : 'Pembayaran berhasil dicatat.');
+        setPaymentAmountCustom('');
+        setPaymentNoteCustom('');
+        setPaymentProofFileCustom(null);
+        setPaymentProofInputKeyCustom((k) => k + 1);
+        fetchCustomRequests(customSearch, customStatusFilter);
+        handleShowCustomDetail(selectedCustomRequest.id_request);
+      } else {
+        showToast('error', response.data?.message || 'Gagal mencatat pembayaran.');
+      }
+    } catch (err) {
+      console.error('Error recording custom payment:', err);
+      showToast('error', err?.response?.data?.message || 'Terjadi kesalahan saat mencatat pembayaran.');
+    } finally {
+      setIsRecordingPaymentCustom(false);
+    }
+  };
+
   // Update order status inside the detail modal
   const handleUpdateStatus = async (e) => {
     e.preventDefault();
@@ -422,6 +465,10 @@ export default function AdminDashboard() {
         const data = response.data.data;
         setSelectedCustomRequest(data);
         setSelectedCustomStatus(data.status_request);
+        setPaymentAmountCustom('');
+        setPaymentNoteCustom('');
+        setPaymentProofFileCustom(null);
+        setPaymentProofInputKeyCustom((k) => k + 1);
 
         // Penawaran terbaru (jika sudah ada) -> masuk mode edit dengan data di-prefill.
         // Belum ada penawaran sama sekali -> mode buat baru, form kosong.
@@ -3231,12 +3278,130 @@ export default function AdminDashboard() {
                             </div>
                           )}
                         </div>
-                        {/* Status Midtrans Pembayaran untuk Penawaran Custom */}
+                        {/* Status Pembayaran Penawaran Custom */}
                         <div style={{ marginTop: '1rem', backgroundColor: penawaran.payment_status === 'paid' ? '#f0fdf4' : '#fffbeb', padding: '0.75rem 1rem', borderRadius: '6px', border: `1px solid ${penawaran.payment_status === 'paid' ? '#bbf7d0' : '#fef08a'}` }}>
                           <h5 style={{ margin: 0, fontSize: '0.85rem', color: penawaran.payment_status === 'paid' ? '#166534' : '#854d0e', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            {penawaran.payment_status === 'paid' ? '✅ Pembayaran DP Midtrans: Lunas' : '⏳ Pembayaran DP Midtrans: Belum Lunas / Pending'}
+                            {penawaran.payment_status === 'paid'
+                              ? '✅ Pembayaran: Lunas'
+                              : penawaran.payment_status === 'dp_paid'
+                              ? '🟡 Pembayaran DP Midtrans: Lunas — Menunggu Pelunasan'
+                              : '⏳ Pembayaran Midtrans: Belum Lunas / Pending'}
                           </h5>
+                          {penawaran.payment_status === 'dp_paid' && (
+                            <p style={{ margin: '0.5rem 0 0', fontSize: '0.85rem', color: '#854d0e' }}>
+                              Sisa pembayaran: <strong>{formatRupiah(
+                                Math.max(0, (penawaran.total_penawaran || 0) - (penawaran.pembayaran || [])
+                                  .filter(p => p.status_konfirmasi === 'dikonfirmasi')
+                                  .reduce((sum, p) => sum + Number(p.jumlah_bayar), 0))
+                              )}</strong>
+                            </p>
+                          )}
                         </div>
+
+                        {/* Riwayat Pembayaran */}
+                        {penawaran.pembayaran && penawaran.pembayaran.length > 0 && (
+                          <div className="zy-table-wrapper" style={{ marginTop: '0.75rem' }}>
+                            <table className="zy-table" style={{ fontSize: '0.85rem' }}>
+                              <thead>
+                                <tr>
+                                  <th>Tanggal Bayar</th>
+                                  <th>Jumlah</th>
+                                  <th>Status</th>
+                                  <th>Bukti</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {penawaran.pembayaran.map((pay) => (
+                                  <tr key={pay.id_pembayaran}>
+                                    <td>{formatIndoDate(pay.tanggal_bayar)}</td>
+                                    <td>{formatRupiah(pay.jumlah_bayar)}</td>
+                                    <td>
+                                      <span className={`zy-status-badge ${
+                                        pay.status_konfirmasi === 'dikonfirmasi' ? 'status-diproses' :
+                                        pay.status_konfirmasi === 'ditolak' ? 'status-dibatalkan' : 'status-menunggu-verifikasi'
+                                      }`} style={{ padding: '0.2rem 0.5rem', fontSize: '0.7rem' }}>
+                                        {pay.status_konfirmasi === 'dikonfirmasi' ? 'Dikonfirmasi' :
+                                         pay.status_konfirmasi === 'ditolak' ? 'Ditolak' : 'Menunggu Verifikasi'}
+                                      </span>
+                                    </td>
+                                    <td>
+                                      {pay.bukti_pembayaran ? (
+                                        <a
+                                          href={`/storage/${pay.bukti_pembayaran}`}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          style={{ color: 'var(--primary)', fontWeight: 'bold', textDecoration: 'underline' }}
+                                        >
+                                          Lihat Bukti
+                                        </a>
+                                      ) : (
+                                        '-'
+                                      )}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+
+                        {/* Catat Pelunasan — hanya muncul setelah DP lunas dan sebelum lunas penuh */}
+                        {penawaran.payment_status === 'dp_paid' && (
+                          <div style={{ marginTop: '0.75rem', background: '#f8f9fa', padding: '1rem', borderRadius: '8px', border: '1px solid var(--neutral-light)' }}>
+                            <h5 style={{ margin: '0 0 0.75rem', fontSize: '0.85rem', fontWeight: 700, color: 'var(--dark)' }}>
+                              Catat Pelunasan
+                            </h5>
+                            <form onSubmit={(e) => handleRecordPaymentCustom(e, penawaran.id_penawaran)} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                                <div className="zy-form-group" style={{ flex: '1 1 160px', margin: 0 }}>
+                                  <label className="zy-form-label">Jumlah Dibayar</label>
+                                  <input
+                                    type="number"
+                                    className="zy-filter-input"
+                                    value={paymentAmountCustom}
+                                    onChange={(e) => setPaymentAmountCustom(e.target.value)}
+                                    min="1"
+                                    step="1"
+                                    placeholder="Contoh: 3500000"
+                                    required
+                                  />
+                                </div>
+                                <div className="zy-form-group" style={{ flex: '2 1 220px', margin: 0 }}>
+                                  <label className="zy-form-label">Catatan (opsional)</label>
+                                  <input
+                                    type="text"
+                                    className="zy-filter-input"
+                                    value={paymentNoteCustom}
+                                    onChange={(e) => setPaymentNoteCustom(e.target.value)}
+                                    placeholder="Transfer BCA a.n. ..."
+                                  />
+                                </div>
+                              </div>
+                              <div className="zy-form-group" style={{ margin: 0 }}>
+                                <label className="zy-form-label">Bukti Pembayaran (opsional)</label>
+                                <input
+                                  key={paymentProofInputKeyCustom}
+                                  type="file"
+                                  className="zy-filter-input"
+                                  accept=".pdf,.jpg,.jpeg,.png"
+                                  onChange={(e) => setPaymentProofFileCustom(e.target.files[0] || null)}
+                                  style={{ padding: '0.45rem' }}
+                                />
+                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                                  PDF, JPG, atau PNG — maks 5MB. Berguna sebagai arsip bukti transfer kalau nanti diperlukan.
+                                </span>
+                              </div>
+                              <button
+                                type="submit"
+                                className="zy-btn-submit"
+                                disabled={isRecordingPaymentCustom || !paymentAmountCustom}
+                                style={{ height: 'auto', minWidth: 'auto', padding: '0.6rem 1.25rem', alignSelf: 'flex-start' }}
+                              >
+                                {isRecordingPaymentCustom ? 'Menyimpan...' : 'Catat Pembayaran'}
+                              </button>
+                            </form>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

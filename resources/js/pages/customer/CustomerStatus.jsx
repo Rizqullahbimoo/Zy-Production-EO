@@ -95,6 +95,7 @@ export default function CustomerStatus() {
   const getPaymentBadge = ps => {
     switch (ps) {
       case "paid": return "badge-paid";
+      case "dp_paid":
       case "pending": return "badge-warning";
       case "failed":
       case "expired": return "badge-danger";
@@ -102,7 +103,7 @@ export default function CustomerStatus() {
     }
   };
   const getPaymentLabel = ps => {
-    const m = { unpaid: "Belum Dibayar", pending: "Pembayaran Menunggu", paid: "✅ Lunas", failed: "❌ Gagal", expired: "⏰ Kadaluwarsa", refund: "↩ Refund" };
+    const m = { unpaid: "Belum Dibayar", pending: "Pembayaran Menunggu", dp_paid: "🟡 DP Lunas — Menunggu Pelunasan", paid: "✅ Lunas", failed: "❌ Gagal", expired: "⏰ Kadaluwarsa", refund: "↩ Refund" };
     return m[ps] || ps;
   };
 
@@ -657,12 +658,12 @@ export default function CustomerStatus() {
                                     </button>
                                   ) : offer.payment_status === "pending" && selectedRequest.dokumen_mou?.status_mou === "selesai" ? (
                                     <button className="btn-pay-midtrans" onClick={() => handlePayCustom(offer)} disabled={isPayingCustom} style={{ width: "100%", justifyContent: "center" }}>Lanjutkan Pembayaran DP</button>
-                                  ) : offer.status_penawaran !== "ditolak" && offer.payment_status !== "paid" ? (
+                                  ) : offer.status_penawaran !== "ditolak" && offer.payment_status !== "paid" && offer.payment_status !== "dp_paid" ? (
                                     <div className="mou-locked-notice">
                                       🔒 Selesaikan proses tanda tangan dokumen MOU terlebih dahulu sebelum dapat membayar DP.
                                     </div>
                                   ) : null}
-                                  {offer.payment_status === "paid" && (
+                                  {(offer.payment_status === "dp_paid" || offer.payment_status === "paid") && (
                                     <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
                                       <button className="btn btn-outline btn-sm" onClick={() => handleDownloadInvoice('custom', offer.id_penawaran)}>
                                         📄 Unduh Invoice
@@ -677,7 +678,7 @@ export default function CustomerStatus() {
                                       )}
                                     </div>
                                   )}
-                                  {offer.payment_status !== "paid" && (
+                                  {offer.payment_status !== "paid" && offer.payment_status !== "dp_paid" && offer.status_penawaran !== 'menunggu' && (
                                     <p className="whatsapp-prompt" style={{ marginTop: "10px" }}>
                                       💡 Untuk negosiasi lebih lanjut, hubungi kami di WhatsApp <strong>+62 812-7777-427</strong> dengan kode <strong>{selectedRequest.kode_request}</strong>.
                                     </p>

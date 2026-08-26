@@ -44,4 +44,9 @@ class PenawaranCustom extends Model
     {
         return $this->belongsTo(RequestCustomPaket::class, 'id_request', 'id_request');
     }
+
+    public function pembayaran()
+    {
+        return $this->hasMany(Pembayaran::class, 'id_penawaran', 'id_penawaran');
+    }
 }

@@ -5,11 +5,13 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\PenawaranRequest;
 use App\Mail\PenawaranBaruMail;
+use App\Models\Pembayaran;
 use App\Models\PenawaranCustom;
 use App\Models\RequestCustomPaket;
 use App\Support\DpCalculator;
 use App\Support\KodeGenerator;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
@@ -91,17 +93,23 @@ class PenawaranController extends Controller
             ], 404);
         }
 
-        if ($penawaran->payment_status === 'paid') {
+        // Kunci harga jika: penawaran sudah disetujui customer ATAU DP sudah dibayar.
+        // Dalam kedua kondisi ini hanya catatan_admin yang boleh diperbarui.
+        $harganDikunci = $penawaran->status_penawaran === 'diterima'
+            || $penawaran->payment_status === 'paid';
+
+        if ($harganDikunci) {
             $penawaran->update([
                 'catatan_admin' => $request->catatan_admin,
             ]);
 
             return response()->json([
-                'status' => 'success',
-                'message' => 'Catatan penawaran diperbarui. Total & DP tidak diubah karena DP sudah dibayar customer.',
-                'data' => $penawaran->fresh(),
+                'status'  => 'success',
+                'message' => 'Catatan penawaran diperbarui. Total & DP dikunci karena penawaran sudah disetujui customer atau DP sudah dibayar.',
+                'data'    => $penawaran->fresh(),
             ]);
         }
+
 
         try {
             DB::beginTransaction();
@@ -137,6 +145,72 @@ class PenawaranController extends Controller
                 'message' => 'Gagal memperbarui penawaran: '.$e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Catat pembayaran manual (pelunasan) untuk penawaran custom yang DP-nya
+     * sudah lunas. Kalau total yang tercatat sudah menutupi total penawaran,
+     * status pembayaran otomatis naik jadi 'paid' (Lunas). Menyamakan alur
+     * pelunasan paket bawaan (lihat PemesananController::recordPayment).
+     */
+    public function recordPayment(Request $request, int $id_penawaran): JsonResponse
+    {
+        $request->validate([
+            'jumlah_bayar' => ['required', 'numeric', 'min:1'],
+            'tanggal_bayar' => ['nullable', 'date'],
+            'catatan_admin' => ['nullable', 'string', 'max:1000'],
+            'bukti_pembayaran' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
+        ]);
+
+        $penawaran = PenawaranCustom::find($id_penawaran);
+
+        if (! $penawaran) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Penawaran tidak ditemukan.',
+            ], 404);
+        }
+
+        if ($penawaran->payment_status !== 'dp_paid') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Pembayaran manual hanya bisa dicatat setelah DP lunas dan sebelum penawaran lunas penuh.',
+            ], 422);
+        }
+
+        $buktiPath = $request->hasFile('bukti_pembayaran')
+            ? $request->file('bukti_pembayaran')->store('pembayaran', 'public')
+            : null;
+
+        Pembayaran::create([
+            'id_penawaran' => $penawaran->id_penawaran,
+            'created_id' => $request->user()->id_user,
+            'tanggal_bayar' => $request->input('tanggal_bayar', now()->toDateString()),
+            'jumlah_bayar' => $request->jumlah_bayar,
+            'bukti_pembayaran' => $buktiPath,
+            'status_konfirmasi' => 'dikonfirmasi',
+            'catatan_admin' => $request->catatan_admin,
+        ]);
+
+        $total = (float) $penawaran->total_penawaran;
+        $totalDibayar = (float) $penawaran->pembayaran()->where('status_konfirmasi', 'dikonfirmasi')->sum('jumlah_bayar');
+
+        if ($totalDibayar >= $total) {
+            $penawaran->update(['payment_status' => 'paid']);
+        }
+
+        $penawaran->load('pembayaran');
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Pembayaran berhasil dicatat.',
+            'data' => [
+                'payment_status' => $penawaran->payment_status,
+                'pembayaran' => $penawaran->pembayaran,
+                'total_dibayar' => $totalDibayar,
+                'sisa_pembayaran' => max(0, $total - $totalDibayar),
+            ],
+        ]);
     }
 
     /**

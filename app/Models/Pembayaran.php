@@ -15,6 +15,7 @@ class Pembayaran extends Model
 
     protected $fillable = [
         'id_pemesanan',
+        'id_penawaran',
         'created_id',
         'tanggal_bayar',
         'jumlah_bayar',
@@ -32,6 +33,11 @@ class Pembayaran extends Model
     public function pemesanan()
     {
         return $this->belongsTo(Pemesanan::class, 'id_pemesanan', 'id_pemesanan');
+    }
+
+    public function penawaranCustom()
+    {
+        return $this->belongsTo(PenawaranCustom::class, 'id_penawaran', 'id_penawaran');
     }
 
     public function adminPemroses()
