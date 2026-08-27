@@ -1977,7 +1977,7 @@
 .status-layout-grid {
   display: grid;
   grid-template-columns: 1fr;
-  height: 60vh;
+  align-items: start; /* jangan stretch detail-pane mengikuti tinggi sidebar */
 }
 
 @media (min-width: 768px) {
@@ -2031,6 +2031,14 @@
   flex-direction: column;
   overflow: hidden;
   background-color: #F8F9FA;
+  height: 60vh;
+}
+
+@media (min-width: 768px) {
+  .status-sidebar-list {
+    position: sticky;
+    top: calc(65px + var(--spacing-md)); /* 65px = tinggi header fixed (.home-header) */
+  }
 }
 
 .status-sidebar-list .list-title {
@@ -2118,9 +2126,8 @@
   padding-top: 4px;
 }
 
-/* Detail status pane */
+/* Detail status pane — tinggi & scroll mengikuti alur halaman utama, bukan internal */
 .status-detail-pane {
-  overflow-y: auto;
   background-color: #FFFFFF;
   display: flex;
   flex-direction: column;
