@@ -106,7 +106,7 @@ function FileDropzone({ inputId, file, onFileChange }) {
   );
 }
 
-export default function MouStatusCard({ mou, onUploaded }) {
+export default function MouStatusCard({ mou, tipe, id, onUploaded }) {
   const [file, setFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState("");
@@ -147,7 +147,7 @@ export default function MouStatusCard({ mou, onUploaded }) {
     const formData = new FormData();
     formData.append("file", file);
     window.axios
-      .post(`/api/customer/mou/${mou.id_mou}/ttd`, formData, {
+      .post(`/api/customer/mou/upload-ttd/${tipe}/${id}`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       })
       .then((res) => {

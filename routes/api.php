@@ -136,7 +136,7 @@ Route::middleware(['auth:sanctum', 'role.customer'])->prefix('customer')->group(
 
     // Dokumen MOU (Customer)
     Route::get('/mou/{id_mou}', [MoUController::class, 'showForCustomer']);
-    Route::post('/mou/{id_mou}/ttd', [MoUController::class, 'uploadTtd']);
+    Route::post('/mou/upload-ttd/{tipe}/{id}', [MoUController::class, 'uploadTtd']);
 });
 
 // ─── MIDTRANS WEBHOOK (public, tanpa auth) ─────────────────────────────────────

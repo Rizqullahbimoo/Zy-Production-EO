@@ -212,19 +212,52 @@ class MoUController extends Controller
 
     /**
      * Customer mengunggah dokumen MOU yang sudah ditandatangani.
-     * POST /customer/mou/{id_mou}/ttd
+     * POST /customer/mou/upload-ttd/{tipe}/{id}
+     *
+     * Sengaja dikunci berdasarkan (tipe, id pemesanan/request) — bukan id_mou —
+     * karena baris DokumenMou baru ada setelah admin mengunggah draf. Kalau
+     * endpoint ini tetap dikunci ke id_mou, tidak ada cara memanggilnya sama
+     * sekali sebelum draf tersedia, sehingga skenario "customer mencoba unggah
+     * sebelum draf tersedia" (TC-66) tidak pernah bisa ditolak secara eksplisit
+     * oleh backend — satu-satunya pertahanan cuma menyembunyikan tombol di UI.
      */
-    public function uploadTtd(Request $request, int $id_mou): JsonResponse
+    public function uploadTtd(Request $request, string $tipe, int $id): JsonResponse
     {
-        $mou = DokumenMou::with(['pemesanan', 'requestCustomPaket'])->find($id_mou);
-
-        if (! $mou) {
-            return response()->json(['status' => 'error', 'message' => 'Dokumen MOU tidak ditemukan.'], 404);
+        if (! in_array($tipe, ['pemesanan', 'custom'])) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Tipe transaksi tidak valid.',
+            ], 422);
         }
 
-        $ownerId = $mou->pemesanan->id_user ?? $mou->requestCustomPaket->id_user ?? null;
-        if ($ownerId !== Auth::id()) {
-            return response()->json(['message' => 'Unauthorized'], 403);
+        if ($tipe === 'pemesanan') {
+            $pemesanan = Pemesanan::find($id);
+            if (! $pemesanan) {
+                return response()->json(['status' => 'error', 'message' => 'Pemesanan tidak ditemukan.'], 404);
+            }
+            if ($pemesanan->id_user !== Auth::id()) {
+                return response()->json(['message' => 'Unauthorized'], 403);
+            }
+            $mou = DokumenMou::where('id_pemesanan', $pemesanan->id_pemesanan)->first();
+        } else {
+            $customRequest = RequestCustomPaket::find($id);
+            if (! $customRequest) {
+                return response()->json(['status' => 'error', 'message' => 'Request custom tidak ditemukan.'], 404);
+            }
+            if ($customRequest->id_user !== Auth::id()) {
+                return response()->json(['message' => 'Unauthorized'], 403);
+            }
+            $mou = DokumenMou::where('id_request', $customRequest->id_request)->first();
+        }
+
+        // TC-66: draf MOU belum pernah diunggah admin sama sekali — tolak
+        // eksplisit disertai pesan, bukan cuma mengandalkan frontend yang
+        // menyembunyikan kontrol unggah.
+        if (! $mou) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Draf MOU belum tersedia. Admin belum menyiapkan dokumen MOU untuk pesanan Anda.',
+            ], 422);
         }
 
         if ($mou->status_mou !== 'menunggu_ttd_customer') {
