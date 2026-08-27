@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import MouManageModal from '../components/admin/MouManageModal';
+import ImageCropper from '../components/ImageCropper';
+import { CROP_ASPECT_LANDSCAPE, CROP_ASPECT_SQUARE, validateImageFile } from '../utils/imageCropConfig';
 import '../../css/pages/admin-dashboard.css';
 
 const MOU_STATUS_BADGE = {
@@ -164,22 +166,53 @@ export default function AdminDashboard() {
   const [replyText, setReplyText] = useState({});
   const [activeReplyId, setActiveReplyId] = useState(null);
 
-  const handleProfileFotoChange = (e) => {
-    const file = e.target.files[0];
+  // Cropper reusable — satu state terpusat, dipakai semua titik upload foto
+  // (Foto Profil, Foto Paket, Galeri Portfolio).
+  // `target` menentukan setter mana yang dipanggil saat crop dikonfirmasi.
+  const [cropperState, setCropperState] = useState(null); // { target, file, aspect } | null
+
+  const openCropperForFile = (file, target, aspect, inputElementId) => {
     if (!file) return;
-
-    if (!file.type.match('image.*')) {
-      showToast('error', 'File harus berupa gambar (jpeg, png, jpg, gif).');
+    const validationError = validateImageFile(file);
+    if (validationError) {
+      showToast('error', validationError);
+      if (inputElementId) {
+        const el = document.getElementById(inputElementId);
+        if (el) el.value = '';
+      }
       return;
     }
+    setCropperState({ target, file, aspect, inputElementId });
+  };
 
-    if (file.size > 5 * 1024 * 1024) {
-      showToast('error', 'Ukuran gambar maksimal adalah 5 MB.');
-      return;
+  const handleCropperCancel = () => {
+    if (cropperState?.inputElementId) {
+      const el = document.getElementById(cropperState.inputElementId);
+      if (el) el.value = '';
     }
+    setCropperState(null);
+  };
 
-    setProfileFotoFile(file);
-    setProfileFotoPreview(URL.createObjectURL(file));
+  const handleCropperDone = (croppedFile) => {
+    switch (cropperState?.target) {
+      case 'profile':
+        setProfileFotoFile(croppedFile);
+        setProfileFotoPreview(URL.createObjectURL(croppedFile));
+        break;
+      case 'paket':
+        setPackageFoto(croppedFile);
+        break;
+      case 'galeriPortfolio':
+        setGalleryFoto(croppedFile);
+        break;
+      default:
+        break;
+    }
+    setCropperState(null);
+  };
+
+  const handleProfileFotoChange = (e) => {
+    openCropperForFile(e.target.files[0], 'profile', CROP_ASPECT_SQUARE, 'profile_foto_input');
   };
 
 
@@ -3658,7 +3691,7 @@ export default function AdminDashboard() {
                     className="zy-filter-input"
                     style={{ padding: '0.5rem 1rem' }}
                     accept="image/*"
-                    onChange={(e) => setPackageFoto(e.target.files[0] || null)}
+                    onChange={(e) => openCropperForFile(e.target.files[0], 'paket', CROP_ASPECT_LANDSCAPE, 'package_foto')}
                   />
                   {selectedPackage && selectedPackage.foto && !packageFoto && (
                     <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
@@ -4058,7 +4091,7 @@ export default function AdminDashboard() {
                     className="zy-filter-input"
                     style={{ padding: '0.5rem 1rem' }}
                     accept="image/*"
-                    onChange={(e) => setGalleryFoto(e.target.files[0] || null)}
+                    onChange={(e) => openCropperForFile(e.target.files[0], 'galeriPortfolio', CROP_ASPECT_LANDSCAPE, 'gallery_foto')}
                     required={!selectedGallery}
                   />
                   {selectedGallery && selectedGallery.foto && !galleryFoto && (
@@ -4184,6 +4217,15 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
+      )}
+
+      {cropperState && (
+        <ImageCropper
+          file={cropperState.file}
+          aspect={cropperState.aspect}
+          onCropped={handleCropperDone}
+          onCancel={handleCropperCancel}
+        />
       )}
     </div>
   );
