@@ -3,10 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Pemesanan;
-use App\Models\PenawaranCustom;
+use App\Models\Pembayaran;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
@@ -17,8 +15,34 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 class LaporanController extends Controller
 {
     /**
-     * Ringkasan keuangan (total pendapatan, jumlah transaksi, rata-rata per
-     * transaksi) untuk periode bulan/tahun terpilih — dipakai frontend untuk
+     * Ambil semua baris pembayaran (DP + pelunasan) yang benar-benar cair pada
+     * bulan/tahun terpilih — cash basis, per event pembayaran, bukan per
+     * pesanan dibuat. Satu pesanan yang DP dan pelunasannya jatuh di bulan
+     * berbeda akan muncul sebagai baris terpisah di masing-masing bulan.
+     */
+    private function pembayaranPeriode(string $bulan, string $tahun)
+    {
+        return Pembayaran::with([
+            'pemesanan.paketLayanan',
+            'pemesanan.user',
+            'penawaranCustom.requestCustomPaket.user',
+            'penawaranCustom.requestCustomPaket.kategoriEvent',
+        ])
+            ->where('status_konfirmasi', 'dikonfirmasi')
+            ->whereMonth('tanggal_bayar', $bulan)
+            ->whereYear('tanggal_bayar', $tahun)
+            ->orderBy('tanggal_bayar')
+            ->get();
+    }
+
+    private function jenisLabel(Pembayaran $p): string
+    {
+        return $p->jenis === 'dp' ? 'DP' : 'Pelunasan';
+    }
+
+    /**
+     * Ringkasan keuangan (total pendapatan, jumlah entri pemasukan, rata-rata
+     * per entri) untuk periode bulan/tahun terpilih — dipakai frontend untuk
      * menampilkan 3 kartu ringkasan di atas tombol unduh laporan.
      */
     public function ringkasan(Request $request)
@@ -26,22 +50,10 @@ class LaporanController extends Controller
         $bulan = $request->input('bulan', date('m'));
         $tahun = $request->input('tahun', date('Y'));
 
-        $pemesanan = Pemesanan::whereMonth('tanggal_pemesanan', $bulan)
-            ->whereYear('tanggal_pemesanan', $tahun)
-            ->where('payment_status', 'paid')
-            ->with('paketLayanan')
-            ->get();
+        $pembayaran = $this->pembayaranPeriode($bulan, $tahun);
 
-        $custom = PenawaranCustom::whereMonth('created_at', $bulan)
-            ->whereYear('created_at', $tahun)
-            ->where('payment_status', 'paid')
-            ->get();
-
-        $totalPendapatan = $pemesanan->sum(fn ($p) => $p->paketLayanan->harga ?? 0)
-            + $custom->sum(fn ($c) => $c->total_penawaran ?? 0);
-
-        $jumlahTransaksi = $pemesanan->count() + $custom->count();
-
+        $totalPendapatan = (float) $pembayaran->sum('jumlah_bayar');
+        $jumlahTransaksi = $pembayaran->count();
         $rataRata = $jumlahTransaksi > 0 ? $totalPendapatan / $jumlahTransaksi : 0;
 
         return response()->json([
@@ -59,17 +71,10 @@ class LaporanController extends Controller
         $bulan = $request->input('bulan', date('m'));
         $tahun = $request->input('tahun', date('Y'));
 
-        $pemesanan = Pemesanan::with(['user', 'paketLayanan'])
-            ->whereMonth('tanggal_pemesanan', $bulan)
-            ->whereYear('tanggal_pemesanan', $tahun)
-            ->where('payment_status', 'paid')
-            ->get();
+        $pembayaran = $this->pembayaranPeriode($bulan, $tahun);
 
-        $custom = PenawaranCustom::with(['requestCustomPaket.user', 'requestCustomPaket.kategoriEvent'])
-            ->whereMonth('created_at', $bulan)
-            ->whereYear('created_at', $tahun)
-            ->where('payment_status', 'paid')
-            ->get();
+        $pemesananRows = $pembayaran->filter(fn ($p) => $p->id_pemesanan !== null)->values();
+        $customRows = $pembayaran->filter(fn ($p) => $p->id_penawaran !== null)->values();
 
         $format = $request->input('format', 'pdf');
 
@@ -86,7 +91,7 @@ class LaporanController extends Controller
                 ->setDescription("Laporan Keuangan ZY Production Bulan {$bulan} Tahun {$tahun}");
 
             // Set header values
-            $headers = ['ID Transaksi', 'Tanggal', 'Nama Customer', 'Tipe', 'Paket/Event', 'Total Pemasukan (Rp)'];
+            $headers = ['Kode Transaksi', 'Tanggal Diterima', 'Nama Customer', 'Tipe', 'Paket/Event', 'Jenis', 'Jumlah Diterima (Rp)'];
             $sheet->fromArray($headers, null, 'A1');
 
             // Style header
@@ -103,43 +108,46 @@ class LaporanController extends Controller
                     ],
                 ],
             ];
-            $sheet->getStyle('A1:F1')->applyFromArray($headerStyle);
+            $sheet->getStyle('A1:G1')->applyFromArray($headerStyle);
 
             // Add data
             $row = 2;
             $totalPendapatan = 0;
             $totalCount = 0;
 
-            if ($pemesanan->isEmpty() && $custom->isEmpty()) {
-                $sheet->mergeCells("A{$row}:F{$row}");
-                $sheet->setCellValue("A{$row}", "Pemberitahuan: Tidak ada data transaksi pemesanan lunas yang ditemukan pada periode Bulan {$bulan} Tahun {$tahun}.");
+            if ($pemesananRows->isEmpty() && $customRows->isEmpty()) {
+                $sheet->mergeCells("A{$row}:G{$row}");
+                $sheet->setCellValue("A{$row}", "Pemberitahuan: Tidak ada pembayaran yang diterima pada periode Bulan {$bulan} Tahun {$tahun}.");
                 $sheet->getStyle("A{$row}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 $sheet->getStyle("A{$row}")->getFont()->setItalic(true)->getColor()->setRGB('721c24');
-                $sheet->getStyle("A{$row}:F{$row}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('f8d7da');
+                $sheet->getStyle("A{$row}:G{$row}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('f8d7da');
                 $row++;
             } else {
-                foreach ($pemesanan as $p) {
-                    $sheet->setCellValue('A'.$row, $p->kode_pemesanan);
-                    $sheet->setCellValue('B'.$row, Carbon::parse($p->tanggal_pemesanan)->format('Y-m-d'));
-                    $sheet->setCellValue('C'.$row, $p->user->name ?? '-');
+                foreach ($pemesananRows as $p) {
+                    $sheet->setCellValue('A'.$row, $p->pemesanan->kode_pemesanan ?? '-');
+                    $sheet->setCellValue('B'.$row, $p->tanggal_bayar->format('Y-m-d'));
+                    $sheet->setCellValue('C'.$row, $p->pemesanan->user->nama ?? '-');
                     $sheet->setCellValue('D'.$row, 'Paket Bawaan');
-                    $sheet->setCellValue('E'.$row, $p->paketLayanan->nama_paket ?? '-');
-                    $sheet->setCellValue('F'.$row, $p->paketLayanan->harga ?? 0);
+                    $sheet->setCellValue('E'.$row, $p->pemesanan->paketLayanan->nama_paket ?? '-');
+                    $sheet->setCellValue('F'.$row, $this->jenisLabel($p));
+                    $sheet->setCellValue('G'.$row, (float) $p->jumlah_bayar);
 
-                    $totalPendapatan += $p->paketLayanan->harga ?? 0;
+                    $totalPendapatan += (float) $p->jumlah_bayar;
                     $totalCount++;
                     $row++;
                 }
 
-                foreach ($custom as $c) {
-                    $sheet->setCellValue('A'.$row, $c->requestCustomPaket->kode_request ?? '-');
-                    $sheet->setCellValue('B'.$row, $c->created_at->format('Y-m-d'));
-                    $sheet->setCellValue('C'.$row, $c->requestCustomPaket->user->name ?? '-');
+                foreach ($customRows as $p) {
+                    $req = $p->penawaranCustom->requestCustomPaket ?? null;
+                    $sheet->setCellValue('A'.$row, $req->kode_request ?? '-');
+                    $sheet->setCellValue('B'.$row, $p->tanggal_bayar->format('Y-m-d'));
+                    $sheet->setCellValue('C'.$row, $req->user->nama ?? '-');
                     $sheet->setCellValue('D'.$row, 'Custom Paket');
-                    $sheet->setCellValue('E'.$row, $c->requestCustomPaket->kategoriEvent->nama_kategori ?? 'Event Custom');
-                    $sheet->setCellValue('F'.$row, $c->total_penawaran ?? 0);
+                    $sheet->setCellValue('E'.$row, $req->kategoriEvent->nama_kategori ?? 'Event Custom');
+                    $sheet->setCellValue('F'.$row, $this->jenisLabel($p));
+                    $sheet->setCellValue('G'.$row, (float) $p->jumlah_bayar);
 
-                    $totalPendapatan += $c->total_penawaran ?? 0;
+                    $totalPendapatan += (float) $p->jumlah_bayar;
                     $totalCount++;
                     $row++;
                 }
@@ -150,53 +158,53 @@ class LaporanController extends Controller
                 $row++;
 
                 // Add Summary Section
-                $sheet->mergeCells("A{$row}:F{$row}");
+                $sheet->mergeCells("A{$row}:G{$row}");
                 $sheet->setCellValue("A{$row}", 'RINGKASAN KEUANGAN');
                 $sheet->getStyle("A{$row}")->getFont()->setBold(true);
                 $sheet->getStyle("A{$row}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                $sheet->getStyle("A{$row}:F{$row}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('e2efda');
+                $sheet->getStyle("A{$row}:G{$row}")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('e2efda');
                 $row++;
 
-                $sheet->mergeCells("A{$row}:E{$row}");
-                $sheet->setCellValue("A{$row}", 'Total Transaksi (Pesanan)');
-                $sheet->setCellValue("F{$row}", $totalCount);
+                $sheet->mergeCells("A{$row}:F{$row}");
+                $sheet->setCellValue("A{$row}", 'Total Entri Pemasukan (DP + Pelunasan)');
+                $sheet->setCellValue("G{$row}", $totalCount);
                 $row++;
 
-                $sheet->mergeCells("A{$row}:E{$row}");
-                $sheet->setCellValue("A{$row}", 'Rata-rata Pendapatan per Transaksi');
-                $sheet->setCellValue("F{$row}", $avgPendapatan);
-                $sheet->getStyle("F{$row}")->getNumberFormat()->setFormatCode('#,##0');
+                $sheet->mergeCells("A{$row}:F{$row}");
+                $sheet->setCellValue("A{$row}", 'Rata-rata per Entri Pemasukan');
+                $sheet->setCellValue("G{$row}", $avgPendapatan);
+                $sheet->getStyle("G{$row}")->getNumberFormat()->setFormatCode('#,##0');
                 $row++;
 
-                $sheet->mergeCells("A{$row}:E{$row}");
-                $sheet->setCellValue("A{$row}", 'Total Pendapatan Bersih');
-                $sheet->setCellValue("F{$row}", $totalPendapatan);
-                $sheet->getStyle("F{$row}")->getNumberFormat()->setFormatCode('#,##0');
-                
+                $sheet->mergeCells("A{$row}:F{$row}");
+                $sheet->setCellValue("A{$row}", 'Total Pemasukan Bersih');
+                $sheet->setCellValue("G{$row}", $totalPendapatan);
+                $sheet->getStyle("G{$row}")->getNumberFormat()->setFormatCode('#,##0');
+
                 // Style Summary rows
                 $summaryStart = $row - 3;
                 $summaryEnd = $row;
-                $sheet->getStyle("A{$summaryStart}:F{$summaryEnd}")->applyFromArray([
+                $sheet->getStyle("A{$summaryStart}:G{$summaryEnd}")->applyFromArray([
                     'borders' => [
                         'allBorders' => [
                             'borderStyle' => Border::BORDER_THIN,
                         ],
                     ],
                 ]);
-                $sheet->getStyle("A{$row}:F{$row}")->getFont()->setBold(true);
-                $sheet->getStyle("A{$summaryStart}:E{$row}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+                $sheet->getStyle("A{$row}:G{$row}")->getFont()->setBold(true);
+                $sheet->getStyle("A{$summaryStart}:F{$row}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
             }
 
             // Format currency column (hanya pada row data, jika ada)
             if ($totalCount > 0) {
                 $dataEndRow = $row - 5;
                 if ($dataEndRow >= 2) {
-                    $sheet->getStyle("F2:F{$dataEndRow}")->getNumberFormat()->setFormatCode('#,##0');
+                    $sheet->getStyle("G2:G{$dataEndRow}")->getNumberFormat()->setFormatCode('#,##0');
                 }
             }
 
             // Auto size columns
-            foreach (range('A', 'F') as $col) {
+            foreach (range('A', 'G') as $col) {
                 $sheet->getColumnDimension($col)->setAutoSize(true);
             }
 
@@ -218,8 +226,8 @@ class LaporanController extends Controller
         }
 
         $pdf = Pdf::loadView('admin.laporan.pdf', [
-            'pemesanan' => $pemesanan,
-            'custom' => $custom,
+            'pemesananRows' => $pemesananRows,
+            'customRows' => $customRows,
             'bulan' => $bulan,
             'tahun' => $tahun,
         ]);

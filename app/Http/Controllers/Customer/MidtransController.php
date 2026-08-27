@@ -229,6 +229,7 @@ class MidtransController extends Controller
                     if (! $sudahDpSebelumnya) {
                         Pembayaran::create([
                             'id_pemesanan' => $pemesanan->id_pemesanan,
+                            'jenis' => 'dp',
                             'created_id' => null,
                             'tanggal_bayar' => now()->toDateString(),
                             'jumlah_bayar' => $pemesanan->dp_amount ?: DpCalculator::hitung((float) $pemesanan->paketLayanan->harga),
@@ -263,6 +264,7 @@ class MidtransController extends Controller
                     if (! $sudahDpSebelumnya) {
                         Pembayaran::create([
                             'id_penawaran' => $penawaran->id_penawaran,
+                            'jenis' => 'dp',
                             'created_id' => null,
                             'tanggal_bayar' => now()->toDateString(),
                             'jumlah_bayar' => $penawaran->dp_awal ?: DpCalculator::hitung((float) $penawaran->total_penawaran),
@@ -346,6 +348,7 @@ class MidtransController extends Controller
                     if (! $sudahDpSebelumnya) {
                         Pembayaran::create([
                             'id_pemesanan' => $pemesanan->id_pemesanan,
+                            'jenis' => 'dp',
                             'created_id' => null,
                             'tanggal_bayar' => now()->toDateString(),
                             'jumlah_bayar' => $pemesanan->dp_amount ?: DpCalculator::hitung((float) $pemesanan->paketLayanan->harga),
@@ -372,6 +375,7 @@ class MidtransController extends Controller
                     if (! $sudahDpSebelumnya) {
                         Pembayaran::create([
                             'id_penawaran' => $penawaran->id_penawaran,
+                            'jenis' => 'dp',
                             'created_id' => null,
                             'tanggal_bayar' => now()->toDateString(),
                             'jumlah_bayar' => $penawaran->dp_awal ?: DpCalculator::hitung((float) $penawaran->total_penawaran),

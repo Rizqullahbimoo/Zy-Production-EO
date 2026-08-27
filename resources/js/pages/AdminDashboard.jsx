@@ -59,6 +59,7 @@ export default function AdminDashboard() {
   const [isLoadingOrders, setIsLoadingOrders] = useState(false);
   const [selectedOrderStatus, setSelectedOrderStatus] = useState('');
   const [paymentAmount, setPaymentAmount] = useState('');
+  const [paymentTanggalBayar, setPaymentTanggalBayar] = useState(() => new Date().toISOString().slice(0, 10));
   const [paymentNote, setPaymentNote] = useState('');
   const [paymentProofFile, setPaymentProofFile] = useState(null);
   const [paymentProofInputKey, setPaymentProofInputKey] = useState(0);
@@ -66,6 +67,7 @@ export default function AdminDashboard() {
 
   // Catat Pelunasan — Penawaran Custom Paket
   const [paymentAmountCustom, setPaymentAmountCustom] = useState('');
+  const [paymentTanggalBayarCustom, setPaymentTanggalBayarCustom] = useState(() => new Date().toISOString().slice(0, 10));
   const [paymentNoteCustom, setPaymentNoteCustom] = useState('');
   const [paymentProofFileCustom, setPaymentProofFileCustom] = useState(null);
   const [paymentProofInputKeyCustom, setPaymentProofInputKeyCustom] = useState(0);
@@ -341,6 +343,7 @@ export default function AdminDashboard() {
         setSelectedOrder(response.data.data);
         setSelectedOrderStatus(response.data.data.status_pemesanan);
         setPaymentAmount('');
+        setPaymentTanggalBayar(new Date().toISOString().slice(0, 10));
         setPaymentNote('');
         setPaymentProofFile(null);
         setPaymentProofInputKey((k) => k + 1);
@@ -362,6 +365,7 @@ export default function AdminDashboard() {
     try {
       const formData = new FormData();
       formData.append('jumlah_bayar', paymentAmount);
+      if (paymentTanggalBayar) formData.append('tanggal_bayar', paymentTanggalBayar);
       if (paymentNote) formData.append('catatan_admin', paymentNote);
       if (paymentProofFile) formData.append('bukti_pembayaran', paymentProofFile);
 
@@ -394,6 +398,7 @@ export default function AdminDashboard() {
     try {
       const formData = new FormData();
       formData.append('jumlah_bayar', paymentAmountCustom);
+      if (paymentTanggalBayarCustom) formData.append('tanggal_bayar', paymentTanggalBayarCustom);
       if (paymentNoteCustom) formData.append('catatan_admin', paymentNoteCustom);
       if (paymentProofFileCustom) formData.append('bukti_pembayaran', paymentProofFileCustom);
 
@@ -405,6 +410,7 @@ export default function AdminDashboard() {
           ? 'Pembayaran dicatat — penawaran sekarang Lunas!'
           : 'Pembayaran berhasil dicatat.');
         setPaymentAmountCustom('');
+        setPaymentTanggalBayarCustom(new Date().toISOString().slice(0, 10));
         setPaymentNoteCustom('');
         setPaymentProofFileCustom(null);
         setPaymentProofInputKeyCustom((k) => k + 1);
@@ -499,6 +505,7 @@ export default function AdminDashboard() {
         setSelectedCustomRequest(data);
         setSelectedCustomStatus(data.status_request);
         setPaymentAmountCustom('');
+        setPaymentTanggalBayarCustom(new Date().toISOString().slice(0, 10));
         setPaymentNoteCustom('');
         setPaymentProofFileCustom(null);
         setPaymentProofInputKeyCustom((k) => k + 1);
@@ -1541,7 +1548,7 @@ export default function AdminDashboard() {
       {/* Header Banner */}
       <header className="zy-dashboard-header">
         <h1>Laporan Keuangan & Pesanan</h1>
-        <p>Cetak laporan bulanan format PDF atau Excel untuk rekapan pendapatan pemesanan Lunas.</p>
+        <p>Cetak laporan bulanan format PDF atau Excel untuk rekapan pembayaran (DP &amp; Pelunasan) yang diterima pada bulan tersebut.</p>
       </header>
 
       <div style={{ maxWidth: '800px', margin: '2rem auto' }}>
@@ -1581,20 +1588,21 @@ export default function AdminDashboard() {
           </div>
         ) : laporanRingkasan && laporanRingkasan.jumlah_transaksi === 0 ? (
           <div className="zy-section-card fade-in" style={{ marginBottom: '1.5rem', textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
-            Tidak ada data transaksi pada periode ini.
+            Tidak ada pembayaran yang diterima pada periode ini.
           </div>
         ) : laporanRingkasan ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem', marginBottom: '1.5rem' }}>
             <div className="zy-section-card fade-in" style={{ textAlign: 'center', padding: '1.5rem' }}>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>Total Pendapatan</p>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>Total Pendapatan Diterima</p>
               <h3 style={{ color: 'var(--primary)', fontSize: '1.4rem', margin: 0 }}>{formatRupiah(laporanRingkasan.total_pendapatan)}</h3>
             </div>
             <div className="zy-section-card fade-in" style={{ textAlign: 'center', padding: '1.5rem' }}>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>Jumlah Transaksi</p>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>Jumlah Entri Pemasukan</p>
               <h3 style={{ color: 'var(--text-main)', fontSize: '1.4rem', margin: 0 }}>{laporanRingkasan.jumlah_transaksi}</h3>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.7rem', margin: '0.25rem 0 0' }}>DP &amp; Pelunasan dihitung terpisah</p>
             </div>
             <div className="zy-section-card fade-in" style={{ textAlign: 'center', padding: '1.5rem' }}>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>Rata-rata per Transaksi</p>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>Rata-rata per Entri</p>
               <h3 style={{ color: 'var(--text-main)', fontSize: '1.4rem', margin: 0 }}>{formatRupiah(laporanRingkasan.rata_rata)}</h3>
             </div>
           </div>
@@ -3000,6 +3008,7 @@ export default function AdminDashboard() {
                       <thead>
                         <tr>
                           <th>Tanggal Bayar</th>
+                          <th>Jenis</th>
                           <th>Jumlah</th>
                           <th>Status</th>
                           <th>Bukti</th>
@@ -3009,6 +3018,7 @@ export default function AdminDashboard() {
                         {selectedOrder.pembayaran.map((pay) => (
                           <tr key={pay.id_pembayaran}>
                             <td>{formatIndoDate(pay.tanggal_bayar)}</td>
+                            <td>{pay.jenis === 'dp' ? 'DP' : 'Pelunasan'}</td>
                             <td>{formatRupiah(pay.jumlah_bayar)}</td>
                             <td>
                               <span className={`zy-status-badge ${
@@ -3062,6 +3072,17 @@ export default function AdminDashboard() {
                             min="1"
                             step="1"
                             placeholder="Contoh: 1500000"
+                            required
+                          />
+                        </div>
+                        <div className="zy-form-group" style={{ flex: '1 1 160px', margin: 0 }}>
+                          <label className="zy-form-label">Tanggal Diterima</label>
+                          <input
+                            type="date"
+                            className="zy-filter-input"
+                            value={paymentTanggalBayar}
+                            onChange={(e) => setPaymentTanggalBayar(e.target.value)}
+                            max={new Date().toISOString().slice(0, 10)}
                             required
                           />
                         </div>
@@ -3338,6 +3359,7 @@ export default function AdminDashboard() {
                               <thead>
                                 <tr>
                                   <th>Tanggal Bayar</th>
+                                  <th>Jenis</th>
                                   <th>Jumlah</th>
                                   <th>Status</th>
                                   <th>Bukti</th>
@@ -3347,6 +3369,7 @@ export default function AdminDashboard() {
                                 {penawaran.pembayaran.map((pay) => (
                                   <tr key={pay.id_pembayaran}>
                                     <td>{formatIndoDate(pay.tanggal_bayar)}</td>
+                                    <td>{pay.jenis === 'dp' ? 'DP' : 'Pelunasan'}</td>
                                     <td>{formatRupiah(pay.jumlah_bayar)}</td>
                                     <td>
                                       <span className={`zy-status-badge ${
@@ -3396,6 +3419,17 @@ export default function AdminDashboard() {
                                     min="1"
                                     step="1"
                                     placeholder="Contoh: 3500000"
+                                    required
+                                  />
+                                </div>
+                                <div className="zy-form-group" style={{ flex: '1 1 160px', margin: 0 }}>
+                                  <label className="zy-form-label">Tanggal Diterima</label>
+                                  <input
+                                    type="date"
+                                    className="zy-filter-input"
+                                    value={paymentTanggalBayarCustom}
+                                    onChange={(e) => setPaymentTanggalBayarCustom(e.target.value)}
+                                    max={new Date().toISOString().slice(0, 10)}
                                     required
                                   />
                                 </div>

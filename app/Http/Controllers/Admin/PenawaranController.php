@@ -157,7 +157,7 @@ class PenawaranController extends Controller
     {
         $request->validate([
             'jumlah_bayar' => ['required', 'numeric', 'min:1'],
-            'tanggal_bayar' => ['nullable', 'date'],
+            'tanggal_bayar' => ['nullable', 'date', 'before_or_equal:today'],
             'catatan_admin' => ['nullable', 'string', 'max:1000'],
             'bukti_pembayaran' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
         ]);
@@ -184,6 +184,7 @@ class PenawaranController extends Controller
 
         Pembayaran::create([
             'id_penawaran' => $penawaran->id_penawaran,
+            'jenis' => 'pelunasan',
             'created_id' => $request->user()->id_user,
             'tanggal_bayar' => $request->input('tanggal_bayar', now()->toDateString()),
             'jumlah_bayar' => $request->jumlah_bayar,

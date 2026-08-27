@@ -30,3 +30,4 @@ Thumbs.db
 /database/backups
 /database/*.sqlite
 /database/*.sqlite-journal
+/export_data.sql
