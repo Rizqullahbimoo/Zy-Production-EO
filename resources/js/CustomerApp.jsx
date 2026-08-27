@@ -8,6 +8,9 @@ import CustomerHome from './pages/customer/CustomerHome';
 import CustomerAbout from './pages/customer/CustomerAbout';
 import CustomerPortfolio from './pages/customer/CustomerPortfolio';
 import CustomerKatalog from './pages/customer/CustomerKatalog';
+import CustomerPaketDetail from './pages/customer/CustomerPaketDetail';
+import CustomerPemesananBaru from './pages/customer/CustomerPemesananBaru';
+import CustomerCustomPaketBaru from './pages/customer/CustomerCustomPaketBaru';
 import CustomerContact from './pages/customer/CustomerContact';
 import CustomerStatus from './pages/customer/CustomerStatus';
 
@@ -20,6 +23,9 @@ export default function CustomerApp() {
           <Route path="/about" element={<CustomerAbout />} />
           <Route path="/portfolio" element={<CustomerPortfolio />} />
           <Route path="/katalog" element={<CustomerKatalog />} />
+          <Route path="/katalog/:id" element={<CustomerPaketDetail />} />
+          <Route path="/pemesanan/baru/:paketId" element={<CustomerPemesananBaru />} />
+          <Route path="/custom-paket/baru" element={<CustomerCustomPaketBaru />} />
           <Route path="/contact" element={<CustomerContact />} />
           <Route path="/status" element={<CustomerStatus />} />
           {/* Fallback: redirect ke home */}
