@@ -110,6 +110,7 @@ export default function RegisterForm({
   onLoginClick,
   isLoading = false,
   serverError = '',
+  successMessage = '',
   serverErrors = {},
 }) {
   const [form, setForm] = useState({
@@ -155,6 +156,14 @@ export default function RegisterForm({
           Halaman pendaftaran akun customer ZY Production
         </p>
       </header>
+
+      {/* Success Alert (Toast) */}
+      {successMessage && (
+        <div className="register-alert" style={{ backgroundColor: '#e2efda', color: '#1e683f', borderColor: '#c3e6cb' }} role="alert" aria-live="polite">
+          <svg style={{marginRight: '8px', minWidth: '20px'}} viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+          <span>{successMessage}</span>
+        </div>
+      )}
 
       {/* Server Error Alert */}
       {serverError && (

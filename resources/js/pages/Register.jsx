@@ -13,20 +13,26 @@ import '../../css/pages/register.css';
 export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [serverError, setServerError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [serverErrors, setServerErrors] = useState({}); // 422 field-level errors
 
   const handleRegister = async (formData) => {
     setServerError('');
+    setSuccessMessage('');
     setServerErrors({});
     setIsLoading(true);
 
     try {
       await window.axios.post('/api/register', formData);
-      // Redirect to login
-      window.location.href = '/login';
+      // Registrasi sukses: tampilkan notifikasi dan jeda sebelum redirect
+      setSuccessMessage('Registrasi berhasil! Silakan login untuk melanjutkan.');
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 1500);
 
     } catch (err) {
       const status = err?.response?.status;
+      setIsLoading(false);
 
       if (status === 422) {
         // Backend validation errors — field-level (e.g. email already taken)
@@ -44,8 +50,6 @@ export default function RegisterPage() {
           'Terjadi kesalahan. Silakan coba lagi.';
         setServerError(message);
       }
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -89,6 +93,7 @@ export default function RegisterPage() {
           onLoginClick={handleGoToLogin}
           isLoading={isLoading}
           serverError={serverError}
+          successMessage={successMessage}
           serverErrors={serverErrors}
         />
       </main>
