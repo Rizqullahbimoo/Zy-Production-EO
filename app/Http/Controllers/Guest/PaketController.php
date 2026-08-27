@@ -18,7 +18,6 @@ class PaketController extends Controller
      * Query params:
      *   - kategori: filter by id_kategori
      *   - search: cari berdasarkan nama_paket
-     *   - sort: nama_asc (default) | nama_desc | harga_asc | harga_desc
      */
     public function index(Request $request): JsonResponse
     {
@@ -33,16 +32,7 @@ class PaketController extends Controller
             $query->where('nama_paket', 'like', '%'.$request->search.'%');
         }
 
-        match ($request->input('sort', 'nama_asc')) {
-            'nama_desc' => $query->orderBy('nama_paket', 'desc'),
-            // Paket tanpa harga (null) selalu ditaruh di akhir, terlepas arah sort-nya,
-            // supaya tidak nyempil di antara paket berharga saat diurutkan.
-            'harga_asc' => $query->orderByRaw('harga IS NULL')->orderBy('harga', 'asc'),
-            'harga_desc' => $query->orderByRaw('harga IS NULL')->orderBy('harga', 'desc'),
-            default => $query->orderBy('nama_paket', 'asc'),
-        };
-
-        $paket = $query->get()->map(function ($item) {
+        $paket = $query->orderBy('nama_paket')->get()->map(function ($item) {
             return [
                 'id_paket' => $item->id_paket,
                 'nama_paket' => $item->nama_paket,

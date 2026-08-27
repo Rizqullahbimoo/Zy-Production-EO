@@ -29,7 +29,7 @@ export default function CustomerAbout() {
       icon: '✏️',
       title: 'Custom Paket',
       desc: 'Melayani kebutuhan event yang disesuaikan dengan tema, fasilitas, dan budget pengguna.',
-      link: '/custom-paket/baru',
+      link: '/katalog?custom=true',
       label: 'Ajukan Request',
     },
     {

@@ -1,54 +1,207 @@
 /**
  * CustomerKatalog.jsx — Halaman /katalog customer.
- * Daftar paket layanan. Setiap card cuma punya satu CTA: "Lihat Detail" —
- * keputusan jalur (Pilih Paket vs Request Paket) terjadi di Halaman Detail
- * Paket (CustomerPaketDetail), bukan di sini. Form pemesanan (standar) dan
- * custom paket masing-masing jadi halaman tersendiri (bukan modal).
+ * Berisi: Daftar paket layanan + modal pemesanan paket bawaan + custom request modal.
+ * Integrasi: Midtrans Snap untuk pembayaran paket bawaan.
  */
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export default function CustomerKatalog() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const token = localStorage.getItem("auth_token");
 
   const [categories, setCategories] = useState([]);
   const [packages, setPackages] = useState([]);
   const [loadingPackages, setLoadingPackages] = useState(true);
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState("all");
 
-  // Search & sort — dikirim ke backend sebagai query param, bekerja bersamaan
-  // dengan filter tab kategori (bukan saling menimpa).
-  const [searchInput, setSearchInput] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [sortOption, setSortOption] = useState("nama_asc");
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedDetailPaket, setSelectedDetailPaket] = useState(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+
+  const [showOrderModal, setShowOrderModal] = useState(false);
+  const [orderPackage, setOrderPackage] = useState(null);
+  const [orderForm, setOrderForm] = useState({ tanggal_acara: "", lokasi_acara: "", jumlah_tamu: "", catatan: "" });
+  const [orderError, setOrderError] = useState("");
+  const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
+  const [orderResult, setOrderResult] = useState(null);
+
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [requestStep, setRequestStep] = useState(1);
+  const [facilities, setFacilities] = useState([]);
+  const [loadingFacilities, setLoadingFacilities] = useState(false);
+  const [formData, setFormData] = useState({ id_kategori: "", tanggal_acara: "", lokasi_acara: "", jumlah_tamu: "", budget_acara: "", catatan: "", fasilitas: [] });
+  const [requestError, setRequestError] = useState("");
+  const [requestSuccess, setRequestSuccess] = useState(false);
+  const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
+
+  /* ── Toast notification (pengganti alert() bawaan browser) ── */
+  const [toast, setToast] = useState(null); // { type: 'success' | 'error', message }
+  const showToast = (type, message) => setToast({ type, message });
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(null), 3500);
+    return () => clearTimeout(timer);
+  }, [toast]);
 
   useEffect(() => {
     window.axios.get("/api/kategori").then(res => { if (res.data.status === "success") setCategories(res.data.data); }).catch(() => {});
+    setLoadingPackages(true);
+    window.axios.get("/api/paket").then(res => { if (res.data.status === "success") setPackages(res.data.data); }).catch(() => {}).finally(() => setLoadingPackages(false));
   }, []);
 
-  // Debounce input pencarian supaya tidak fetch di setiap ketikan.
   useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(searchInput.trim()), 400);
-    return () => clearTimeout(timer);
-  }, [searchInput]);
-
-  useEffect(() => {
-    setLoadingPackages(true);
-    const params = new URLSearchParams();
-    if (selectedCategoryFilter !== "all") params.set("kategori", selectedCategoryFilter);
-    if (debouncedSearch) params.set("search", debouncedSearch);
-    params.set("sort", sortOption);
-    window.axios.get(`/api/paket?${params.toString()}`)
-      .then(res => { if (res.data.status === "success") setPackages(res.data.data); })
-      .catch(() => {})
-      .finally(() => setLoadingPackages(false));
-  }, [selectedCategoryFilter, debouncedSearch, sortOption]);
+    if (formData.id_kategori) {
+      setLoadingFacilities(true);
+      window.axios.get(`/api/fasilitas?id_kategori=${formData.id_kategori}`)
+        .then(res => { if (res.data.status === "success") { setFacilities(res.data.data); setFormData(prev => ({ ...prev, fasilitas: [] })); }})
+        .catch(() => {}).finally(() => setLoadingFacilities(false));
+    } else { setFacilities([]); }
+  }, [formData.id_kategori]);
 
   const formatIDR = num => { if (!num) return "-"; return "Rp " + parseFloat(num).toLocaleString("id-ID", { maximumFractionDigits: 0 }); };
-  // Total "Semua Paket" dihitung dari jumlah_paket per kategori (stabil, tidak
-  // ikut menyusut saat search/sort aktif) — bukan dari packages.length, karena
-  // packages sekarang sudah hasil filter dari backend.
-  const totalPaketCount = categories.reduce((sum, cat) => sum + (cat.jumlah_paket || 0), 0);
+  const formatDateIndo = dateStr => { if (!dateStr) return "-"; const d = new Date(dateStr); const months = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"]; return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`; };
+  // Tanggal acara minimal besok — sinkron dengan validasi backend (`after:today`),
+  // dihitung dari tanggal lokal (bukan toISOString/UTC) supaya tidak meleset di WIB.
+  const minEventDate = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  })();
+  const filteredPackages = selectedCategoryFilter === "all" ? packages : packages.filter(p => p.kategori.id_kategori === parseInt(selectedCategoryFilter));
+
+  const openOrderModal = pkg => {
+    if (!token) {
+      showToast('error', "Silakan login terlebih dahulu untuk memesan paket.");
+      setTimeout(() => { window.location.href = "/login"; }, 1200);
+      return;
+    }
+    setOrderPackage(pkg); setOrderForm({ tanggal_acara: "", lokasi_acara: "", jumlah_tamu: "", catatan: "" }); setOrderError(""); setOrderResult(null); setShowOrderModal(true);
+  };
+
+  const openDetailModal = pkg => {
+    setShowDetailModal(true);
+    setSelectedDetailPaket(pkg);
+    setLoadingDetail(true);
+    window.axios.get(`/api/paket/${pkg.id_paket}`)
+      .then(res => { if (res.data.status === "success") setSelectedDetailPaket(res.data.data); })
+      .catch(() => {})
+      .finally(() => setLoadingDetail(false));
+  };
+
+  const handlePesanFromDetail = () => {
+    const pkg = selectedDetailPaket;
+    setShowDetailModal(false);
+    openOrderModal(pkg);
+  };
+
+  const handleAjukanCustomFromDetail = () => {
+    const pkg = selectedDetailPaket;
+    setShowDetailModal(false);
+    openRequestModal({
+      id_kategori: pkg.kategori?.id_kategori ? String(pkg.kategori.id_kategori) : "",
+      catatan: "",
+    });
+  };
+
+  const [orderFieldErrors, setOrderFieldErrors] = useState({});
+
+  const handleOrderFormChange = e => {
+    const { name, value } = e.target;
+    setOrderForm(prev => ({ ...prev, [name]: value }));
+    if (orderFieldErrors[name]) setOrderFieldErrors(prev => ({ ...prev, [name]: '' }));
+  };
+
+  // TC-11: tampilkan "Field ini wajib diisi." saat field wajib di-blur dalam keadaan kosong
+  const handleOrderFieldBlur = e => {
+    const { name, value } = e.target;
+    if (!String(value).trim()) {
+      setOrderFieldErrors(prev => ({ ...prev, [name]: 'Field ini wajib diisi.' }));
+    }
+  };
+
+  const handleSubmitOrder = async e => {
+    e.preventDefault();
+    const errors = {};
+    if (!orderForm.tanggal_acara) errors.tanggal_acara = "Tanggal acara harus ditentukan.";
+    else if (new Date(orderForm.tanggal_acara) <= new Date()) errors.tanggal_acara = "Tanggal acara harus di masa mendatang.";
+    if (!orderForm.lokasi_acara.trim()) errors.lokasi_acara = "Lokasi acara harus diisi.";
+    if (!orderForm.jumlah_tamu || parseInt(orderForm.jumlah_tamu) < 1) errors.jumlah_tamu = "Jumlah tamu minimal 1 orang.";
+    
+    setOrderFieldErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
+    setOrderError(""); setIsSubmittingOrder(true);
+    try {
+      const res = await window.axios.post("/api/customer/pemesanan", { id_paket: orderPackage.id_paket, tanggal_acara: orderForm.tanggal_acara, lokasi_acara: orderForm.lokasi_acara, jumlah_tamu: parseInt(orderForm.jumlah_tamu), catatan: orderForm.catatan || null });
+      if (res.data.status === "success") setOrderResult(res.data.data);
+    } catch (err) { setOrderError(err?.response?.data?.message || "Terjadi kesalahan."); }
+    finally { setIsSubmittingOrder(false); }
+  };
+
+  const handleInputChange = e => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    setRequestFieldErrors(prev => (prev[name] ? { ...prev, [name]: '' } : prev));
+  };
+  const handleFacilityToggle = facilityId => setFormData(prev => { const exists = prev.fasilitas.find(f => f.id_fasilitas === facilityId); if (exists) return { ...prev, fasilitas: prev.fasilitas.filter(f => f.id_fasilitas !== facilityId) }; else return { ...prev, fasilitas: [...prev.fasilitas, { id_fasilitas: facilityId, keterangan: "" }] }; });
+  const handleFacilityDescChange = (facilityId, value) => setFormData(prev => ({ ...prev, fasilitas: prev.fasilitas.map(f => f.id_fasilitas === facilityId ? { ...f, keterangan: value } : f) }));
+  
+  const [requestFieldErrors, setRequestFieldErrors] = useState({});
+
+  // TC-17: tampilkan "Field ini wajib diisi." saat field wajib di langkah Info Event di-blur dalam keadaan kosong
+  const handleRequestFieldBlur = e => {
+    const { name, value } = e.target;
+    if (!String(value).trim()) {
+      setRequestFieldErrors(prev => ({ ...prev, [name]: 'Field ini wajib diisi.' }));
+    }
+  };
+
+  const openRequestModal = (prefill = {}) => {
+    if (!token) {
+      showToast('error', "Silakan login terlebih dahulu.");
+      setTimeout(() => { window.location.href = "/login"; }, 1200);
+      return;
+    }
+    setShowRequestModal(true); setRequestStep(1); setRequestSuccess(false); setRequestError(""); setRequestFieldErrors({}); setFormData({ id_kategori: "", tanggal_acara: "", lokasi_acara: "", jumlah_tamu: "", budget_acara: "", catatan: "", fasilitas: [], ...prefill });
+  };
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    if (searchParams.get('custom') === 'true') {
+      openRequestModal();
+      // Optionally remove the query param so it doesn't re-trigger on refresh
+      navigate('/katalog', { replace: true });
+    }
+  }, [location.search]);
+
+  const handleNextRequestStep1 = () => {
+    const errors = {};
+    if (!formData.id_kategori) errors.id_kategori = "Kategori event harus dipilih.";
+    if (!formData.tanggal_acara) errors.tanggal_acara = "Tanggal acara harus ditentukan.";
+    else if (new Date(formData.tanggal_acara) <= new Date()) errors.tanggal_acara = "Tanggal acara harus di masa mendatang.";
+    if (!formData.lokasi_acara.trim()) errors.lokasi_acara = "Lokasi acara harus diisi.";
+    if (!formData.jumlah_tamu || parseInt(formData.jumlah_tamu) < 1) errors.jumlah_tamu = "Jumlah tamu minimal 1 orang.";
+    
+    setRequestFieldErrors(errors);
+    if (Object.keys(errors).length === 0) setRequestStep(2);
+  };
+
+  const handleSubmitRequest = e => {
+    e.preventDefault();
+    const errors = {};
+    if (formData.fasilitas.length === 0) { 
+        setRequestError("Pilih minimal 1 fasilitas."); 
+        return; 
+    }
+    
+    setRequestError(""); setIsSubmittingRequest(true);
+    window.axios.post("/api/customer/request-custom", { id_kategori: parseInt(formData.id_kategori), tanggal_acara: formData.tanggal_acara, lokasi_acara: formData.lokasi_acara, jumlah_tamu: parseInt(formData.jumlah_tamu), budget_acara: formData.budget_acara ? parseFloat(formData.budget_acara) : null, catatan: formData.catatan, fasilitas: formData.fasilitas })
+      .then(res => { if (res.data.status === "success") setRequestSuccess(true); })
+      .catch(err => setRequestError(err?.response?.data?.message || "Terjadi kesalahan."))
+      .finally(() => setIsSubmittingRequest(false));
+  };
 
   return (
     <>
@@ -65,42 +218,13 @@ export default function CustomerKatalog() {
       {/* KATALOG CONTENT */}
       <section className="catalog-section" style={{ paddingTop: "3rem" }}>
         <div className="container">
-          {/* Search & Sort Toolbar */}
-          <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", justifyContent: "center", marginBottom: "1.5rem" }}>
-            <input
-              type="text"
-              className="form-control"
-              style={{ maxWidth: "320px" }}
-              placeholder="Cari nama paket..."
-              value={searchInput}
-              onChange={e => setSearchInput(e.target.value)}
-            />
-            <select
-              className="form-control"
-              style={{ maxWidth: "220px" }}
-              value={sortOption}
-              onChange={e => setSortOption(e.target.value)}
-            >
-              <option value="nama_asc">Nama A-Z</option>
-              <option value="nama_desc">Nama Z-A</option>
-              <option value="harga_asc">Harga Termurah</option>
-              <option value="harga_desc">Harga Termahal</option>
-            </select>
-          </div>
-
           <div className="catalog-categories">
-            <button className={`catalog-cat-btn ${selectedCategoryFilter === "all" ? "active" : ""}`} onClick={() => setSelectedCategoryFilter("all")}>Semua Paket ({totalPaketCount})</button>
+            <button className={`catalog-cat-btn ${selectedCategoryFilter === "all" ? "active" : ""}`} onClick={() => setSelectedCategoryFilter("all")}>Semua Paket ({packages.length})</button>
             {categories.map(cat => (<button key={cat.id_kategori} className={`catalog-cat-btn ${selectedCategoryFilter === cat.id_kategori.toString() ? "active" : ""}`} onClick={() => setSelectedCategoryFilter(cat.id_kategori.toString())}>{cat.nama_kategori} ({cat.jumlah_paket})</button>))}
           </div>
           {loadingPackages ? (<div className="catalog-loading"><div className="spinner" /><p>Memuat paket layanan...</p></div>) : (
             <div className="packages-grid">
-              {packages.length === 0 && (
-                <div className="no-status-notice text-center" style={{ gridColumn: "1 / -1" }}>
-                  <h4>Tidak Ada Paket Ditemukan</h4>
-                  <p>Coba ubah kata kunci pencarian atau filter kategori Anda.</p>
-                </div>
-              )}
-              {packages.map(pkg => (
+              {filteredPackages.map(pkg => (
                 <div key={pkg.id_paket} className="package-card">
                   <div className="package-img-wrapper">
                     <img src={pkg.foto || "/images/login-hero.jpg"} alt={pkg.nama_paket} className="package-img" onError={e => { e.currentTarget.src = "/images/login-hero.jpg"; }} />
@@ -124,7 +248,10 @@ export default function CustomerKatalog() {
                         <span className="price-label">Harga Paket</span>
                         <span className="price-value">{formatIDR(pkg.harga)}</span>
                       </div>
-                      <button className="btn btn-primary btn-sm" onClick={() => navigate(`/katalog/${pkg.id_paket}`)}>Lihat Detail</button>
+                      <div style={{ display: "flex", gap: "8px" }}>
+                        <button className="btn btn-outline btn-sm" onClick={() => openDetailModal(pkg)}>Lihat Detail</button>
+                        <button className="btn btn-primary btn-sm" onClick={() => openOrderModal(pkg)}>Pesan Sekarang</button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -134,13 +261,270 @@ export default function CustomerKatalog() {
                   <div className="promo-icon"><svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" /></svg></div>
                   <h3 className="promo-title">Butuh Paket Custom?</h3>
                   <p className="promo-desc">Miliki visi event tersendiri? Padukan fasilitas, sesuaikan budget, dan rancang paket custom spesial Anda bersama planner profesional kami.</p>
-                  <button className="btn btn-outline btn-full" onClick={() => navigate("/custom-paket/baru")}>Buat Custom Paket</button>
+                  <button className="btn btn-outline btn-full" onClick={() => openRequestModal()}>Buat Custom Paket</button>
                 </div>
               </div>
             </div>
           )}
         </div>
       </section>
+
+      {/* MODAL: PESAN PAKET BAWAAN */}
+      {showOrderModal && orderPackage && (
+        <div className="modal-backdrop" onClick={() => setShowOrderModal(false)}>
+          <div className="modal-container" style={{ maxWidth: "560px" }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>{orderResult ? "Pemesanan Berhasil!" : `Pesan ${orderPackage.nama_paket}`}</h3>
+              <button className="close-btn" onClick={() => setShowOrderModal(false)}><svg viewBox="0 0 24 24" width="20" height="20"><path fill="none" stroke="currentColor" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+            </div>
+            <div className="modal-body">
+              {orderResult ? (
+                <div className="order-success-view">
+                  <div className="order-success-icon"><svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg></div>
+                  <h3 style={{ color: "var(--color-text-main)", margin: 0 }}>Pemesanan Diterima!</h3>
+                  <p style={{ color: "var(--color-text-muted)", margin: 0, lineHeight: 1.6, maxWidth: "340px" }}>Pemesanan paket <strong style={{ color: "var(--color-text-main)" }}>{orderPackage.nama_paket}</strong> berhasil dibuat.</p>
+                  <div className="order-success-code">{orderResult.kode_pemesanan}</div>
+                  <div className="pay-now-section">
+                    <span className="pay-now-label">Total yang harus dibayar</span>
+                    <span style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--color-primary)" }}>{formatIDR(orderPackage.harga)}</span>
+                    <div className="mou-locked-notice" style={{ width: "100%", justifyContent: "center", textAlign: "center" }}>
+                      🔒 Admin akan menyiapkan dokumen MOU terlebih dahulu. Pantau & selesaikan proses tanda tangan MOU di halaman Status sebelum dapat membayar DP.
+                    </div>
+                    <button className="btn btn-outline btn-sm" onClick={() => { setShowOrderModal(false); navigate("/status"); }} style={{ marginTop: "0.5rem" }}>Lihat Status</button>
+                  </div>
+                </div>
+              ) : (
+                <form noValidate onSubmit={handleSubmitOrder}>
+                  <div className="order-package-summary">
+                    <img src={orderPackage.foto || "/images/login-hero.jpg"} alt={orderPackage.nama_paket} className="order-pkg-img" onError={e => { e.currentTarget.src = "/images/login-hero.jpg"; }} />
+                    <div className="order-pkg-info"><div className="order-pkg-name">{orderPackage.nama_paket}</div><div className="order-pkg-cat">{orderPackage.kategori?.nama_kategori}</div></div>
+                    <div className="order-pkg-price">{formatIDR(orderPackage.harga)}</div>
+                  </div>
+                  {orderError && <div className="error-alert">{orderError}</div>}
+                  <div className="form-grid-2">
+                    <div className="form-group">
+                      <label className="required-label">Tanggal Acara</label>
+                      <input type="date" className={`form-control ${orderFieldErrors.tanggal_acara ? 'is-invalid' : ''}`} style={orderFieldErrors.tanggal_acara ? {borderColor: '#dc3545', backgroundColor: '#fff8f8'} : {}} name="tanggal_acara" value={orderForm.tanggal_acara} onChange={handleOrderFormChange} onBlur={handleOrderFieldBlur} min={minEventDate} required />
+                      {orderFieldErrors.tanggal_acara && <span style={{ color: '#dc3545', fontSize: '0.85rem', marginTop: '4px', display: 'block' }}>{orderFieldErrors.tanggal_acara}</span>}
+                    </div>
+                    <div className="form-group">
+                      <label className="required-label">Jumlah Tamu (Pax)</label>
+                      <input type="number" className={`form-control ${orderFieldErrors.jumlah_tamu ? 'is-invalid' : ''}`} style={orderFieldErrors.jumlah_tamu ? {borderColor: '#dc3545', backgroundColor: '#fff8f8'} : {}} name="jumlah_tamu" placeholder="Contoh: 150" value={orderForm.jumlah_tamu} onChange={handleOrderFormChange} onBlur={handleOrderFieldBlur} min="1" required />
+                      {orderFieldErrors.jumlah_tamu && <span style={{ color: '#dc3545', fontSize: '0.85rem', marginTop: '4px', display: 'block' }}>{orderFieldErrors.jumlah_tamu}</span>}
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label className="required-label">Lokasi Acara</label>
+                    <input type="text" className={`form-control ${orderFieldErrors.lokasi_acara ? 'is-invalid' : ''}`} style={orderFieldErrors.lokasi_acara ? {borderColor: '#dc3545', backgroundColor: '#fff8f8'} : {}} name="lokasi_acara" placeholder="Contoh: Ballroom Hotel Grand, Jakarta" value={orderForm.lokasi_acara} onChange={handleOrderFormChange} onBlur={handleOrderFieldBlur} required />
+                    {orderFieldErrors.lokasi_acara && <span style={{ color: '#dc3545', fontSize: '0.85rem', marginTop: '4px', display: 'block' }}>{orderFieldErrors.lokasi_acara}</span>}
+                  </div>
+                  <div className="form-group"><label>Catatan Tambahan</label><textarea className="form-control" name="catatan" rows="3" placeholder="Tema, permintaan khusus, atau informasi lainnya..." value={orderForm.catatan} onChange={handleOrderFormChange} /></div>
+                  <div style={{ background: "rgba(226,154,0,0.06)", border: "1px solid rgba(226,154,0,0.2)", borderRadius: "10px", padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
+                    <span style={{ color: "var(--color-text-muted)", fontSize: "0.875rem" }}>Total Pembayaran</span>
+                    <span style={{ fontSize: "1.25rem", fontWeight: 800, color: "var(--color-primary)" }}>{formatIDR(orderPackage.harga)}</span>
+                  </div>
+                  <div className="modal-footer-actions" style={{ borderTop: "none", paddingTop: 0, marginTop: 0 }}>
+                    <button type="button" className="btn btn-outline" onClick={() => setShowOrderModal(false)}>Batal</button>
+                    <button type="submit" className="btn btn-primary" disabled={isSubmittingOrder}>{isSubmittingOrder ? "Memproses..." : "Konfirmasi Pemesanan"}</button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: DETAIL PAKET */}
+      {showDetailModal && selectedDetailPaket && (
+        <div className="modal-backdrop" onClick={() => setShowDetailModal(false)}>
+          <div className="modal-container" style={{ maxWidth: "620px" }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>{selectedDetailPaket.nama_paket}</h3>
+              <button className="close-btn" onClick={() => setShowDetailModal(false)}><svg viewBox="0 0 24 24" width="20" height="20"><path fill="none" stroke="currentColor" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+            </div>
+            <div className="modal-body">
+              <img
+                src={selectedDetailPaket.foto || "/images/login-hero.jpg"}
+                alt={selectedDetailPaket.nama_paket}
+                style={{ width: "100%", height: "220px", objectFit: "cover", borderRadius: "12px", marginBottom: "1.25rem" }}
+                onError={e => { e.currentTarget.src = "/images/login-hero.jpg"; }}
+              />
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+                <span className="package-category-label" style={{ position: "static" }}>{selectedDetailPaket.kategori?.nama_kategori}</span>
+                <span style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--color-primary)" }}>{formatIDR(selectedDetailPaket.harga)}</span>
+              </div>
+              {selectedDetailPaket.deskripsi && (
+                <p style={{ color: "var(--color-text-muted)", lineHeight: 1.7, marginBottom: "1.5rem" }}>{selectedDetailPaket.deskripsi}</p>
+              )}
+
+              <h4 className="facilities-title">Fasilitas & Benefit</h4>
+              {loadingDetail ? (
+                <div className="loading-facilities-spinner"><div className="spinner" /><p>Memuat detail fasilitas...</p></div>
+              ) : selectedDetailPaket.fasilitas && selectedDetailPaket.fasilitas.length > 0 ? (
+                <div className="facilities-checklist-container">
+                  {selectedDetailPaket.fasilitas.map(f => (
+                    <div key={f.id_fasilitas} className="facility-checklist-item selected">
+                      <div className="checkbox-row" style={{ cursor: "default" }}>
+                        <div className="custom-checkbox checked"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg></div>
+                        <div className="facility-label-desc">
+                          <span className="facility-name">{f.nama_fasilitas}{f.qty > 1 ? ` (x${f.qty})` : ""}</span>
+                          {(f.deskripsi || f.keterangan) && <span className="facility-desc">{f.keterangan || f.deskripsi}</span>}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="no-facilities-notice"><p>Belum ada fasilitas khusus yang ditentukan untuk paket ini.</p></div>
+              )}
+
+              <div className="custom-addon-cta">
+                <p className="custom-addon-cta-title">✨ Butuh tambahan di luar daftar ini?</p>
+                <p className="custom-addon-cta-desc">Ajukan sebagai Custom Paket dan dapatkan penawaran harga khusus dari tim kami.</p>
+                <button type="button" className="btn btn-outline btn-sm" onClick={handleAjukanCustomFromDetail}>Ajukan Custom Paket →</button>
+              </div>
+
+              <div className="modal-footer-actions" style={{ borderTop: "none", paddingTop: 0, marginTop: "1.5rem" }}>
+                <button type="button" className="btn btn-outline" onClick={() => setShowDetailModal(false)}>Tutup</button>
+                <button type="button" className="btn btn-primary" onClick={handlePesanFromDetail}>Pesan Sekarang</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: REQUEST CUSTOM PAKET */}
+      {showRequestModal && (
+        <div className="modal-backdrop">
+          <div className="modal-container">
+            <div className="modal-header">
+              <h3>Buat Request Custom Paket</h3>
+              <button className="close-btn" onClick={() => { setShowRequestModal(false); setRequestSuccess(false); }}><svg viewBox="0 0 24 24" width="20" height="20"><path fill="none" stroke="currentColor" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+            </div>
+            <div className="modal-body">
+              {requestSuccess ? (
+                <div className="success-step text-center">
+                  <div className="success-icon-wrapper"><svg viewBox="0 0 24 24" width="64" height="64" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12" /></svg></div>
+                  <h3>Pengajuan Berhasil Dikirim!</h3>
+                  <p>Custom paket Anda telah masuk ke sistem. Tim kami akan segera meninjau dan memberikan penawaran resmi.</p>
+                  <div className="success-actions">
+                    <button className="btn btn-primary" onClick={() => { setShowRequestModal(false); setRequestSuccess(false); navigate("/status"); }}>Pantau Status Pemesanan</button>
+                    <button className="btn btn-outline" onClick={() => { setShowRequestModal(false); setRequestSuccess(false); }}>Tutup</button>
+                  </div>
+                </div>
+              ) : (
+                <form noValidate onSubmit={handleSubmitRequest}>
+                  {requestError && <div className="error-alert">{requestError}</div>}
+                  <div className="stepper-indicator">
+                    <div className={`step-dot ${requestStep >= 1 ? "active" : ""}`}>1. Info Event</div>
+                    <div className={`step-line ${requestStep >= 2 ? "active" : ""}`} />
+                    <div className={`step-dot ${requestStep >= 2 ? "active" : ""}`}>2. Pilih Fasilitas</div>
+                    <div className={`step-line ${requestStep >= 3 ? "active" : ""}`} />
+                    <div className={`step-dot ${requestStep >= 3 ? "active" : ""}`}>3. Catatan & Kirim</div>
+                  </div>
+                  {requestStep === 1 && (
+                    <div className="step-content">
+                      <div className="form-group">
+                        <label className="required-label">Kategori Event</label>
+                        <select className={`form-control ${requestFieldErrors.id_kategori ? 'is-invalid' : ''}`} style={requestFieldErrors.id_kategori ? {borderColor: '#dc3545', backgroundColor: '#fff8f8'} : {}} name="id_kategori" value={formData.id_kategori} onChange={handleInputChange} onBlur={handleRequestFieldBlur}>
+                          <option value="">-- Pilih Kategori Event --</option>
+                          {categories.map(cat => (<option key={cat.id_kategori} value={cat.id_kategori}>{cat.nama_kategori}</option>))}
+                        </select>
+                        {requestFieldErrors.id_kategori && <span style={{ color: '#dc3545', fontSize: '0.85rem', marginTop: '4px', display: 'block' }}>{requestFieldErrors.id_kategori}</span>}
+                      </div>
+                      <div className="form-grid-2">
+                        <div className="form-group">
+                          <label className="required-label">Tanggal Acara</label>
+                          <input type="date" className={`form-control ${requestFieldErrors.tanggal_acara ? 'is-invalid' : ''}`} style={requestFieldErrors.tanggal_acara ? {borderColor: '#dc3545', backgroundColor: '#fff8f8'} : {}} name="tanggal_acara" value={formData.tanggal_acara} onChange={handleInputChange} onBlur={handleRequestFieldBlur} min={minEventDate} />
+                          {requestFieldErrors.tanggal_acara && <span style={{ color: '#dc3545', fontSize: '0.85rem', marginTop: '4px', display: 'block' }}>{requestFieldErrors.tanggal_acara}</span>}
+                        </div>
+                        <div className="form-group">
+                          <label className="required-label">Jumlah Tamu (Pax)</label>
+                          <input type="number" className={`form-control ${requestFieldErrors.jumlah_tamu ? 'is-invalid' : ''}`} style={requestFieldErrors.jumlah_tamu ? {borderColor: '#dc3545', backgroundColor: '#fff8f8'} : {}} name="jumlah_tamu" placeholder="Contoh: 250" value={formData.jumlah_tamu} onChange={handleInputChange} onBlur={handleRequestFieldBlur} min="1" />
+                          {requestFieldErrors.jumlah_tamu && <span style={{ color: '#dc3545', fontSize: '0.85rem', marginTop: '4px', display: 'block' }}>{requestFieldErrors.jumlah_tamu}</span>}
+                        </div>
+                      </div>
+                      <div className="form-group">
+                        <label className="required-label">Lokasi Acara</label>
+                        <input type="text" className={`form-control ${requestFieldErrors.lokasi_acara ? 'is-invalid' : ''}`} style={requestFieldErrors.lokasi_acara ? {borderColor: '#dc3545', backgroundColor: '#fff8f8'} : {}} name="lokasi_acara" placeholder="Contoh: Ballroom Hotel Grand, Mampang" value={formData.lokasi_acara} onChange={handleInputChange} onBlur={handleRequestFieldBlur} />
+                        {requestFieldErrors.lokasi_acara && <span style={{ color: '#dc3545', fontSize: '0.85rem', marginTop: '4px', display: 'block' }}>{requestFieldErrors.lokasi_acara}</span>}
+                      </div>
+                      <div className="form-group"><label>Rencana Budget Maksimal (Rp)</label><input type="number" className="form-control" name="budget_acara" placeholder="Masukkan angka, contoh: 50000000" value={formData.budget_acara} onChange={handleInputChange} /><span className="input-tip">Kosongkan jika ingin dihitung otomatis.</span></div>
+                      <div className="modal-footer-actions"><span className="step-info">Langkah 1 dari 3</span><button type="button" className="btn btn-primary" onClick={handleNextRequestStep1}>Lanjut: Pilih Fasilitas</button></div>
+                    </div>
+                  )}
+                  {requestStep === 2 && (
+                    <div className="step-content">
+                      <h4 className="facilities-title">Pilih Fasilitas & Layanan Pendukung</h4>
+                      <p className="facilities-subtitle">Fasilitas disesuaikan dengan kategori event Anda.</p>
+                      {loadingFacilities ? (<div className="loading-facilities-spinner"><div className="spinner" /><p>Mengambil fasilitas...</p></div>) : facilities.length === 0 ? (<div className="no-facilities-notice"><p>Tidak ada fasilitas standar. Tulis fasilitas pada kolom catatan.</p></div>) : (
+                        <div className="facilities-checklist-container">
+                          {facilities.map(fac => { const isChecked = !!formData.fasilitas.find(f => f.id_fasilitas === fac.id_fasilitas); const currentFacObj = formData.fasilitas.find(f => f.id_fasilitas === fac.id_fasilitas); return (<div key={fac.id_fasilitas} className={`facility-checklist-item ${isChecked ? "selected" : ""}`}><div className="checkbox-row" onClick={() => handleFacilityToggle(fac.id_fasilitas)}><div className={`custom-checkbox ${isChecked ? "checked" : ""}`}>{isChecked && (<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>)}</div><div className="facility-label-desc"><span className="facility-name">{fac.nama_fasilitas}</span>{fac.deskripsi && <span className="facility-desc">{fac.deskripsi}</span>}</div></div>{isChecked && (<div className="facility-input-detail"><input type="text" className="form-control form-control-sm" placeholder="Detail permintaan khusus (opsional)..." value={currentFacObj?.keterangan || ""} onChange={e => handleFacilityDescChange(fac.id_fasilitas, e.target.value)} /></div>)}</div>); })}
+                        </div>
+                      )}
+                      <div className="modal-footer-actions"><button type="button" className="btn btn-outline" onClick={() => setRequestStep(1)}>Kembali</button><span className="step-info">Langkah 2 dari 3</span><button type="button" className="btn btn-primary" disabled={formData.fasilitas.length === 0} onClick={() => setRequestStep(3)}>Lanjut: Catatan Akhir</button></div>
+                    </div>
+                  )}
+                  {requestStep === 3 && (
+                    <div className="step-content">
+                      <div className="form-group"><label>Catatan Tambahan / Deskripsi Rencana Event</label><textarea className="form-control" name="catatan" rows="5" placeholder="Instruksi khusus, tema warna, layout, dll..." value={formData.catatan} onChange={handleInputChange} /></div>
+                      <div className="summary-card">
+                        <h4>Ringkasan Pengajuan</h4>
+                        <div className="summary-grid">
+                          <div><span>Kategori:</span> <strong>{categories.find(c => c.id_kategori.toString() === formData.id_kategori)?.nama_kategori || "-"}</strong></div>
+                          <div><span>Tanggal:</span> <strong>{formatDateIndo(formData.tanggal_acara)}</strong></div>
+                          <div><span>Tamu:</span> <strong>{formData.jumlah_tamu} Pax</strong></div>
+                          <div><span>Lokasi:</span> <strong>{formData.lokasi_acara}</strong></div>
+                          <div><span>Budget:</span> <strong>{formData.budget_acara ? formatIDR(formData.budget_acara) : "Otomatis"}</strong></div>
+                          <div><span>Fasilitas:</span> <strong>{formData.fasilitas.length} Layanan</strong></div>
+                        </div>
+                      </div>
+                      <div className="modal-footer-actions"><button type="button" className="btn btn-outline" onClick={() => setRequestStep(2)}>Kembali</button><span className="step-info">Langkah 3 dari 3</span><button type="submit" className="btn btn-primary" disabled={isSubmittingRequest}>{isSubmittingRequest ? "Mengirim..." : "Kirim Pengajuan"}</button></div>
+                    </div>
+                  )}
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast notification — pengganti alert() bawaan browser */}
+      {toast && (
+        <div
+          role="status"
+          style={{
+            position: 'fixed',
+            top: '20px',
+            right: '20px',
+            zIndex: 10000,
+            minWidth: '280px',
+            maxWidth: '420px',
+            background: '#FFFFFF',
+            border: `1px solid ${toast.type === 'success' ? 'rgba(226,154,0,0.35)' : '#FFC9C9'}`,
+            borderLeft: `4px solid ${toast.type === 'success' ? 'var(--color-primary, #E29A00)' : '#C92A2A'}`,
+            color: 'var(--color-text-main)',
+            borderRadius: '10px',
+            padding: '0.9rem 1.1rem',
+            boxShadow: '0 20px 50px rgba(30,22,6,0.18)',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '0.75rem',
+            fontSize: '0.9rem',
+            lineHeight: 1.5,
+          }}
+        >
+          <span style={{ flex: 1 }}>{toast.message}</span>
+          <button
+            type="button"
+            onClick={() => setToast(null)}
+            aria-label="Tutup notifikasi"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', fontSize: '1rem', lineHeight: 1, padding: 0 }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
     </>
   );
 }
