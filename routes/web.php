@@ -59,6 +59,28 @@ Route::get('/test-smtp-connection', function () {
     }
 });
 
+// TEMPORARY — testing kirim email via mailer 'brevo' (HTTP API) dari Railway (hapus setelah selesai testing)
+Route::get('/test-brevo-mail', function () {
+    try {
+        \Illuminate\Support\Facades\Mail::mailer('brevo')->raw('Test email dari Railway via Brevo API - '.now(), function ($message) {
+            $message->to('rizqullahbimo34@gmail.com')
+                    ->subject('Test Brevo API Transport');
+        });
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Email berhasil dikirim (tidak ada exception)',
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'status' => 'failed',
+            'exception_class' => get_class($e),
+            'message' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+        ], 500);
+    }
+});
+
 // Customer SPA catch-all: semua URL customer di-handle oleh React Router
 // Regex negatif: kecualikan /api, /admin, /login, /register, /forgot-password, /reset-password
 Route::get('/{any}', function () {
