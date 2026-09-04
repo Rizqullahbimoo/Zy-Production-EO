@@ -242,6 +242,10 @@ class MidtransController extends Controller
                     try {
                         Mail::to($pemesanan->user->email)->send(new PembayaranBerhasilMail($pemesanan, 'paket'));
                     } catch (\Exception $e) {
+                        Log::error('Gagal mengirim email PembayaranBerhasilMail', [
+                            'error' => $e->getMessage(),
+                            'trace' => $e->getTraceAsString(),
+                        ]);
                     }
                 }
             }
@@ -277,6 +281,10 @@ class MidtransController extends Controller
                     try {
                         Mail::to($penawaran->requestCustomPaket->user->email)->send(new PembayaranBerhasilMail($penawaran, 'custom'));
                     } catch (\Exception $e) {
+                        Log::error('Gagal mengirim email PembayaranBerhasilMail', [
+                            'error' => $e->getMessage(),
+                            'trace' => $e->getTraceAsString(),
+                        ]);
                     }
                 }
             }

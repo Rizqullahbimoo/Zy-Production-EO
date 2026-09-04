@@ -13,6 +13,7 @@ use App\Support\KodeGenerator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class PenawaranController extends Controller
@@ -55,6 +56,10 @@ class PenawaranController extends Controller
             try {
                 Mail::to($customRequest->user->email)->send(new PenawaranBaruMail($penawaran));
             } catch (\Exception $e) {
+                Log::error('Gagal mengirim email PenawaranBaruMail', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
             }
 
             return response()->json([
@@ -130,6 +135,10 @@ class PenawaranController extends Controller
             try {
                 Mail::to($penawaran->requestCustomPaket->user->email)->send(new PenawaranBaruMail($penawaran->fresh()));
             } catch (\Exception $e) {
+                Log::error('Gagal mengirim email PenawaranBaruMail', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
             }
 
             return response()->json([
