@@ -108,9 +108,9 @@ export default function CustomerStatus() {
     return m[ps] || ps;
   };
 
-  const fetchPemesanan = () => {
+  const fetchPemesanan = ({ silent = false } = {}) => {
     if (!token) return;
-    setLoadingPemesanan(true);
+    if (!silent) setLoadingPemesanan(true);
     window.axios.get("/api/customer/pemesanan")
       .then(res => {
         if (res.data.status === "success") {
@@ -125,12 +125,12 @@ export default function CustomerStatus() {
         }
       })
       .catch(() => {})
-      .finally(() => setLoadingPemesanan(false));
+      .finally(() => { if (!silent) setLoadingPemesanan(false); });
   };
 
-  const fetchMyRequests = () => {
+  const fetchMyRequests = ({ silent = false } = {}) => {
     if (!token) return;
-    setLoadingStatus(true);
+    if (!silent) setLoadingStatus(true);
     window.axios.get("/api/customer/request-custom")
       .then(res => {
         if (res.data.status === "success") {
@@ -145,12 +145,12 @@ export default function CustomerStatus() {
         }
       })
       .catch(() => {})
-      .finally(() => setLoadingStatus(false));
+      .finally(() => { if (!silent) setLoadingStatus(false); });
   };
 
-  const fetchMyPesan = () => {
+  const fetchMyPesan = ({ silent = false } = {}) => {
     if (!token) return;
-    setLoadingPesan(true);
+    if (!silent) setLoadingPesan(true);
     window.axios.get("/api/customer/pesan")
       .then(res => {
         if (res.data.status === "success") {
@@ -165,7 +165,7 @@ export default function CustomerStatus() {
         }
       })
       .catch(() => {})
-      .finally(() => setLoadingPesan(false));
+      .finally(() => { if (!silent) setLoadingPesan(false); });
   };
 
   useEffect(() => {
@@ -173,6 +173,16 @@ export default function CustomerStatus() {
     fetchMyRequests();
     fetchMyPesan();
     loadSnapScript().catch(() => {});
+
+    // Polling: sinkronisasi otomatis kalau ada perubahan dari sisi admin
+    // (draft MOU baru, penawaran di-approve, dll) tanpa customer perlu refresh manual.
+    const pollInterval = setInterval(() => {
+      fetchPemesanan({ silent: true });
+      fetchMyRequests({ silent: true });
+      fetchMyPesan({ silent: true });
+    }, 5000);
+
+    return () => clearInterval(pollInterval);
   }, []);
 
   /* ── Pay for Paket Bawaan ── */
