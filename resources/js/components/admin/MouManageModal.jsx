@@ -108,7 +108,7 @@ function FileDropzone({ inputId, file, onFileChange }) {
   );
 }
 
-export default function MouManageModal({ tipe, id, idMou, onClose, onChanged }) {
+export default function MouManageModal({ tipe, id, idMou, onClose, onChanged, showToast }) {
   const [mou, setMou] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [file, setFile] = useState(null);
@@ -142,6 +142,7 @@ export default function MouManageModal({ tipe, id, idMou, onClose, onChanged }) 
         if (res.data.status === "success") {
           setFile(null);
           setMou(res.data.data);
+          showToast && showToast('success', 'Draf MOU berhasil diunggah! Customer sudah bisa mengunduh & menandatangani.');
           onChanged && onChanged();
         }
       })
@@ -160,6 +161,7 @@ export default function MouManageModal({ tipe, id, idMou, onClose, onChanged }) 
         if (res.data.status === "success") {
           setFile(null);
           setMou(res.data.data);
+          showToast && showToast('success', 'Dokumen MOU final berhasil diunggah! Proses MOU selesai, customer sudah bisa melanjutkan pembayaran DP.');
           onChanged && onChanged();
         }
       })

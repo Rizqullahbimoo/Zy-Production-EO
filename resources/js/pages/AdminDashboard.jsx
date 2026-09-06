@@ -4137,6 +4137,7 @@ export default function AdminDashboard() {
           id={mouModalTarget.id}
           idMou={mouModalTarget.idMou}
           onClose={() => setMouModalTarget(null)}
+          showToast={showToast}
           onChanged={() => {
             if (mouModalTarget.tipe === 'pemesanan') {
               handleShowDetail(mouModalTarget.id);

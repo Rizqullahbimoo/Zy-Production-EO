@@ -459,7 +459,7 @@ export default function CustomerStatus() {
 
                         {/* MOU Status Section */}
                         {selectedPemesanan.status_pemesanan !== "dibatalkan" && (
-                          <MouStatusCard mou={selectedPemesanan.dokumen_mou} tipe="pemesanan" id={selectedPemesanan.id_pemesanan} onUploaded={fetchPemesanan} />
+                          <MouStatusCard mou={selectedPemesanan.dokumen_mou} tipe="pemesanan" id={selectedPemesanan.id_pemesanan} onUploaded={fetchPemesanan} showToast={showToast} />
                         )}
 
                         {/* Payment Section */}
@@ -606,7 +606,7 @@ export default function CustomerStatus() {
 
                         {/* MOU Status Section */}
                         {selectedRequest.penawaran_custom && selectedRequest.penawaran_custom.length > 0 && selectedRequest.status_request !== "ditolak" && (
-                          <MouStatusCard mou={selectedRequest.dokumen_mou} tipe="custom" id={selectedRequest.id_request} onUploaded={fetchMyRequests} />
+                          <MouStatusCard mou={selectedRequest.dokumen_mou} tipe="custom" id={selectedRequest.id_request} onUploaded={fetchMyRequests} showToast={showToast} />
                         )}
 
                         {/* Penawaran + Tombol Bayar */}

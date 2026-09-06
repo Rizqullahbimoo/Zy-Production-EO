@@ -106,7 +106,7 @@ function FileDropzone({ inputId, file, onFileChange }) {
   );
 }
 
-export default function MouStatusCard({ mou, tipe, id, onUploaded }) {
+export default function MouStatusCard({ mou, tipe, id, onUploaded, showToast }) {
   const [file, setFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState("");
@@ -153,6 +153,7 @@ export default function MouStatusCard({ mou, tipe, id, onUploaded }) {
       .then((res) => {
         if (res.data.status === "success") {
           setFile(null);
+          showToast && showToast('success', 'Dokumen berhasil diunggah! Admin akan segera memeriksa & menandatangani.');
           onUploaded && onUploaded();
         }
       })
