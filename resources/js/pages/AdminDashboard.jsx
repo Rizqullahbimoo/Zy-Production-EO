@@ -273,9 +273,8 @@ export default function AdminDashboard() {
   };
 
   // Fetch order list for "Data Pemesanan" page
-  const fetchOrders = async (searchVal = '', statusVal = '') => {
-    setIsLoadingOrders(true);
-    setErrorMsg('');
+  const fetchOrders = async (searchVal = '', statusVal = '', silent = false) => {
+    if (!silent) { setIsLoadingOrders(true); setErrorMsg(''); }
     try {
       const response = await window.axios.get(`/api/admin/pemesanan`, {
         params: {
@@ -285,14 +284,14 @@ export default function AdminDashboard() {
       });
       if (response.data?.status === 'success') {
         setOrders(response.data.data);
-      } else {
+      } else if (!silent) {
         setErrorMsg('Gagal memuat data pemesanan.');
       }
     } catch (err) {
       console.error('Error fetching orders:', err);
-      setErrorMsg('Terjadi kesalahan saat memuat data pemesanan.');
+      if (!silent) setErrorMsg('Terjadi kesalahan saat memuat data pemesanan.');
     } finally {
-      setIsLoadingOrders(false);
+      if (!silent) setIsLoadingOrders(false);
     }
   };
 
@@ -433,10 +432,29 @@ export default function AdminDashboard() {
     }
   }, [activeTab]);
 
+  // Polling: sinkronisasi otomatis list & detail pemesanan yang sedang dibuka
+  // kalau ada perubahan dari sisi customer (upload TTD, dll), tanpa admin
+  // perlu refresh manual. Hanya aktif selagi tab "Data Pemesanan" terbuka.
+  // Refresh detail HANYA update selectedOrder (info tampilan) — TIDAK
+  // menyentuh selectedOrderStatus atau form pencatatan pembayaran yang
+  // mungkin sedang diisi admin.
+  const selectedOrderId = selectedOrder?.id_pemesanan;
+  useEffect(() => {
+    if (activeTab !== 'data-pemesanan') return;
+    const pollInterval = setInterval(() => {
+      fetchOrders(orderSearch, orderStatusFilter, true);
+      if (selectedOrderId) {
+        window.axios.get(`/api/admin/pemesanan/${selectedOrderId}`)
+          .then((res) => { if (res.data?.status === 'success') setSelectedOrder(res.data.data); })
+          .catch(() => {});
+      }
+    }, 5000);
+    return () => clearInterval(pollInterval);
+  }, [activeTab, orderSearch, orderStatusFilter, selectedOrderId]);
+
   // Fetch custom request list for "Custom Paket" page
-  const fetchCustomRequests = async (searchVal = '', statusVal = '') => {
-    setIsLoadingCustomRequests(true);
-    setErrorMsg('');
+  const fetchCustomRequests = async (searchVal = '', statusVal = '', silent = false) => {
+    if (!silent) { setIsLoadingCustomRequests(true); setErrorMsg(''); }
     try {
       const response = await window.axios.get(`/api/admin/request-custom`, {
         params: {
@@ -446,14 +464,14 @@ export default function AdminDashboard() {
       });
       if (response.data?.status === 'success') {
         setCustomRequests(response.data.data);
-      } else {
+      } else if (!silent) {
         setErrorMsg('Gagal memuat data request custom.');
       }
     } catch (err) {
       console.error('Error fetching custom requests:', err);
-      setErrorMsg('Terjadi kesalahan saat memuat data request custom.');
+      if (!silent) setErrorMsg('Terjadi kesalahan saat memuat data request custom.');
     } finally {
-      setIsLoadingCustomRequests(false);
+      if (!silent) setIsLoadingCustomRequests(false);
     }
   };
 
@@ -1240,6 +1258,27 @@ export default function AdminDashboard() {
       fetchCustomRequests(customSearch, customStatusFilter);
     }
   }, [activeTab]);
+
+  // Polling: sinkronisasi otomatis list & detail request custom yang sedang
+  // dibuka kalau ada perubahan dari sisi customer (approve/revisi penawaran,
+  // upload TTD, dll), tanpa admin perlu refresh manual. Hanya aktif selagi
+  // tab "Custom Paket" terbuka. Refresh detail HANYA update
+  // selectedCustomRequest (info tampilan) — TIDAK menyentuh
+  // selectedCustomStatus atau form pembayaran/penawaran yang mungkin sedang
+  // diisi admin.
+  const selectedCustomRequestId = selectedCustomRequest?.id_request;
+  useEffect(() => {
+    if (activeTab !== 'custom-paket') return;
+    const pollInterval = setInterval(() => {
+      fetchCustomRequests(customSearch, customStatusFilter, true);
+      if (selectedCustomRequestId) {
+        window.axios.get(`/api/admin/request-custom/${selectedCustomRequestId}`)
+          .then((res) => { if (res.data?.status === 'success') setSelectedCustomRequest(res.data.data); })
+          .catch(() => {});
+      }
+    }, 5000);
+    return () => clearInterval(pollInterval);
+  }, [activeTab, customSearch, customStatusFilter, selectedCustomRequestId]);
 
   // Trigger gallery list fetch when tab changes to 'galeri-event'
   useEffect(() => {
@@ -3531,11 +3570,19 @@ export default function AdminDashboard() {
                     value={selectedCustomStatus}
                     onChange={(e) => setSelectedCustomStatus(e.target.value)}
                   >
-                    {/* Selalu tampilkan status saat ini agar dropdown tidak blank */}
-                    {['menunggu', 'diproses', 'ditawarkan'].includes(selectedCustomRequest.status_request) && (
-                      <option value={selectedCustomRequest.status_request}>
-                        {selectedCustomRequest.status_request === 'menunggu' ? 'Menunggu Review' :
-                         selectedCustomRequest.status_request === 'diproses' ? 'Diproses' : 'Menunggu Penawaran'}
+                    {/* Selalu tampilkan opsi yang cocok dengan value dropdown saat ini
+                        (selectedCustomStatus) — BUKAN status_request yang sedang di-poll
+                        silent di background. Kalau dicek terhadap status_request, opsi
+                        "stale" ini bisa hilang duluan begitu status_request berubah lewat
+                        polling (customer approve, dll), padahal selectedCustomStatus belum
+                        ikut berubah — <select> jadi kehilangan <option> yang cocok dengan
+                        value-nya dan browser diam-diam menampilkan pilihan lain secara
+                        visual walau state sebenarnya tidak berubah (bisa membuat admin
+                        tanpa sadar submit status yang salah). */}
+                    {!['diterima', 'selesai', 'ditolak'].includes(selectedCustomStatus) && (
+                      <option value={selectedCustomStatus}>
+                        {selectedCustomStatus === 'menunggu' ? 'Menunggu Review' :
+                         selectedCustomStatus === 'diproses' ? 'Diproses' : 'Menunggu Penawaran'}
                       </option>
                     )}
                     <option value="diterima">Siap Ditinjau</option>
