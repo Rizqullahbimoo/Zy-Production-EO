@@ -124,6 +124,45 @@ export default function MouManageModal({ tipe, id, idMou, onClose, onChanged, sh
       .finally(() => setIsLoading(false));
   }, [idMou]);
 
+  // Polling: sinkronisasi otomatis kalau customer upload TTD (atau ada
+  // perubahan lain) sementara modal ini terbuka, tanpa perlu admin tutup-buka
+  // modal lagi. Pakai mou?.id_mou sebagai fallback karena idMou dari parent
+  // masih null saat admin baru saja upload draf pertama kali di sesi modal
+  // ini (dokumen belum ada sebelumnya).
+  const currentMouId = mou?.id_mou || idMou;
+  useEffect(() => {
+    const pollInterval = setInterval(() => {
+      if (currentMouId) {
+        // Dokumen MOU sudah ada — poll endpoint MOU langsung (formatnya
+        // sudah lengkap & benar lewat formatMou() di backend).
+        window.axios.get(`/api/admin/mou/${currentMouId}`)
+          .then((res) => { if (res.data.status === "success") setMou(res.data.data); })
+          .catch(() => {});
+      } else {
+        // Belum ada dokumen MOU sama sekali — endpoint /mou/{id} belum bisa
+        // dipakai karena belum ada id_mou. Poll endpoint detail
+        // pemesanan/request-custom yang sudah ada untuk deteksi kapan draf
+        // pertama muncul (dibuat dari luar modal ini), lalu susul fetch ke
+        // /api/admin/mou/{id} supaya bentuk data mou tetap konsisten
+        // (formatMou()) — respons pemesanan & request-custom punya format
+        // MOU yang beda-beda dan tidak lengkap (tidak ada path file).
+        const url = tipe === "pemesanan" ? `/api/admin/pemesanan/${id}` : `/api/admin/request-custom/${id}`;
+        window.axios.get(url)
+          .then((res) => {
+            const newMouId = tipe === "pemesanan"
+              ? res.data?.data?.mou?.id_mou
+              : (res.data?.data?.dokumenMou || res.data?.data?.dokumen_mou)?.id_mou;
+            if (newMouId) {
+              return window.axios.get(`/api/admin/mou/${newMouId}`)
+                .then((r2) => { if (r2.data.status === "success") setMou(r2.data.data); });
+            }
+          })
+          .catch(() => {});
+      }
+    }, 5000);
+    return () => clearInterval(pollInterval);
+  }, [currentMouId, tipe, id]);
+
   const status = mou?.status_mou || "belum_ada";
 
   const handleFileChange = (selectedFile) => {
