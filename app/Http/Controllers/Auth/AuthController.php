@@ -68,6 +68,13 @@ class AuthController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
+        if ($user->status === 'nonaktif') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Akun Anda telah dinonaktifkan. Hubungi admin lain untuk informasi lebih lanjut.',
+            ], 403);
+        }
+
         // Hapus token lama (opsional, untuk single session)
         $user->tokens()->delete();
 

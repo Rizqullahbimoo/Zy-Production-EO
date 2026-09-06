@@ -44,8 +44,8 @@ export default function AdminDashboard() {
     return () => clearTimeout(timer);
   }, [toast]);
 
-  const askConfirm = (message, onConfirm, title = 'Konfirmasi Hapus') => {
-    setConfirmModal({ title, message, onConfirm });
+  const askConfirm = (message, onConfirm, title = 'Konfirmasi Hapus', confirmLabel = 'Hapus') => {
+    setConfirmModal({ title, message, onConfirm, confirmLabel });
   };
 
   // Data Pemesanan state
@@ -82,6 +82,16 @@ export default function AdminDashboard() {
 
   // Kelola Dokumen MOU state
   const [mouModalTarget, setMouModalTarget] = useState(null); // { tipe, id, idMou }
+
+  // Kelola Admin (multi-admin) state
+  const [adminList, setAdminList] = useState([]);
+  const [isLoadingAdminList, setIsLoadingAdminList] = useState(false);
+  const [newAdminNama, setNewAdminNama] = useState('');
+  const [newAdminEmail, setNewAdminEmail] = useState('');
+  const [newAdminPassword, setNewAdminPassword] = useState('');
+  const [newAdminPasswordConfirm, setNewAdminPasswordConfirm] = useState('');
+  const [newAdminNoHp, setNewAdminNoHp] = useState('');
+  const [isSubmittingNewAdmin, setIsSubmittingNewAdmin] = useState(false);
 
   // Penawaran form states
   const [totalPenawaran, setTotalPenawaran] = useState('');
@@ -1231,6 +1241,100 @@ export default function AdminDashboard() {
     }
   };
 
+  // Kelola Admin (multi-admin) handlers
+  const fetchAdminList = async () => {
+    setIsLoadingAdminList(true);
+    setErrorMsg('');
+    try {
+      const response = await window.axios.get('/api/admin/kelola-admin');
+      if (response.data?.status === 'success') {
+        setAdminList(response.data.data);
+      } else {
+        setErrorMsg('Gagal memuat daftar admin.');
+      }
+    } catch (err) {
+      console.error('Error fetching admin list:', err);
+      setErrorMsg('Terjadi kesalahan saat memuat daftar admin.');
+    } finally {
+      setIsLoadingAdminList(false);
+    }
+  };
+
+  const handleCreateAdmin = async (e) => {
+    e.preventDefault();
+    if (!newAdminNama.trim() || !newAdminEmail.trim() || !newAdminPassword || !newAdminNoHp.trim()) {
+      showToast('error', 'Nama, email, password, dan no. HP wajib diisi.');
+      return;
+    }
+    if (newAdminPassword !== newAdminPasswordConfirm) {
+      showToast('error', 'Konfirmasi password tidak cocok.');
+      return;
+    }
+
+    setIsSubmittingNewAdmin(true);
+    try {
+      const response = await window.axios.post('/api/admin/kelola-admin', {
+        nama: newAdminNama,
+        email: newAdminEmail,
+        password: newAdminPassword,
+        password_confirmation: newAdminPasswordConfirm,
+        no_hp: newAdminNoHp,
+      });
+
+      if (response.data?.status === 'success') {
+        showToast('success', 'Akun admin baru berhasil dibuat!');
+        setNewAdminNama('');
+        setNewAdminEmail('');
+        setNewAdminPassword('');
+        setNewAdminPasswordConfirm('');
+        setNewAdminNoHp('');
+        fetchAdminList();
+      } else {
+        showToast('error', response.data?.message || 'Gagal membuat akun admin.');
+      }
+    } catch (err) {
+      console.error('Error creating admin:', err);
+      if (err.response?.data?.errors) {
+        const validationErrs = Object.values(err.response.data.errors).flat().join(' ');
+        showToast('error', validationErrs);
+      } else {
+        showToast('error', err.response?.data?.message || 'Terjadi kesalahan saat membuat akun admin.');
+      }
+    } finally {
+      setIsSubmittingNewAdmin(false);
+    }
+  };
+
+  const handleNonaktifkanAdmin = (adminId, namaAdmin) => {
+    askConfirm(
+      `Yakin ingin menonaktifkan admin "${namaAdmin}"? Akun ini tidak akan bisa login lagi sampai diaktifkan kembali.`,
+      async () => {
+        setConfirmModal(null);
+        try {
+          const response = await window.axios.patch(`/api/admin/kelola-admin/${adminId}/nonaktifkan`);
+          if (response.data?.status === 'success') {
+            showToast('success', 'Akun admin berhasil dinonaktifkan.');
+            fetchAdminList();
+          } else {
+            showToast('error', response.data?.message || 'Gagal menonaktifkan akun admin.');
+          }
+        } catch (err) {
+          console.error('Error deactivating admin:', err);
+          showToast('error', err.response?.data?.message || 'Terjadi kesalahan saat menonaktifkan akun admin.');
+        }
+      },
+      'Konfirmasi Nonaktifkan Admin',
+      'Nonaktifkan'
+    );
+  };
+
+  // Trigger admin list fetch when tab changes to 'kelola-admin'
+  useEffect(() => {
+    if (activeTab === 'kelola-admin') {
+      fetchAdminList();
+    }
+  }, [activeTab]);
+
   // Trigger facilities list fetch when tab starts with 'fasilitas-'
   // ('fasilitas-layanan' itself is the dropdown parent — it's a menu-only id that
   // never becomes activeTab — but excluded here too to mirror getTabLabel's guard)
@@ -1453,6 +1557,7 @@ export default function AdminDashboard() {
       'kategori-crud': 'Kategori Event',
       'kategori-event': 'Paket Event',
       'galeri-event': 'Galeri Event',
+      'kelola-admin': 'Kelola Admin',
       'profil-admin': 'Profil Admin',
       'pesan-masuk': 'Pesan Masuk',
       'laporan': 'Laporan Keuangan',
@@ -2667,6 +2772,156 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+            </section>
+          </>
+        ) : activeTab === 'kelola-admin' ? (
+          /* KELOLA ADMIN VIEW */
+          <>
+            {/* Breadcrumb */}
+            <div className="zy-breadcrumb">
+              <div className="zy-breadcrumb-item">
+                <a onClick={() => setActiveTab('dashboard')}>Dashboard</a>
+              </div>
+              <div className="zy-breadcrumb-item">/</div>
+              <div className="zy-breadcrumb-item active">Kelola Admin</div>
+            </div>
+
+            {/* Header Banner */}
+            <header className="zy-dashboard-header">
+              <h1>Kelola Admin</h1>
+              <p>Tambah akun admin baru atau nonaktifkan akun admin yang sudah tidak aktif. Semua admin memiliki hak akses yang setara.</p>
+            </header>
+
+            {/* Form Tambah Admin */}
+            <section className="zy-section-card" aria-label="Form Tambah Admin Baru" style={{ marginBottom: '1.5rem' }}>
+              <h2 className="zy-section-card-title">Tambah Admin Baru</h2>
+              <p className="zy-section-card-desc">Akun yang dibuat di sini langsung aktif dan bisa langsung login.</p>
+
+              <form onSubmit={handleCreateAdmin} className="zy-penawaran-form-grid" style={{ marginTop: '1rem' }}>
+                <div className="zy-form-group">
+                  <label className="zy-form-label" htmlFor="new_admin_nama">Nama Lengkap</label>
+                  <input
+                    type="text"
+                    id="new_admin_nama"
+                    className="zy-filter-input"
+                    value={newAdminNama}
+                    onChange={(e) => setNewAdminNama(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="zy-form-group">
+                  <label className="zy-form-label" htmlFor="new_admin_email">Email</label>
+                  <input
+                    type="email"
+                    id="new_admin_email"
+                    className="zy-filter-input"
+                    value={newAdminEmail}
+                    onChange={(e) => setNewAdminEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="zy-form-group">
+                  <label className="zy-form-label" htmlFor="new_admin_no_hp">No. HP</label>
+                  <input
+                    type="text"
+                    id="new_admin_no_hp"
+                    className="zy-filter-input"
+                    value={newAdminNoHp}
+                    onChange={(e) => setNewAdminNoHp(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="zy-form-group">
+                  <label className="zy-form-label" htmlFor="new_admin_password">Password</label>
+                  <input
+                    type="password"
+                    id="new_admin_password"
+                    className="zy-filter-input"
+                    value={newAdminPassword}
+                    onChange={(e) => setNewAdminPassword(e.target.value)}
+                    placeholder="Min. 8 karakter"
+                    required
+                  />
+                </div>
+                <div className="zy-form-group">
+                  <label className="zy-form-label" htmlFor="new_admin_password_confirm">Konfirmasi Password</label>
+                  <input
+                    type="password"
+                    id="new_admin_password_confirm"
+                    className="zy-filter-input"
+                    value={newAdminPasswordConfirm}
+                    onChange={(e) => setNewAdminPasswordConfirm(e.target.value)}
+                    placeholder="Ulangi password"
+                    required
+                  />
+                </div>
+                <div className="zy-form-group" style={{ display: 'flex', alignItems: 'flex-end' }}>
+                  <button type="submit" className="zy-btn-submit" disabled={isSubmittingNewAdmin}>
+                    {isSubmittingNewAdmin ? 'Menyimpan...' : '+ Tambah Admin'}
+                  </button>
+                </div>
+              </form>
+            </section>
+
+            {/* Daftar Admin */}
+            <section className="zy-section-card" aria-label="Daftar Admin">
+              <h2 className="zy-section-card-title">Daftar Admin</h2>
+              <p className="zy-section-card-desc">Berikut adalah semua akun admin yang terdaftar di sistem.</p>
+
+              {isLoadingAdminList ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  <div className="zy-skeleton-line skeleton-row" />
+                  <div className="zy-skeleton-line skeleton-row" />
+                  <div className="zy-skeleton-line skeleton-row" />
+                </div>
+              ) : adminList.length === 0 ? (
+                <p style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
+                  Belum ada data admin.
+                </p>
+              ) : (
+                <div className="zy-table-wrapper">
+                  <table className="zy-table">
+                    <thead>
+                      <tr>
+                        <th>Nama</th>
+                        <th>Email</th>
+                        <th>No. HP</th>
+                        <th style={{ textAlign: 'center' }}>Status</th>
+                        <th style={{ width: '160px', textAlign: 'center' }}>Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {adminList.map((admin) => {
+                        const isSelf = user && admin.id_user === user.id_user;
+                        const isNonaktif = admin.status === 'nonaktif';
+                        return (
+                          <tr key={admin.id_user}>
+                            <td style={{ fontWeight: 'bold' }}>{admin.nama}{isSelf && ' (Anda)'}</td>
+                            <td>{admin.email}</td>
+                            <td>{admin.no_hp || '-'}</td>
+                            <td style={{ textAlign: 'center' }}>
+                              <span className={`zy-status-badge ${isNonaktif ? 'status-dibatalkan' : 'status-diproses'}`}>
+                                {isNonaktif ? 'Nonaktif' : 'Aktif'}
+                              </span>
+                            </td>
+                            <td style={{ textAlign: 'center' }}>
+                              <button
+                                className="zy-btn-submit"
+                                style={{ backgroundColor: '#FFF0F0', color: '#C92A2A', border: '1px solid #FFC9C9', padding: '0.4rem 1rem', fontSize: '0.85rem', minWidth: 'auto', height: 'auto' }}
+                                onClick={() => handleNonaktifkanAdmin(admin.id_user, admin.nama)}
+                                disabled={isSelf || isNonaktif}
+                                title={isSelf ? 'Tidak bisa menonaktifkan akun sendiri' : undefined}
+                              >
+                                {isNonaktif ? 'Nonaktif' : 'Nonaktifkan'}
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </section>
@@ -4258,7 +4513,7 @@ export default function AdminDashboard() {
                 style={{ backgroundColor: '#C92A2A', borderColor: '#C92A2A' }}
                 onClick={confirmModal.onConfirm}
               >
-                Hapus
+                {confirmModal.confirmLabel}
               </button>
               <button type="button" className="zy-btn-close" onClick={() => setConfirmModal(null)}>
                 Batal

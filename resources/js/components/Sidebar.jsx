@@ -210,6 +210,7 @@ export default function Sidebar({ activeItem: propActiveItem, defaultActive = 'd
     { id: 'pesan-masuk', label: 'Pesan Masuk', icon: icons.laporan }, // Reusing laporan icon for now
     { id: 'laporan', label: 'Laporan Keuangan', icon: icons.laporan },
     { id: 'galeri-event', label: 'Galeri Event', icon: icons.galeri },
+    { id: 'kelola-admin', label: 'Kelola Admin', icon: icons.admin },
     { id: 'profil-admin', label: 'Profil Admin', icon: icons.admin }
   ];
 

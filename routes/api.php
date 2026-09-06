@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\FasilitasController;
 use App\Http\Controllers\Admin\GaleriController;
@@ -101,6 +102,11 @@ Route::middleware(['auth:sanctum', 'role.admin'])->prefix('admin')->group(functi
     Route::get('/mou/{id_mou}', [MoUController::class, 'show']);
     Route::post('/mou/draft/{tipe}/{id}', [MoUController::class, 'uploadDraft']);
     Route::post('/mou/{id_mou}/final', [MoUController::class, 'uploadFinal']);
+
+    // Kelola Admin — multi-admin (semua admin setara, tidak ada tier super-admin)
+    Route::get('/kelola-admin', [AdminUserController::class, 'index']);
+    Route::post('/kelola-admin', [AdminUserController::class, 'store']);
+    Route::patch('/kelola-admin/{id}/nonaktifkan', [AdminUserController::class, 'nonaktifkan']);
 });
 
 // ─── CUSTOMER ──────────────────────────────────────────────────────────────────

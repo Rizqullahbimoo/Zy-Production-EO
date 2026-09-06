@@ -275,7 +275,7 @@ class MoUController extends Controller
         $mou->status_mou = 'menunggu_ttd_admin';
         $mou->save();
 
-        $adminEmails = User::where('role', 'admin')->pluck('email');
+        $adminEmails = User::where('role', 'admin')->where('status', 'aktif')->pluck('email');
         foreach ($adminEmails as $email) {
             try {
                 Mail::to($email)->send(new MouTtdCustomerMasukMail($mou));

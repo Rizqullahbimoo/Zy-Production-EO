@@ -57,7 +57,7 @@ class PenawaranController extends Controller
 
             DB::commit();
 
-            $adminEmails = User::where('role', 'admin')->pluck('email');
+            $adminEmails = User::where('role', 'admin')->where('status', 'aktif')->pluck('email');
             foreach ($adminEmails as $email) {
                 try {
                     Mail::to($email)->send(new PenawaranDisetujuiMail($penawaran->fresh()));
@@ -114,7 +114,7 @@ class PenawaranController extends Controller
             'catatan_revisi_customer' => $request->catatan_revisi,
         ]);
 
-        $adminEmails = User::where('role', 'admin')->pluck('email');
+        $adminEmails = User::where('role', 'admin')->where('status', 'aktif')->pluck('email');
         foreach ($adminEmails as $email) {
             try {
                 Mail::to($email)->send(new PenawaranRevisiMail($penawaran->fresh()));
