@@ -4,8 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\RequestCustomPaket;
+use App\Support\CekKapasitasHarian;
+use App\Support\KapasitasHarian;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class RequestCustomController extends Controller
 {
@@ -73,6 +77,19 @@ class RequestCustomController extends Controller
             ], 404);
         }
 
+        // Info kapasitas non-blocking untuk tanggal request ini — dipakai
+        // frontend menampilkan badge peringatan (bukan larangan) di form buat
+        // penawaran, supaya admin tahu risikonya SEBELUM menawarkan harga ke
+        // customer di tanggal yang sudah padat, tanpa dipaksa batal.
+        // Kapasitas sesungguhnya baru benar-benar digerbangi (blocking) saat
+        // customer approve penawaran ini nanti.
+        $tanggal = $customRequest->tanggal_acara->toDateString();
+        $customRequest->kapasitas_tanggal = [
+            'tersedia' => CekKapasitasHarian::tersedia($tanggal),
+            'slot_terpakai' => CekKapasitasHarian::hitungSlotTerpakai($tanggal),
+            'slot_maks' => KapasitasHarian::MAKS_EVENT_PER_HARI,
+        ];
+
         return response()->json([
             'status' => 'success',
             'data' => $customRequest,
@@ -81,6 +98,16 @@ class RequestCustomController extends Controller
 
     /**
      * Update status request (misal: 'diproses' atau 'ditolak').
+     *
+     * Kalau target statusnya 'diterima' DAN status sebelumnya BUKAN
+     * 'diterima' (transisi baru, bukan re-submit status yang sama), ini
+     * artinya request itu akan ikut dihitung slot kapasitas harian — jadi
+     * digerbangi mutex+cek kapasitas yang sama seperti
+     * Customer\PenawaranController::approve(). Ditemukan saat review
+     * independen: dropdown "Ubah Status Request Custom" di admin dashboard
+     * punya opsi "Siap Ditinjau" (= status_request 'diterima') yang sebelumnya
+     * bisa dipakai admin untuk melewati approve() milik customer sepenuhnya,
+     * termasuk melewati validasi kapasitas.
      */
     public function updateStatus(Request $request, int $id): JsonResponse
     {
@@ -97,14 +124,49 @@ class RequestCustomController extends Controller
             ], 404);
         }
 
-        $customRequest->update([
-            'status_request' => $request->status_request,
-        ]);
+        $targetStatus = $request->status_request;
+        $akanJadiDiterima = $targetStatus === 'diterima' && $customRequest->status_request !== 'diterima';
+
+        if (! $akanJadiDiterima) {
+            $customRequest->update(['status_request' => $targetStatus]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Status request berhasil diperbarui.',
+                'data' => $customRequest,
+            ]);
+        }
+
+        $tanggal = $customRequest->tanggal_acara->toDateString();
+
+        try {
+            $hasil = Cache::lock("kapasitas:{$tanggal}", 10)->block(5, function () use ($tanggal, $customRequest, $targetStatus) {
+                if (! CekKapasitasHarian::tersedia($tanggal)) {
+                    return 'penuh';
+                }
+
+                $customRequest->update(['status_request' => $targetStatus]);
+
+                return 'sukses';
+            });
+        } catch (LockTimeoutException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Sistem sedang memproses permintaan lain untuk tanggal ini. Silakan coba lagi sesaat lagi.',
+            ], 503);
+        }
+
+        if ($hasil === 'penuh') {
+            return response()->json([
+                'status' => 'error',
+                'message' => KapasitasHarian::pesanPenuh($tanggal),
+            ], 422);
+        }
 
         return response()->json([
             'status' => 'success',
             'message' => 'Status request berhasil diperbarui.',
-            'data' => $customRequest,
+            'data' => $customRequest->fresh(),
         ]);
     }
 }

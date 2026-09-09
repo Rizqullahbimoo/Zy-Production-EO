@@ -8,9 +8,12 @@ use App\Models\DokumenMou;
 use App\Models\Pembayaran;
 use App\Models\Pemesanan;
 use App\Models\PenawaranCustom;
+use App\Support\CekKapasitasHarian;
 use App\Support\DpCalculator;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Midtrans\Config;
@@ -259,11 +262,10 @@ class MidtransController extends Controller
                 $penawaranStatus = $settledStatus === 'settled' ? 'dp_paid' : $settledStatus;
                 $penawaran->update(['payment_status' => $penawaranStatus]);
                 if ($penawaranStatus === 'dp_paid') {
-                    $penawaran->update(['status_penawaran' => 'diterima']);
-                    // Update status request juga
-                    if ($penawaran->requestCustomPaket) {
-                        $penawaran->requestCustomPaket->update(['status_request' => 'diterima']);
-                    }
+                    // Pembayaran SUDAH pasti diproses di bawah ini apa pun hasil
+                    // guard kapasitas — uang customer sudah masuk, tidak boleh
+                    // gagal karena isu kapasitas/lock. Lihat docblock method ini.
+                    $this->terapkanStatusDiterimaCustom($penawaran);
 
                     if (! $sudahDpSebelumnya) {
                         Pembayaran::create([
@@ -375,10 +377,10 @@ class MidtransController extends Controller
                 $penawaranStatus = $settledStatus === 'settled' ? 'dp_paid' : $settledStatus;
                 $penawaran->update(['payment_status' => $penawaranStatus]);
                 if ($penawaranStatus === 'dp_paid') {
-                    $penawaran->update(['status_penawaran' => 'diterima']);
-                    if ($penawaran->requestCustomPaket) {
-                        $penawaran->requestCustomPaket->update(['status_request' => 'diterima']);
-                    }
+                    // Pembayaran SUDAH pasti diproses di bawah ini apa pun hasil
+                    // guard kapasitas — uang customer sudah masuk, tidak boleh
+                    // gagal karena isu kapasitas/lock. Lihat docblock method ini.
+                    $this->terapkanStatusDiterimaCustom($penawaran);
 
                     if (! $sudahDpSebelumnya) {
                         Pembayaran::create([
@@ -400,6 +402,78 @@ class MidtransController extends Controller
                 'status' => 'error',
                 'message' => 'Gagal sinkronisasi status: '.$e->getMessage(),
             ], 500);
+        }
+    }
+
+    /* ─────────────────────────────────────────────────────────
+     | 5. HELPER — transisi status_penawaran/status_request 'diterima'
+     |    sebagai efek samping DP custom paket settle, DIGERBANGI kapasitas
+     |    harian yang sama seperti Customer\PenawaranController::approve().
+     ───────────────────────────────────────────────────────── */
+
+    /**
+     * Dipakai oleh notification() (webhook) dan syncStatus() (fallback
+     * manual) — keduanya bisa membawa PenawaranCustom ke status 'diterima'
+     * tanpa pernah lewat Customer\PenawaranController::approve() (mis. admin
+     * menyiapkan MOU untuk request yang penawarannya belum di-approve
+     * customer). Ditemukan saat review independen fitur pencegahan bentrok
+     * jadwal: tanpa guard ini, jalur pembayaran bisa dipakai melewati kuota
+     * harian sepenuhnya.
+     *
+     * PENTING — prinsip yang HARUS dijaga: pemanggil method ini SELALU sudah
+     * menetapkan payment_status='dp_paid' dan akan tetap mencatat baris
+     * Pembayaran terlepas dari hasil method ini. Uang customer sudah masuk,
+     * jadi kegagalan mendapatkan slot kapasitas (penuh ATAU lock timeout)
+     * TIDAK PERNAH membatalkan/menggagalkan pembayaran — cuma menahan
+     * transisi status_penawaran/status_request, dicatat Log::warning supaya
+     * admin menindaklanjuti manual (mis. batalkan/pindahkan booking lain di
+     * tanggal itu, atau negosiasikan tanggal baru dengan customer ini).
+     */
+    private function terapkanStatusDiterimaCustom(PenawaranCustom $penawaran): void
+    {
+        if ($penawaran->status_penawaran === 'diterima') {
+            // Sudah diterima sebelumnya lewat approve() normal — slot kapasitas
+            // untuk baris ini sudah terhitung sejak transisi pertama, resync
+            // status_request saja (harmless, jaga-jaga kalau pernah tidak sinkron).
+            $penawaran->requestCustomPaket?->update(['status_request' => 'diterima']);
+
+            return;
+        }
+
+        if (! $penawaran->requestCustomPaket) {
+            // Data tidak lengkap (relasi request custom hilang) — tidak ada
+            // tanggal_acara untuk digerbangi. Pertahankan perilaku lama: set
+            // langsung tanpa cek kapasitas, di luar cakupan guard ini.
+            $penawaran->update(['status_penawaran' => 'diterima']);
+
+            return;
+        }
+
+        $tanggal = $penawaran->requestCustomPaket->tanggal_acara->toDateString();
+
+        try {
+            $hasil = Cache::lock("kapasitas:{$tanggal}", 10)->block(5, function () use ($tanggal, $penawaran) {
+                if (! CekKapasitasHarian::tersedia($tanggal)) {
+                    return 'penuh';
+                }
+
+                $penawaran->update(['status_penawaran' => 'diterima']);
+                $penawaran->requestCustomPaket->update(['status_request' => 'diterima']);
+
+                return 'sukses';
+            });
+        } catch (LockTimeoutException $e) {
+            $hasil = 'lock_timeout';
+        }
+
+        if ($hasil !== 'sukses') {
+            Log::warning('Pembayaran DP custom paket sukses tapi status_penawaran/status_request TIDAK diset diterima karena kapasitas tanggal penuh atau lock timeout — perlu ditangani admin manual.', [
+                'id_penawaran' => $penawaran->id_penawaran,
+                'id_request' => $penawaran->requestCustomPaket->id_request,
+                'kode_penawaran' => $penawaran->kode_penawaran,
+                'tanggal_acara' => $tanggal,
+                'alasan' => $hasil,
+            ]);
         }
     }
 }

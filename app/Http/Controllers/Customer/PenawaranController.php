@@ -8,8 +8,11 @@ use App\Mail\PenawaranDisetujuiMail;
 use App\Mail\PenawaranRevisiMail;
 use App\Models\PenawaranCustom;
 use App\Models\User;
+use App\Support\CekKapasitasHarian;
+use App\Support\KapasitasHarian;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -44,41 +47,71 @@ class PenawaranController extends Controller
             ], 422);
         }
 
+        $tanggal = $penawaran->requestCustomPaket->tanggal_acara->toDateString();
+
+        // Mutex per-tanggal (sama seperti PemesananCustomerController::store)
+        // — mencegah race condition dua approve nyaris bersamaan sama-sama
+        // lolos hitung kapasitas pada slot terakhir. Kunci hanya dipegang
+        // selama update status (bukan saat kirim email) supaya lock cepat
+        // dilepas.
         try {
-            DB::beginTransaction();
-
-            $penawaran->update([
-                'status_penawaran' => 'diterima',
-            ]);
-
-            $penawaran->requestCustomPaket->update([
-                'status_request' => 'diterima',
-            ]);
-
-            DB::commit();
-
-            $adminEmails = User::where('role', 'admin')->where('status', 'aktif')->pluck('email');
-            foreach ($adminEmails as $email) {
-                try {
-                    Mail::to($email)->send(new PenawaranDisetujuiMail($penawaran->fresh()));
-                } catch (\Exception $e) {
-                    Log::error('Gagal kirim email penawaran disetujui ke '.$email.': '.$e->getMessage());
+            $hasil = Cache::lock("kapasitas:{$tanggal}", 10)->block(5, function () use ($tanggal, $penawaran) {
+                if (! CekKapasitasHarian::tersedia($tanggal)) {
+                    return 'penuh';
                 }
-            }
 
+                try {
+                    DB::beginTransaction();
+
+                    $penawaran->update([
+                        'status_penawaran' => 'diterima',
+                    ]);
+
+                    $penawaran->requestCustomPaket->update([
+                        'status_request' => 'diterima',
+                    ]);
+
+                    DB::commit();
+
+                    return 'sukses';
+                } catch (\Exception $e) {
+                    DB::rollBack();
+                    throw $e;
+                }
+            });
+        } catch (\Illuminate\Contracts\Cache\LockTimeoutException $e) {
             return response()->json([
-                'status' => 'success',
-                'message' => 'Penawaran berhasil disetujui.',
-                'data' => $penawaran->fresh(),
-            ]);
+                'status' => 'error',
+                'message' => 'Sistem sedang memproses permintaan lain untuk tanggal ini. Silakan coba lagi sesaat lagi.',
+            ], 503);
         } catch (\Exception $e) {
-            DB::rollBack();
-
             return response()->json([
                 'status' => 'error',
                 'message' => 'Gagal menyetujui penawaran: '.$e->getMessage(),
             ], 500);
         }
+
+        if ($hasil === 'penuh') {
+            return response()->json([
+                'status' => 'error',
+                'message' => KapasitasHarian::pesanPenuh($tanggal),
+            ], 422);
+        }
+
+        $adminEmails = User::where('role', 'admin')->where('status', 'aktif')->pluck('email');
+        foreach ($adminEmails as $email) {
+            try {
+                Mail::to($email)->send(new PenawaranDisetujuiMail($penawaran->fresh()));
+            } catch (\Exception $e) {
+                Log::error('Gagal kirim email penawaran disetujui ke '.$email.': '.$e->getMessage());
+            }
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Penawaran berhasil disetujui.',
+            'data' => $penawaran->fresh(),
+        ]);
     }
 
     /**

@@ -5,8 +5,12 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Pembayaran;
 use App\Models\Pemesanan;
+use App\Support\CekKapasitasHarian;
+use App\Support\KapasitasHarian;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class PemesananController extends Controller
 {
@@ -171,6 +175,16 @@ class PemesananController extends Controller
 
     /**
      * Update order status.
+     *
+     * Kalau transisinya DARI 'dibatalkan' KE status lain (reaktivasi), itu
+     * artinya pemesanan ini akan ikut dihitung slot kapasitas harian lagi —
+     * digerbangi mutex+cek kapasitas yang sama seperti
+     * PemesananCustomerController::store(). Ditemukan saat review independen:
+     * slot yang dibebaskan oleh pembatalan bisa saja sudah terisi booking
+     * lain di tanggal yang sama sebelum admin membatalkan pembatalan ini.
+     * Transisi status lain (menunggu<->dikonfirmasi<->selesai, atau ke
+     * 'dibatalkan') tidak mengubah jumlah slot terpakai sama sekali, jadi
+     * tidak perlu digerbangi.
      */
     public function updateStatus(Request $request, int $id): JsonResponse
     {
@@ -187,14 +201,49 @@ class PemesananController extends Controller
             ], 404);
         }
 
-        $order->update([
-            'status_pemesanan' => $request->status_pemesanan,
-        ]);
+        $targetStatus = $request->status_pemesanan;
+        $akanReaktivasi = $order->status_pemesanan === 'dibatalkan' && $targetStatus !== 'dibatalkan';
+
+        if (! $akanReaktivasi) {
+            $order->update(['status_pemesanan' => $targetStatus]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Status pemesanan berhasil diperbarui.',
+                'data' => $order,
+            ]);
+        }
+
+        $tanggal = $order->tanggal_acara->toDateString();
+
+        try {
+            $hasil = Cache::lock("kapasitas:{$tanggal}", 10)->block(5, function () use ($tanggal, $order, $targetStatus) {
+                if (! CekKapasitasHarian::tersedia($tanggal)) {
+                    return 'penuh';
+                }
+
+                $order->update(['status_pemesanan' => $targetStatus]);
+
+                return 'sukses';
+            });
+        } catch (LockTimeoutException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Sistem sedang memproses permintaan lain untuk tanggal ini. Silakan coba lagi sesaat lagi.',
+            ], 503);
+        }
+
+        if ($hasil === 'penuh') {
+            return response()->json([
+                'status' => 'error',
+                'message' => KapasitasHarian::pesanPenuh($tanggal),
+            ], 422);
+        }
 
         return response()->json([
             'status' => 'success',
             'message' => 'Status pemesanan berhasil diperbarui.',
-            'data' => $order,
+            'data' => $order->fresh(),
         ]);
     }
 }

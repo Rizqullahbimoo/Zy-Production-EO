@@ -3754,6 +3754,14 @@ export default function AdminDashboard() {
                       {' '}Hanya catatan admin yang dapat diperbarui.
                     </p>
                   )}
+                  {/* Badge non-blocking — cuma informasi, tidak menghalangi admin membuat/
+                      mengubah penawaran. Kapasitas sesungguhnya baru digerbangi (menolak)
+                      nanti saat customer approve penawaran ini. */}
+                  {!isPenawaranTerkunci && selectedCustomRequest?.kapasitas_tanggal && !selectedCustomRequest.kapasitas_tanggal.tersedia && (
+                    <p style={{ margin: '0 0 1rem', fontSize: '0.85rem', color: '#92400e', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '6px', padding: '0.6rem 0.8rem' }}>
+                      ⚠️ Tanggal acara ini sudah mencapai kapasitas maksimal ({selectedCustomRequest.kapasitas_tanggal.slot_terpakai}/{selectedCustomRequest.kapasitas_tanggal.slot_maks} event). Anda tetap bisa membuat penawaran, tapi customer kemungkinan akan ditolak sistem saat menyetujuinya kecuali ada slot yang kosong lebih dulu.
+                    </p>
+                  )}
                   <div className="zy-penawaran-form-grid">
                     <div className="zy-form-group">
                       <label className="zy-form-label" htmlFor="total_penawaran">Total Penawaran Harga (Rp):</label>

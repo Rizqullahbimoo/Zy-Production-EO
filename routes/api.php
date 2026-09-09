@@ -17,6 +17,7 @@ use App\Http\Controllers\Customer\MidtransController;
 use App\Http\Controllers\Customer\PemesananCustomerController;
 use App\Http\Controllers\Customer\PenawaranController as CustomerPenawaranController;
 use App\Http\Controllers\Customer\RequestCustomController as CustomerRequestCustomController;
+use App\Http\Controllers\Guest\KetersediaanController;
 use App\Http\Controllers\Guest\PaketController;
 use App\Http\Controllers\MoUController;
 use App\Http\Controllers\PesanKontakController;
@@ -38,6 +39,7 @@ Route::get('/fasilitas', [PaketController::class, 'fasilitas']);
 Route::get('/ulasan', [UlasanController::class, 'getTopReviews']);
 Route::get('/galeri', [GaleriController::class, 'index']);   // Publik: untuk halaman Portofolio customer
 Route::post('/pesan', [PesanKontakController::class, 'store']);
+Route::get('/ketersediaan', [KetersediaanController::class, 'cek']); // Cek kapasitas event per tanggal
 
 // ─── AUTH ──────────────────────────────────────────────────────────────────────
 Route::post('/register', [AuthController::class, 'register']);

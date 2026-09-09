@@ -5,10 +5,15 @@ namespace App\Http\Controllers\Customer;
 use App\Http\Controllers\Controller;
 use App\Models\PaketLayanan;
 use App\Models\Pemesanan;
+use App\Support\CekKapasitasHarian;
 use App\Support\DpCalculator;
+use App\Support\KapasitasHarian;
 use App\Support\KodeGenerator;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class PemesananCustomerController extends Controller
 {
@@ -34,22 +39,49 @@ class PemesananCustomerController extends Controller
             ], 422);
         }
 
-        $kode = KodeGenerator::buat('PMS');
+        // Normalisasi ke 'Y-m-d' murni sekali di sini — dipakai konsisten untuk
+        // key lock, pesan error, DAN baris yang disimpan, supaya dua input
+        // yang merepresentasikan tanggal kalender yang sama tidak pernah
+        // dianggap "tanggal berbeda" oleh mutex di bawah.
+        $tanggal = Carbon::parse($validated['tanggal_acara'])->toDateString();
 
-        $dpAmount = DpCalculator::hitung((float) $paket->harga);
+        // Mutex per-tanggal — mencegah race condition dua pemesanan nyaris
+        // bersamaan sama-sama lolos hitung kapasitas pada slot terakhir.
+        // Lihat CekKapasitasHarian untuk definisi "1 slot terpakai".
+        try {
+            $pemesanan = Cache::lock("kapasitas:{$tanggal}", 10)->block(5, function () use ($request, $validated, $paket, $tanggal) {
+                if (! CekKapasitasHarian::tersedia($tanggal)) {
+                    return null; // sentinel: kapasitas penuh
+                }
 
-        $pemesanan = Pemesanan::create([
-            'id_user' => $request->user()->id_user,
-            'id_paket' => $validated['id_paket'],
-            'kode_pemesanan' => $kode,
-            'tanggal_pemesanan' => now()->toDateString(),
-            'tanggal_acara' => $validated['tanggal_acara'],
-            'lokasi_acara' => $validated['lokasi_acara'],
-            'jumlah_tamu' => $validated['jumlah_tamu'],
-            'dp_amount' => $dpAmount,
-            'status_pemesanan' => 'menunggu',
-            'catatan' => $validated['catatan'] ?? null,
-        ]);
+                return DB::transaction(function () use ($request, $validated, $paket, $tanggal) {
+                    return Pemesanan::create([
+                        'id_user' => $request->user()->id_user,
+                        'id_paket' => $validated['id_paket'],
+                        'kode_pemesanan' => KodeGenerator::buat('PMS'),
+                        'tanggal_pemesanan' => now()->toDateString(),
+                        'tanggal_acara' => $tanggal,
+                        'lokasi_acara' => $validated['lokasi_acara'],
+                        'jumlah_tamu' => $validated['jumlah_tamu'],
+                        'dp_amount' => DpCalculator::hitung((float) $paket->harga),
+                        'status_pemesanan' => 'menunggu',
+                        'catatan' => $validated['catatan'] ?? null,
+                    ]);
+                });
+            });
+        } catch (\Illuminate\Contracts\Cache\LockTimeoutException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Sistem sedang memproses pemesanan lain untuk tanggal ini. Silakan coba lagi sesaat lagi.',
+            ], 503);
+        }
+
+        if ($pemesanan === null) {
+            return response()->json([
+                'status' => 'error',
+                'message' => KapasitasHarian::pesanPenuh($tanggal),
+            ], 422);
+        }
 
         return response()->json([
             'status' => 'success',

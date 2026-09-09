@@ -3,8 +3,19 @@
  * Berisi: Daftar paket layanan + modal pemesanan paket bawaan + custom request modal.
  * Integrasi: Midtrans Snap untuk pembayaran paket bawaan.
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+
+// Dibangun dinamis dari `slot_maks` yang dikembalikan GET /api/ketersediaan —
+// TIDAK menghardcode angka kapasitas di sini — dan teksnya PERSIS SAMA
+// dengan App\Support\KapasitasHarian::pesanPenuh() di backend (sumber
+// tunggal 422 dari PemesananCustomerController::store,
+// Customer\PenawaranController::approve, Admin\RequestCustomController::updateStatus,
+// dan Admin\PemesananController::updateStatus), supaya kalau kapasitas
+// maksimal diubah suatu saat nanti, peringatan proaktif di form ini otomatis
+// ikut berubah tanpa perlu disinkronkan manual di dua tempat.
+const buatPesanKapasitasPenuh = (tanggal, slotMaks) =>
+  `Maaf, tanggal ${tanggal} sudah mencapai kapasitas maksimal ${slotMaks} event per hari. Silakan pilih tanggal lain.`;
 
 export default function CustomerKatalog() {
   const navigate = useNavigate();
@@ -26,6 +37,7 @@ export default function CustomerKatalog() {
   const [orderError, setOrderError] = useState("");
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
   const [orderResult, setOrderResult] = useState(null);
+  const [orderDateFull, setOrderDateFull] = useState(false); // hasil cek /api/ketersediaan untuk tanggal_acara di form paket bawaan
 
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [requestStep, setRequestStep] = useState(1);
@@ -35,6 +47,13 @@ export default function CustomerKatalog() {
   const [requestError, setRequestError] = useState("");
   const [requestSuccess, setRequestSuccess] = useState(false);
   const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
+  const [requestDateFull, setRequestDateFull] = useState(false); // hasil cek /api/ketersediaan untuk tanggal_acara di form custom request
+
+  // Debounce timer untuk cek ketersediaan tanggal — dipisah per form supaya
+  // ganti tanggal di satu modal tidak membatalkan pengecekan yang sedang
+  // berjalan di modal lain.
+  const orderDateCheckTimer = useRef(null);
+  const requestDateCheckTimer = useRef(null);
 
   /* ── Toast notification (pengganti alert() bawaan browser) ── */
   const [toast, setToast] = useState(null); // { type: 'success' | 'error', message }
@@ -71,13 +90,45 @@ export default function CustomerKatalog() {
   })();
   const filteredPackages = selectedCategoryFilter === "all" ? packages : packages.filter(p => p.kategori.id_kategori === parseInt(selectedCategoryFilter));
 
+  // Cek ketersediaan slot untuk satu tanggal (peringatan proaktif sebelum
+  // submit — backend tetap sumber kebenaran final saat submit/approve).
+  // `target` menentukan form mana yang diupdate: 'order' (paket bawaan)
+  // atau 'request' (custom paket).
+  const cekKetersediaanTanggal = (tanggal, target) => {
+    window.axios.get(`/api/ketersediaan?tanggal=${tanggal}`)
+      .then(res => {
+        if (res.data.status !== "success") return;
+        const penuh = !res.data.data.tersedia;
+        const setFull = target === "order" ? setOrderDateFull : setRequestDateFull;
+        const setErrors = target === "order" ? setOrderFieldErrors : setRequestFieldErrors;
+
+        setFull(penuh);
+        setErrors(prev => {
+          if (penuh) return { ...prev, tanggal_acara: buatPesanKapasitasPenuh(tanggal, res.data.data.slot_maks) };
+          // Hanya bersihkan kalau error yang tampil sekarang memang pesan
+          // kapasitas ini (ditandai prefix "Maaf, tanggal " yang unik untuk
+          // pesan ini — tidak dipakai pesan validasi lain) — jangan timpa
+          // error lain (mis. "wajib diisi").
+          if (prev.tanggal_acara?.startsWith("Maaf, tanggal ")) return { ...prev, tanggal_acara: "" };
+          return prev;
+        });
+      })
+      .catch(() => {}); // gagal cek: diamkan saja, validasi final tetap di backend saat submit
+  };
+
+  const debouncedCekTanggal = (tanggal, target) => {
+    const timerRef = target === "order" ? orderDateCheckTimer : requestDateCheckTimer;
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => cekKetersediaanTanggal(tanggal, target), 300);
+  };
+
   const openOrderModal = pkg => {
     if (!token) {
       showToast('error', "Silakan login terlebih dahulu untuk memesan paket.");
       setTimeout(() => { window.location.href = "/login"; }, 1200);
       return;
     }
-    setOrderPackage(pkg); setOrderForm({ tanggal_acara: "", lokasi_acara: "", jumlah_tamu: "", catatan: "" }); setOrderError(""); setOrderResult(null); setShowOrderModal(true);
+    setOrderPackage(pkg); setOrderForm({ tanggal_acara: "", lokasi_acara: "", jumlah_tamu: "", catatan: "" }); setOrderError(""); setOrderResult(null); setOrderDateFull(false); setShowOrderModal(true);
   };
 
   const openDetailModal = pkg => {
@@ -111,6 +162,10 @@ export default function CustomerKatalog() {
     const { name, value } = e.target;
     setOrderForm(prev => ({ ...prev, [name]: value }));
     if (orderFieldErrors[name]) setOrderFieldErrors(prev => ({ ...prev, [name]: '' }));
+    if (name === 'tanggal_acara') {
+      setOrderDateFull(false);
+      if (value) debouncedCekTanggal(value, 'order');
+    }
   };
 
   // TC-11: tampilkan "Field ini wajib diisi." saat field wajib di-blur dalam keadaan kosong
@@ -126,6 +181,10 @@ export default function CustomerKatalog() {
     const errors = {};
     if (!orderForm.tanggal_acara) errors.tanggal_acara = "Tanggal acara harus ditentukan.";
     else if (new Date(orderForm.tanggal_acara) <= new Date()) errors.tanggal_acara = "Tanggal acara harus di masa mendatang.";
+    // orderDateFull dan orderFieldErrors.tanggal_acara SELALU di-set bersamaan
+    // oleh cekKetersediaanTanggal (lihat handleOrderFormChange) — aman reuse
+    // teks pesan yang sudah ada persis, tidak perlu bangun ulang di sini.
+    else if (orderDateFull) errors.tanggal_acara = orderFieldErrors.tanggal_acara;
     if (!orderForm.lokasi_acara.trim()) errors.lokasi_acara = "Lokasi acara harus diisi.";
     if (!orderForm.jumlah_tamu || parseInt(orderForm.jumlah_tamu) < 1) errors.jumlah_tamu = "Jumlah tamu minimal 1 orang.";
     
@@ -144,6 +203,10 @@ export default function CustomerKatalog() {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     setRequestFieldErrors(prev => (prev[name] ? { ...prev, [name]: '' } : prev));
+    if (name === 'tanggal_acara') {
+      setRequestDateFull(false);
+      if (value) debouncedCekTanggal(value, 'request');
+    }
   };
   const handleFacilityToggle = facilityId => setFormData(prev => { const exists = prev.fasilitas.find(f => f.id_fasilitas === facilityId); if (exists) return { ...prev, fasilitas: prev.fasilitas.filter(f => f.id_fasilitas !== facilityId) }; else return { ...prev, fasilitas: [...prev.fasilitas, { id_fasilitas: facilityId, keterangan: "" }] }; });
   const handleFacilityDescChange = (facilityId, value) => setFormData(prev => ({ ...prev, fasilitas: prev.fasilitas.map(f => f.id_fasilitas === facilityId ? { ...f, keterangan: value } : f) }));
@@ -164,7 +227,7 @@ export default function CustomerKatalog() {
       setTimeout(() => { window.location.href = "/login"; }, 1200);
       return;
     }
-    setShowRequestModal(true); setRequestStep(1); setRequestSuccess(false); setRequestError(""); setRequestFieldErrors({}); setFormData({ id_kategori: "", tanggal_acara: "", lokasi_acara: "", jumlah_tamu: "", budget_acara: "", catatan: "", fasilitas: [], ...prefill });
+    setShowRequestModal(true); setRequestStep(1); setRequestSuccess(false); setRequestError(""); setRequestFieldErrors({}); setRequestDateFull(false); setFormData({ id_kategori: "", tanggal_acara: "", lokasi_acara: "", jumlah_tamu: "", budget_acara: "", catatan: "", fasilitas: [], ...prefill });
   };
 
   useEffect(() => {
@@ -181,6 +244,10 @@ export default function CustomerKatalog() {
     if (!formData.id_kategori) errors.id_kategori = "Kategori event harus dipilih.";
     if (!formData.tanggal_acara) errors.tanggal_acara = "Tanggal acara harus ditentukan.";
     else if (new Date(formData.tanggal_acara) <= new Date()) errors.tanggal_acara = "Tanggal acara harus di masa mendatang.";
+    // requestDateFull dan requestFieldErrors.tanggal_acara SELALU di-set
+    // bersamaan oleh cekKetersediaanTanggal (lihat handleInputChange) — aman
+    // reuse teks pesan yang sudah ada persis, tidak perlu bangun ulang di sini.
+    else if (requestDateFull) errors.tanggal_acara = requestFieldErrors.tanggal_acara;
     if (!formData.lokasi_acara.trim()) errors.lokasi_acara = "Lokasi acara harus diisi.";
     if (!formData.jumlah_tamu || parseInt(formData.jumlah_tamu) < 1) errors.jumlah_tamu = "Jumlah tamu minimal 1 orang.";
     
