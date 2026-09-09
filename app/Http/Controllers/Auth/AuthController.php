@@ -91,6 +91,7 @@ class AuthController extends Controller
                     'email' => $user->email,
                     'no_hp' => $user->no_hp,
                     'role' => $user->role,
+                    'foto' => $user->foto,
                 ],
                 'token' => $token,
                 'token_type' => 'Bearer',
@@ -186,6 +187,7 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'no_hp' => $user->no_hp,
                 'role' => $user->role,
+                'foto' => $user->foto,
             ],
         ]);
     }
