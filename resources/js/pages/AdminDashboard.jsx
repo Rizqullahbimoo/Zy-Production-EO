@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import MouManageModal from '../components/admin/MouManageModal';
+import ImageCropModal from '../components/admin/ImageCropModal';
 import '../../css/pages/admin-dashboard.css';
 
 const MOU_STATUS_BADGE = {
@@ -110,7 +111,8 @@ export default function AdminDashboard() {
   const [packagePrice, setPackagePrice] = useState('');
   const [packageDesc, setPackageDesc] = useState('');
   const [packageStatus, setPackageStatus] = useState('aktif');
-  const [packageFoto, setPackageFoto] = useState(null);
+  const [packageFoto, setPackageFoto] = useState(null); // File hasil crop, siap di-upload
+  const [cropFile, setCropFile] = useState(null); // File mentah dari <input>, sedang diproses di ImageCropModal
   const [isSubmittingPackage, setIsSubmittingPackage] = useState(false);
 
   // Package modal: tab Fasilitas
@@ -638,6 +640,7 @@ export default function AdminDashboard() {
     setPackageDesc('');
     setPackageStatus('aktif');
     setPackageFoto(null);
+    setCropFile(null);
     setPackageModalTab('info');
     setPackageFacilities([]);
     setSelectedPackageFasilitas([]);
@@ -653,6 +656,7 @@ export default function AdminDashboard() {
     setPackageDesc(pkg.deskripsi || '');
     setPackageStatus(pkg.status_paket || 'aktif');
     setPackageFoto(null);
+    setCropFile(null);
     setPackageModalTab('info');
     setPackageFacilities([]);
     setSelectedPackageFasilitas([]);
@@ -3995,22 +3999,64 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="zy-form-group" style={{ minWidth: 'auto' }}>
-                  <label className="zy-form-label" htmlFor="package_foto">Foto Paket {!selectedPackage && '*'} (Format: JPG/PNG/WebP, Max 5MB)</label>
+                  <label className="zy-form-label" htmlFor="package_foto">Foto Paket {!selectedPackage && '*'} (Format: JPG/PNG/WebP, Max 5MB — akan diminta crop rasio 16:10 sebelum diunggah)</label>
                   <input
                     type="file"
                     id="package_foto"
                     className="zy-filter-input"
                     style={{ padding: '0.5rem 1rem' }}
                     accept="image/*"
-                    onChange={(e) => setPackageFoto(e.target.files[0] || null)}
+                    onChange={(e) => setCropFile(e.target.files[0] || null)}
                   />
-                  {selectedPackage && selectedPackage.foto && !packageFoto && (
+                  {packageFoto ? (
+                    <div style={{ marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <img
+                        src={URL.createObjectURL(packageFoto)}
+                        alt="Preview hasil crop"
+                        style={{ width: '160px', aspectRatio: '16/10', objectFit: 'cover', borderRadius: '8px', border: '1px solid var(--border-color, #e5e7eb)' }}
+                      />
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                        <div>Sudah di-crop, siap diunggah.</div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPackageFoto(null);
+                            const fileInput = document.getElementById('package_foto');
+                            if (fileInput) fileInput.value = '';
+                          }}
+                          style={{
+                            marginTop: '0.4rem', background: 'var(--white)', color: 'var(--text-main)',
+                            border: '1px solid var(--neutral-light)', padding: '0.35rem 0.85rem',
+                            fontSize: '0.8rem', fontWeight: 600, borderRadius: '6px', cursor: 'pointer',
+                          }}
+                        >
+                          Ganti Foto
+                        </button>
+                      </div>
+                    </div>
+                  ) : selectedPackage && selectedPackage.foto && (
                     <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
                       Foto saat ini: <a href={selectedPackage.foto} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', textDecoration: 'underline' }}>Lihat Foto</a>
                     </div>
                   )}
                 </div>
               </div>
+              )}
+
+              {cropFile && (
+                <ImageCropModal
+                  file={cropFile}
+                  aspect={16 / 10}
+                  onCropped={(croppedFile) => {
+                    setPackageFoto(croppedFile);
+                    setCropFile(null);
+                  }}
+                  onCancel={() => {
+                    setCropFile(null);
+                    const fileInput = document.getElementById('package_foto');
+                    if (fileInput) fileInput.value = '';
+                  }}
+                />
               )}
 
               {packageModalTab === 'fasilitas' && (
