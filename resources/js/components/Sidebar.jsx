@@ -401,11 +401,9 @@ export default function Sidebar({ activeItem: propActiveItem, defaultActive = 'd
                   className="zy-profile-avatar"
                 />
               ) : (
-                <img
-                  src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=120&auto=format&fit=crop"
-                  alt="Profile Avatar"
-                  className="zy-profile-avatar"
-                />
+                <div className="zy-profile-avatar-placeholder" aria-label="Profile Avatar">
+                  {user && user.nama ? user.nama.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase() : 'AD'}
+                </div>
               )}
               <div className="zy-profile-info">
                 <span className="zy-profile-name">{user ? user.nama : 'Bimo TA'}</span>
