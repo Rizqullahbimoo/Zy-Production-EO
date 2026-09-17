@@ -72,6 +72,58 @@ class AdminUserController extends Controller
     }
 
     /**
+     * Edit data akun admin lain (nama, email, no HP).
+     * PUT /api/admin/kelola-admin/{id}
+     *
+     * SENGAJA tidak menyertakan field password di sini — satu admin tidak
+     * boleh bisa menyetel/mengetahui password admin lain (kalau bisa,
+     * artinya admin itu bisa "menyamar" jadi admin lain). Admin yang lupa
+     * password tetap harus lewat jalur self-service /forgot-password
+     * (AuthController::forgotPassword), sama seperti user biasa.
+     */
+    public function update(Request $request, int $id): JsonResponse
+    {
+        $admin = User::where('role', 'admin')->find($id);
+
+        if (! $admin) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Akun admin tidak ditemukan.',
+            ], 404);
+        }
+
+        $request->validate([
+            'nama' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,'.$admin->id_user.',id_user'],
+            'no_hp' => ['required', 'string', 'max:20'],
+        ], [
+            'nama.required' => 'Nama lengkap wajib diisi.',
+            'email.required' => 'Email wajib diisi.',
+            'email.email' => 'Format email tidak valid.',
+            'email.unique' => 'Email sudah digunakan oleh pengguna lain.',
+            'no_hp.required' => 'Nomor HP wajib diisi.',
+        ]);
+
+        $admin->update([
+            'nama' => $request->nama,
+            'email' => $request->email,
+            'no_hp' => $request->no_hp,
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Data admin berhasil diperbarui.',
+            'data' => [
+                'id_user' => $admin->id_user,
+                'nama' => $admin->nama,
+                'email' => $admin->email,
+                'no_hp' => $admin->no_hp,
+                'status' => $admin->status,
+            ],
+        ]);
+    }
+
+    /**
      * Nonaktifkan akun admin (soft — bukan hapus permanen, supaya histori
      * relasi data seperti siapa yang approve penawaran tetap utuh).
      * PATCH /api/admin/kelola-admin/{id}/nonaktifkan
@@ -107,6 +159,40 @@ class AdminUserController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Akun admin berhasil dinonaktifkan.',
+            'data' => [
+                'id_user' => $admin->id_user,
+                'status' => $admin->status,
+            ],
+        ]);
+    }
+
+    /**
+     * Aktifkan kembali akun admin yang sebelumnya dinonaktifkan.
+     * PATCH /api/admin/kelola-admin/{id}/aktifkan
+     *
+     * Kebalikan dari nonaktifkan() — tidak perlu guard "tidak bisa
+     * mengaktifkan diri sendiri" karena admin yang sedang nonaktif tidak
+     * bisa login sama sekali (AuthController::login menolak status
+     * 'nonaktif'), jadi mustahil dia yang memanggil endpoint ini untuk
+     * dirinya sendiri. Tidak ada perubahan pada relasi/riwayat data apa
+     * pun — murni kebalikan dari transisi status yang sudah ada.
+     */
+    public function aktifkan(int $id): JsonResponse
+    {
+        $admin = User::where('role', 'admin')->find($id);
+
+        if (! $admin) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Akun admin tidak ditemukan.',
+            ], 404);
+        }
+
+        $admin->update(['status' => 'aktif']);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Akun admin berhasil diaktifkan kembali.',
             'data' => [
                 'id_user' => $admin->id_user,
                 'status' => $admin->status,

@@ -108,7 +108,9 @@ Route::middleware(['auth:sanctum', 'role.admin'])->prefix('admin')->group(functi
     // Kelola Admin — multi-admin (semua admin setara, tidak ada tier super-admin)
     Route::get('/kelola-admin', [AdminUserController::class, 'index']);
     Route::post('/kelola-admin', [AdminUserController::class, 'store']);
+    Route::put('/kelola-admin/{id}', [AdminUserController::class, 'update']);
     Route::patch('/kelola-admin/{id}/nonaktifkan', [AdminUserController::class, 'nonaktifkan']);
+    Route::patch('/kelola-admin/{id}/aktifkan', [AdminUserController::class, 'aktifkan']);
 });
 
 // ─── CUSTOMER ──────────────────────────────────────────────────────────────────

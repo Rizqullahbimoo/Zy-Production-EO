@@ -94,6 +94,14 @@ export default function AdminDashboard() {
   const [newAdminNoHp, setNewAdminNoHp] = useState('');
   const [isSubmittingNewAdmin, setIsSubmittingNewAdmin] = useState(false);
 
+  // Kelola Admin — edit admin lain (nama/email/no HP saja, tanpa password)
+  const [showEditAdminModal, setShowEditAdminModal] = useState(false);
+  const [editAdminId, setEditAdminId] = useState(null);
+  const [editAdminNama, setEditAdminNama] = useState('');
+  const [editAdminEmail, setEditAdminEmail] = useState('');
+  const [editAdminNoHp, setEditAdminNoHp] = useState('');
+  const [isSubmittingEditAdmin, setIsSubmittingEditAdmin] = useState(false);
+
   // Penawaran form states
   const [totalPenawaran, setTotalPenawaran] = useState('');
   const [catatanAdmin, setCatatanAdmin] = useState('');
@@ -1330,6 +1338,72 @@ export default function AdminDashboard() {
       'Konfirmasi Nonaktifkan Admin',
       'Nonaktifkan'
     );
+  };
+
+  const handleAktifkanAdmin = (adminId, namaAdmin) => {
+    askConfirm(
+      `Aktifkan kembali admin "${namaAdmin}"? Akun ini akan bisa login lagi seperti biasa.`,
+      async () => {
+        setConfirmModal(null);
+        try {
+          const response = await window.axios.patch(`/api/admin/kelola-admin/${adminId}/aktifkan`);
+          if (response.data?.status === 'success') {
+            showToast('success', 'Akun admin berhasil diaktifkan kembali.');
+            fetchAdminList();
+          } else {
+            showToast('error', response.data?.message || 'Gagal mengaktifkan akun admin.');
+          }
+        } catch (err) {
+          console.error('Error activating admin:', err);
+          showToast('error', err.response?.data?.message || 'Terjadi kesalahan saat mengaktifkan akun admin.');
+        }
+      },
+      'Konfirmasi Aktifkan Admin',
+      'Aktifkan'
+    );
+  };
+
+  const handleOpenEditAdminModal = (admin) => {
+    setEditAdminId(admin.id_user);
+    setEditAdminNama(admin.nama || '');
+    setEditAdminEmail(admin.email || '');
+    setEditAdminNoHp(admin.no_hp || '');
+    setShowEditAdminModal(true);
+  };
+
+  const handleUpdateAdmin = async (e) => {
+    e.preventDefault();
+    if (!editAdminNama.trim() || !editAdminEmail.trim() || !editAdminNoHp.trim()) {
+      showToast('error', 'Nama, email, dan no. HP wajib diisi.');
+      return;
+    }
+
+    setIsSubmittingEditAdmin(true);
+    try {
+      const response = await window.axios.put(`/api/admin/kelola-admin/${editAdminId}`, {
+        nama: editAdminNama,
+        email: editAdminEmail,
+        no_hp: editAdminNoHp,
+      });
+
+      if (response.data?.status === 'success') {
+        showToast('success', 'Data admin berhasil diperbarui!');
+        setShowEditAdminModal(false);
+        fetchAdminList();
+      } else {
+        showToast('error', response.data?.message || 'Gagal memperbarui data admin.');
+      }
+    } catch (err) {
+      console.error('Error updating admin:', err);
+      if (err.response?.data?.errors) {
+        const validationErrs = Object.values(err.response.data.errors).flat().join(' ');
+        showToast('error', validationErrs);
+      } else {
+        showToast('error', err.response?.data?.message || 'Terjadi kesalahan saat memperbarui data admin.');
+      }
+    } finally {
+      setIsSubmittingEditAdmin(false);
+    }
   };
 
   // Trigger admin list fetch when tab changes to 'kelola-admin'
@@ -2893,7 +2967,7 @@ export default function AdminDashboard() {
                         <th>Email</th>
                         <th>No. HP</th>
                         <th style={{ textAlign: 'center' }}>Status</th>
-                        <th style={{ width: '160px', textAlign: 'center' }}>Aksi</th>
+                        <th style={{ width: '220px', textAlign: 'center' }}>Aksi</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -2911,15 +2985,36 @@ export default function AdminDashboard() {
                               </span>
                             </td>
                             <td style={{ textAlign: 'center' }}>
-                              <button
-                                className="zy-btn-submit"
-                                style={{ backgroundColor: '#FFF0F0', color: '#C92A2A', border: '1px solid #FFC9C9', padding: '0.4rem 1rem', fontSize: '0.85rem', minWidth: 'auto', height: 'auto' }}
-                                onClick={() => handleNonaktifkanAdmin(admin.id_user, admin.nama)}
-                                disabled={isSelf || isNonaktif}
-                                title={isSelf ? 'Tidak bisa menonaktifkan akun sendiri' : undefined}
-                              >
-                                {isNonaktif ? 'Nonaktif' : 'Nonaktifkan'}
-                              </button>
+                              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                                {!isSelf && (
+                                  <button
+                                    className="zy-btn-submit"
+                                    style={{ backgroundColor: '#F1F3F5', color: 'var(--dark)', border: '1px solid var(--neutral-light)', padding: '0.4rem 1rem', fontSize: '0.85rem', minWidth: 'auto', height: 'auto' }}
+                                    onClick={() => handleOpenEditAdminModal(admin)}
+                                  >
+                                    Edit
+                                  </button>
+                                )}
+                                {isNonaktif ? (
+                                  <button
+                                    className="zy-btn-submit"
+                                    style={{ backgroundColor: '#EBFBEE', color: '#2B8A3E', border: '1px solid #B2F2BB', padding: '0.4rem 1rem', fontSize: '0.85rem', minWidth: 'auto', height: 'auto' }}
+                                    onClick={() => handleAktifkanAdmin(admin.id_user, admin.nama)}
+                                  >
+                                    Aktifkan
+                                  </button>
+                                ) : (
+                                  <button
+                                    className="zy-btn-submit"
+                                    style={{ backgroundColor: '#FFF0F0', color: '#C92A2A', border: '1px solid #FFC9C9', padding: '0.4rem 1rem', fontSize: '0.85rem', minWidth: 'auto', height: 'auto' }}
+                                    onClick={() => handleNonaktifkanAdmin(admin.id_user, admin.nama)}
+                                    disabled={isSelf}
+                                    title={isSelf ? 'Tidak bisa menonaktifkan akun sendiri' : undefined}
+                                  >
+                                    Nonaktifkan
+                                  </button>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         );
@@ -2929,6 +3024,76 @@ export default function AdminDashboard() {
                 </div>
               )}
             </section>
+
+            {showEditAdminModal && (
+              <div className="zy-modal-overlay" onClick={() => setShowEditAdminModal(false)}>
+                <form
+                  className="zy-modal"
+                  style={{ maxWidth: '480px' }}
+                  onClick={(e) => e.stopPropagation()}
+                  onSubmit={handleUpdateAdmin}
+                >
+                  <div className="zy-modal-header">
+                    <h3>Edit Data Admin</h3>
+                    <button
+                      type="button"
+                      className="zy-modal-close-btn"
+                      onClick={() => setShowEditAdminModal(false)}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="zy-modal-body">
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: 0, marginBottom: '1.25rem' }}>
+                      Password tidak bisa diubah dari sini — kalau admin ini lupa password, arahkan dia memakai "Lupa Password" di halaman login.
+                    </p>
+                    <div className="zy-form-group" style={{ marginBottom: '1rem' }}>
+                      <label className="zy-form-label" htmlFor="edit_admin_nama">Nama Lengkap</label>
+                      <input
+                        type="text"
+                        id="edit_admin_nama"
+                        className="zy-filter-input"
+                        value={editAdminNama}
+                        onChange={(e) => setEditAdminNama(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="zy-form-group" style={{ marginBottom: '1rem' }}>
+                      <label className="zy-form-label" htmlFor="edit_admin_email">Email</label>
+                      <input
+                        type="email"
+                        id="edit_admin_email"
+                        className="zy-filter-input"
+                        value={editAdminEmail}
+                        onChange={(e) => setEditAdminEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="zy-form-group">
+                      <label className="zy-form-label" htmlFor="edit_admin_no_hp">No. HP</label>
+                      <input
+                        type="text"
+                        id="edit_admin_no_hp"
+                        className="zy-filter-input"
+                        value={editAdminNoHp}
+                        onChange={(e) => setEditAdminNoHp(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="zy-modal-footer">
+                    <button type="button" className="zy-btn-close" onClick={() => setShowEditAdminModal(false)} disabled={isSubmittingEditAdmin}>
+                      Batal
+                    </button>
+                    <button type="submit" className="zy-btn-submit" disabled={isSubmittingEditAdmin}>
+                      {isSubmittingEditAdmin ? 'Menyimpan...' : 'Simpan Perubahan'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
           </>
         ) : activeTab === 'profil-admin' ? (
           /* PROFIL ADMIN VIEW */
