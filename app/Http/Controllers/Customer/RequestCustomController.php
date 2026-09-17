@@ -65,7 +65,11 @@ class RequestCustomController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $requests = RequestCustomPaket::with(['kategoriEvent', 'penawaranCustom', 'dokumenMou'])
+        // 'ulasan' wajib di-eager-load — pola bug yang sama seperti
+        // PemesananCustomerController::index() (lihat komentar di sana):
+        // tanpa ini, tombol "Beri Ulasan" untuk custom paket juga tidak
+        // pernah hilang setelah ulasan tersimpan.
+        $requests = RequestCustomPaket::with(['kategoriEvent', 'penawaranCustom', 'dokumenMou', 'ulasan'])
             ->where('id_user', $request->user()->id_user)
             ->orderBy('created_at', 'desc')
             ->get();

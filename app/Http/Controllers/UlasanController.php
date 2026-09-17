@@ -51,6 +51,24 @@ class UlasanController extends Controller
             }
         }
 
+        // Cegah ulasan ganda untuk pemesanan/request yang sama — sebelumnya
+        // hanya dicegah di frontend (tombol disembunyikan kalau sudah ada
+        // ulasan), sekarang digerbangi backend juga supaya tidak bisa
+        // dilewati lewat panggilan API langsung.
+        if ($request->id_pemesanan && Ulasan::where('id_pemesanan', $request->id_pemesanan)->exists()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Anda sudah memberikan ulasan untuk pemesanan ini sebelumnya.',
+            ], 409);
+        }
+
+        if ($request->id_request && Ulasan::where('id_request', $request->id_request)->exists()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Anda sudah memberikan ulasan untuk request custom ini sebelumnya.',
+            ], 409);
+        }
+
         $ulasan = Ulasan::create([
             'id_user' => Auth::id(),
             'id_pemesanan' => $request->id_pemesanan,

@@ -225,6 +225,13 @@ class PenawaranController extends Controller
 
     /**
      * Hapus penawaran.
+     *
+     * Ditolak kalau payment_status sudah 'paid' (lunas penuh) — pembayaran.
+     * id_penawaran punya FK onDelete('cascade'), jadi hapus penawaran yang
+     * sudah lunas akan CASCADE menghapus permanen seluruh riwayat
+     * Pembayaran terkait (uang yang sudah benar-benar masuk). Ditemukan
+     * saat audit menyeluruh sebelum sidang — endpoint ini sebelumnya tidak
+     * punya pengecekan apa pun.
      */
     public function destroy(int $id_penawaran): JsonResponse
     {
@@ -235,6 +242,13 @@ class PenawaranController extends Controller
                 'status' => 'error',
                 'message' => 'Penawaran tidak ditemukan.',
             ], 404);
+        }
+
+        if ($penawaran->payment_status === 'paid') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Penawaran ini tidak bisa dihapus karena pembayarannya sudah lunas (paid). Menghapusnya akan ikut menghapus permanen seluruh riwayat pembayaran terkait.',
+            ], 422);
         }
 
         $penawaran->delete();

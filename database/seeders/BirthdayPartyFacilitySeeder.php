@@ -25,22 +25,43 @@ use Illuminate\Support\Facades\DB;
  *    reuse/reference ke baris Wedding, sesuai desain sistem yang sudah ada.
  * 4. Idempoten: tiap fasilitas di-updateOrCreate by (id_kategori,
  *    nama_fasilitas) — aman dijalankan berkali-kali tanpa duplikasi.
- * 5. Jalankan dengan: php artisan db:seed --class=BirthdayPartyFacilitySeeder
+ * 5. linkPaketKeFasilitas() menghubungkan SEMUA paket di kategori Birthday
+ *    Party ke SEMUA fasilitas di kategori yang sama lewat detail_paket —
+ *    pola persis DetailPaketWeddingOutboundSeeder (satu kategori = satu
+ *    bundle fasilitas untuk semua paketnya, bukan pilihan sebagian per
+ *    paket). Baris detail_paket lama untuk paket-paket itu dihapus dulu
+ *    sebelum insert ulang supaya idempoten.
+ * 6. updateDeskripsiPaket() mengganti deskripsi generik "Paket Sweet
+ *    Seventeen" (dari DatabaseSeeder) dengan deskripsi yang di-generate
+ *    (bukan dari dokumen resmi ZY Production — user tidak punya detail
+ *    paket aslinya, dan secara eksplisit mengizinkan deskripsi digenerate
+ *    sesuai preferensi umum paket ulang tahun).
+ * 7. Jalankan dengan: php artisan db:seed --class=BirthdayPartyFacilitySeeder
  */
 class BirthdayPartyFacilitySeeder extends Seeder
 {
     private const NAMA_KATEGORI = 'Birthday Party';
 
+    private const NAMA_PAKET = 'Paket Sweet Seventeen';
+
+    private const DESKRIPSI_PAKET = 'Paket perayaan Sweet Seventeen untuk merayakan momen ulang tahun ke-17 yang berkesan. '
+        .'Fasilitas: dekorasi panggung & backdrop foto sesuai tema, MC yang memandu jalannya acara, make up untuk tokoh utama, '
+        .'entertainment (live music, keyboardist, sound system), serta dokumentasi lengkap foto dan video — seluruh persiapan '
+        .'ditangani penuh oleh tim ZY Production dari konsep hingga hari-H.';
+
     public function run(): void
     {
-        $totalRows = 0;
+        $totalFasilitas = 0;
+        $totalDetail = 0;
 
-        DB::transaction(function () use (&$totalRows) {
+        DB::transaction(function () use (&$totalFasilitas, &$totalDetail) {
             $idKategori = $this->getKategoriId(self::NAMA_KATEGORI);
-            $totalRows = $this->seedFasilitas($idKategori);
+            $totalFasilitas = $this->seedFasilitas($idKategori);
+            $totalDetail = $this->linkPaketKeFasilitas($idKategori);
+            $this->updateDeskripsiPaket($idKategori);
         });
 
-        $this->command->info("BirthdayPartyFacilitySeeder selesai: {$totalRows} fasilitas ditambahkan/diperbarui.");
+        $this->command->info("BirthdayPartyFacilitySeeder selesai: {$totalFasilitas} fasilitas, {$totalDetail} baris detail_paket.");
     }
 
     private function getKategoriId(string $nama): int
@@ -108,5 +129,66 @@ class BirthdayPartyFacilitySeeder extends Seeder
         }
 
         return $count;
+    }
+
+    /**
+     * Hubungkan setiap paket di $idKategori ke seluruh fasilitas di kategori
+     * yang sama (qty=1, keterangan kosong) — mengembalikan jumlah baris
+     * detail_paket yang dibuat.
+     */
+    private function linkPaketKeFasilitas(int $idKategori): int
+    {
+        $now = now();
+
+        $paketIds = DB::table('paket_layanan')
+            ->where('id_kategori', $idKategori)
+            ->pluck('id_paket');
+
+        $fasilitasIds = DB::table('fasilitas_layanan')
+            ->where('id_kategori', $idKategori)
+            ->pluck('id_fasilitas');
+
+        if ($paketIds->isEmpty() || $fasilitasIds->isEmpty()) {
+            return 0;
+        }
+
+        // Bersihkan dulu supaya idempoten (aman dijalankan ulang tanpa duplikat).
+        DB::table('detail_paket')->whereIn('id_paket', $paketIds)->delete();
+
+        $rows = [];
+        foreach ($paketIds as $idPaket) {
+            foreach ($fasilitasIds as $idFasilitas) {
+                $rows[] = [
+                    'id_paket' => $idPaket,
+                    'id_fasilitas' => $idFasilitas,
+                    'qty' => 1,
+                    'keterangan' => null,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+            }
+        }
+
+        DB::table('detail_paket')->insert($rows);
+
+        return count($rows);
+    }
+
+    /**
+     * Ganti deskripsi generik "Paket Sweet Seventeen" (dari DatabaseSeeder,
+     * "Paket lengkap layanan Birthday Party dengan fasilitas terbaik.")
+     * dengan deskripsi yang sesuai konteks 5 fasilitas yang baru dihubungkan.
+     * No-op kalau paket dengan nama itu tidak ditemukan di kategori ini
+     * (tidak melempar error — deskripsi cuma kosmetik, bukan prasyarat).
+     */
+    private function updateDeskripsiPaket(int $idKategori): void
+    {
+        DB::table('paket_layanan')
+            ->where('id_kategori', $idKategori)
+            ->where('nama_paket', self::NAMA_PAKET)
+            ->update([
+                'deskripsi' => self::DESKRIPSI_PAKET,
+                'updated_at' => now(),
+            ]);
     }
 }

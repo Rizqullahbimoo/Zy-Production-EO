@@ -95,7 +95,13 @@ class PemesananCustomerController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $pemesanan = Pemesanan::with(['paketLayanan.kategoriEvent', 'dokumenMou'])
+        // 'ulasan' wajib di-eager-load — frontend (CustomerStatus.jsx) memakai
+        // `!selectedPemesanan.ulasan` untuk menyembunyikan tombol "Beri Ulasan"
+        // setelah customer submit. Tanpa ini, field 'ulasan' tidak pernah ada
+        // di response sama sekali, jadi kondisi itu selalu true — tombol tidak
+        // pernah hilang walau ulasan sudah tersimpan (ditemukan saat audit
+        // menyeluruh sebelum sidang).
+        $pemesanan = Pemesanan::with(['paketLayanan.kategoriEvent', 'dokumenMou', 'ulasan'])
             ->where('id_user', $request->user()->id_user)
             ->orderBy('created_at', 'desc')
             ->get();
