@@ -294,7 +294,7 @@ export default function CustomerKatalog() {
               {filteredPackages.map(pkg => (
                 <div key={pkg.id_paket} className="package-card">
                   <div className="package-img-wrapper">
-                    <img src={pkg.foto || "/images/login-hero.jpg"} alt={pkg.nama_paket} className="package-img" onError={e => { e.currentTarget.src = "/images/login-hero.jpg"; }} />
+                    <img src={pkg.foto || "/images/no-photo-placeholder.svg"} alt={pkg.nama_paket} className="package-img" onError={e => { e.currentTarget.src = "/images/no-photo-placeholder.svg"; }} />
                     <span className="package-category-label">{pkg.kategori.nama_kategori}</span>
                   </div>
                   <div className="package-body">
@@ -363,7 +363,7 @@ export default function CustomerKatalog() {
               ) : (
                 <form noValidate onSubmit={handleSubmitOrder}>
                   <div className="order-package-summary">
-                    <img src={orderPackage.foto || "/images/login-hero.jpg"} alt={orderPackage.nama_paket} className="order-pkg-img" onError={e => { e.currentTarget.src = "/images/login-hero.jpg"; }} />
+                    <img src={orderPackage.foto || "/images/no-photo-placeholder.svg"} alt={orderPackage.nama_paket} className="order-pkg-img" onError={e => { e.currentTarget.src = "/images/no-photo-placeholder.svg"; }} />
                     <div className="order-pkg-info"><div className="order-pkg-name">{orderPackage.nama_paket}</div><div className="order-pkg-cat">{orderPackage.kategori?.nama_kategori}</div></div>
                     <div className="order-pkg-price">{formatIDR(orderPackage.harga)}</div>
                   </div>
@@ -411,10 +411,10 @@ export default function CustomerKatalog() {
             </div>
             <div className="modal-body">
               <img
-                src={selectedDetailPaket.foto || "/images/login-hero.jpg"}
+                src={selectedDetailPaket.foto || "/images/no-photo-placeholder.svg"}
                 alt={selectedDetailPaket.nama_paket}
                 style={{ width: "100%", height: "220px", objectFit: "cover", borderRadius: "12px", marginBottom: "1.25rem" }}
-                onError={e => { e.currentTarget.src = "/images/login-hero.jpg"; }}
+                onError={e => { e.currentTarget.src = "/images/no-photo-placeholder.svg"; }}
               />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
                 <span className="package-category-label" style={{ position: "static" }}>{selectedDetailPaket.kategori?.nama_kategori}</span>

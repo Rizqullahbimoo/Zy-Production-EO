@@ -62,7 +62,7 @@ export default function CustomerHome() {
           const sorted = [...res.data.data].sort((a, b) => (a.urutan ?? 0) - (b.urutan ?? 0));
           setHeroSlides(sorted.slice(0, 6).map(item => ({
             id: item.id_galeri,
-            image: item.foto || '/images/login-hero.jpg',
+            image: item.foto || '/images/no-photo-placeholder.svg',
             title: item.judul,
             desc: item.deskripsi || ''
           })));

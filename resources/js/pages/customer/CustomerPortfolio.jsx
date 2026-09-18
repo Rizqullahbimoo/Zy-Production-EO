@@ -27,7 +27,7 @@ export default function CustomerPortfolio() {
         if (res.data.status === 'success' && res.data.data?.length > 0) {
           setGalleryItems(res.data.data.map(item => ({
             id: item.id_galeri,
-            image: item.foto || '/images/login-hero.jpg',
+            image: item.foto || '/images/no-photo-placeholder.svg',
             title: item.judul,
             category: 'Event',
             desc: item.deskripsi || '',
@@ -108,7 +108,7 @@ export default function CustomerPortfolio() {
                       src={item.image}
                       alt={item.title}
                       className="portfolio-img"
-                      onError={e => { e.currentTarget.src = '/images/login-hero.jpg'; }}
+                      onError={e => { e.currentTarget.src = '/images/no-photo-placeholder.svg'; }}
                     />
                     <div className="portfolio-hover-overlay">
                       <span className="portfolio-item-cat">{item.category}</span>
@@ -162,7 +162,7 @@ export default function CustomerPortfolio() {
               src={selectedItem.image}
               alt={selectedItem.title}
               style={{ width: '100%', maxHeight: '450px', objectFit: 'cover', display: 'block' }}
-              onError={e => { e.currentTarget.src = '/images/login-hero.jpg'; }}
+              onError={e => { e.currentTarget.src = '/images/no-photo-placeholder.svg'; }}
             />
             <div style={{ padding: '1.5rem' }}>
               <span style={{

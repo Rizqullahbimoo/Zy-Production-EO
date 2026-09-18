@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800" role="img" aria-label="Foto belum tersedia">
+  <defs>
+    <radialGradient id="zyPlaceholderGradient" cx="50%" cy="42%" r="70%">
+      <stop offset="0%" stop-color="#F4F4F4" />
+      <stop offset="100%" stop-color="#E2E2E2" />
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#zyPlaceholderGradient)" />
+  <g transform="translate(600,340)" fill="none" stroke="#C9A227" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="-90" y="-65" width="180" height="130" rx="12" />
+    <circle cx="-45" cy="-25" r="16" />
+    <path d="M -90 40 L -25 -15 L 20 25 L 55 -5 L 90 30" />
+  </g>
+  <text x="600" y="520" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="700" letter-spacing="1" fill="#9A9A9A">
+    FOTO BELUM TERSEDIA
+  </text>
+</svg>
