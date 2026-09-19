@@ -14,6 +14,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class MoUController extends Controller
 {
@@ -54,7 +56,7 @@ class MoUController extends Controller
             $customerEmail = $customRequest->user->email ?? null;
         }
 
-        $path = $request->file('file')->store('mou', 'public');
+        $path = $request->file('file')->store('mou', 'local');
 
         $mou->file_draft = $path;
         $mou->status_mou = 'menunggu_ttd_customer';
@@ -96,7 +98,7 @@ class MoUController extends Controller
 
         $request->validate(['file' => self::FILE_RULES]);
 
-        $path = $request->file('file')->store('mou', 'public');
+        $path = $request->file('file')->store('mou', 'local');
 
         $mou->file_final = $path;
         $mou->status_mou = 'selesai';
@@ -269,7 +271,7 @@ class MoUController extends Controller
 
         $request->validate(['file' => self::FILE_RULES]);
 
-        $path = $request->file('file')->store('mou', 'public');
+        $path = $request->file('file')->store('mou', 'local');
 
         $mou->file_ttd_customer = $path;
         $mou->status_mou = 'menunggu_ttd_admin';
@@ -317,21 +319,70 @@ class MoUController extends Controller
         ]);
     }
 
+    /**
+     * Sajikan file dokumen MOU (draft/ttd_customer/final) secara privat.
+     *
+     * File disimpan di disk 'local' (storage/app/private, tidak ada symlink
+     * publik) sejak temuan audit: sebelumnya disimpan di disk 'public' dan
+     * bisa diakses siapa saja yang tahu/menebak URL-nya tanpa login sama
+     * sekali (dokumen kontrak/MOU). Endpoint ini didaftarkan dua kali di
+     * routes/api.php (grup admin & grup customer, masing-masing sudah
+     * digerbangi middleware role) — admin boleh lihat semua, customer cuma
+     * boleh lihat MOU miliknya sendiri.
+     * GET /admin/mou/{id_mou}/file/{type} atau /customer/mou/{id_mou}/file/{type}
+     */
+    public function downloadFile(Request $request, int $id_mou, string $type): StreamedResponse|JsonResponse
+    {
+        $kolom = [
+            'draft' => 'file_draft',
+            'ttd_customer' => 'file_ttd_customer',
+            'final' => 'file_final',
+        ][$type] ?? null;
+
+        if (! $kolom) {
+            return response()->json(['status' => 'error', 'message' => 'Tipe dokumen tidak valid.'], 422);
+        }
+
+        $mou = DokumenMou::with(['pemesanan', 'requestCustomPaket'])->find($id_mou);
+
+        if (! $mou) {
+            return response()->json(['status' => 'error', 'message' => 'Dokumen MOU tidak ditemukan.'], 404);
+        }
+
+        if ($request->user()->role !== 'admin') {
+            $ownerId = $mou->pemesanan->id_user ?? $mou->requestCustomPaket->id_user ?? null;
+            if ($ownerId !== $request->user()->id_user) {
+                return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 403);
+            }
+        }
+
+        $path = $mou->{$kolom};
+
+        if (! $path || ! Storage::disk('local')->exists($path)) {
+            return response()->json(['status' => 'error', 'message' => 'File tidak ditemukan.'], 404);
+        }
+
+        return Storage::disk('local')->response($path);
+    }
+
     /* ─────────────────────────────────────────────────────────
      |  HELPER
      ───────────────────────────────────────────────────────── */
 
     private function formatMou(DokumenMou $mou, bool $withRelasi = false): array
     {
+        // file_draft/file_ttd_customer/file_final di sini tetap nama field lama
+        // (kompatibel dengan frontend admin yang sudah ada) tapi isinya sekarang
+        // URL endpoint terautentikasi, sama seperti *_url accessor di model.
         $data = [
             'id_mou' => $mou->id_mou,
             'id_pemesanan' => $mou->id_pemesanan,
             'id_request' => $mou->id_request,
             'status_mou' => $mou->status_mou,
             'catatan' => $mou->catatan,
-            'file_draft' => $mou->file_draft ? '/storage/'.$mou->file_draft : null,
-            'file_ttd_customer' => $mou->file_ttd_customer ? '/storage/'.$mou->file_ttd_customer : null,
-            'file_final' => $mou->file_final ? '/storage/'.$mou->file_final : null,
+            'file_draft' => $mou->file_draft_url,
+            'file_ttd_customer' => $mou->file_ttd_customer_url,
+            'file_final' => $mou->file_final_url,
             'created_at' => $mou->created_at,
             'updated_at' => $mou->updated_at,
         ];

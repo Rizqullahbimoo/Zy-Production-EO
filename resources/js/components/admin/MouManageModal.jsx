@@ -208,11 +208,23 @@ export default function MouManageModal({ tipe, id, idMou, onClose, onChanged, sh
       .finally(() => setIsSubmitting(false));
   };
 
-  /** Buka file di tab baru — hindari React Router intercept */
+  /**
+   * Buka file di tab baru. File MOU disajikan lewat endpoint terautentikasi
+   * (bukan link statis /storage/... lagi — lihat MoUController::downloadFile()),
+   * jadi harus di-fetch lewat axios (bawa Bearer token) lalu dibuka sebagai
+   * blob URL, bukan window.open(url) langsung yang tidak membawa header auth.
+   */
   const openFile = (url, e) => {
     if (e) { e.preventDefault(); e.stopPropagation(); }
     if (!url) return;
-    window.open(url, '_blank', 'noopener,noreferrer');
+    window.axios.get(url, { responseType: 'blob' })
+      .then((res) => {
+        const blobUrl = window.URL.createObjectURL(res.data);
+        window.open(blobUrl, '_blank', 'noopener,noreferrer');
+      })
+      .catch(() => {
+        showToast && showToast('error', 'Gagal membuka file dokumen.');
+      });
   };
 
   return (

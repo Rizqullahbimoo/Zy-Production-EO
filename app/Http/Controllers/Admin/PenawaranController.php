@@ -188,7 +188,7 @@ class PenawaranController extends Controller
         }
 
         $buktiPath = $request->hasFile('bukti_pembayaran')
-            ? $request->file('bukti_pembayaran')->store('pembayaran', 'public')
+            ? $request->file('bukti_pembayaran')->store('pembayaran', 'local')
             : null;
 
         Pembayaran::create([

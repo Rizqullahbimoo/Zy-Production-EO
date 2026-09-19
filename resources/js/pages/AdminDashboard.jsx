@@ -271,6 +271,24 @@ export default function AdminDashboard() {
     }
   };
 
+  /**
+   * Buka bukti pembayaran di tab baru. File-nya disajikan lewat endpoint
+   * admin-only terautentikasi (bukan link statis /storage/... lagi — lihat
+   * PemesananController::downloadBuktiPembayaran()), jadi harus di-fetch
+   * lewat axios (bawa Bearer token) lalu dibuka sebagai blob URL.
+   */
+  const handleViewBuktiPembayaran = (idPembayaran, e) => {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    window.axios.get(`/api/admin/pembayaran/${idPembayaran}/bukti`, { responseType: 'blob' })
+      .then((res) => {
+        const blobUrl = window.URL.createObjectURL(res.data);
+        window.open(blobUrl, '_blank', 'noopener,noreferrer');
+      })
+      .catch(() => {
+        showToast('error', 'Gagal membuka bukti pembayaran.');
+      });
+  };
+
   // Fetch facilities for a specific category ID
   const fetchFacilities = async (catId) => {
     setIsLoadingFacilities(true);
@@ -3461,14 +3479,13 @@ export default function AdminDashboard() {
                             </td>
                             <td>
                               {pay.bukti_pembayaran ? (
-                                <a
-                                  href={`/storage/${pay.bukti_pembayaran}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  style={{ color: 'var(--primary)', fontWeight: 'bold', textDecoration: 'underline' }}
+                                <button
+                                  type="button"
+                                  onClick={(e) => handleViewBuktiPembayaran(pay.id_pembayaran, e)}
+                                  style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--primary)', fontWeight: 'bold', textDecoration: 'underline' }}
                                 >
                                   Lihat Bukti
-                                </a>
+                                </button>
                               ) : (
                                 '-'
                               )}
@@ -3812,14 +3829,13 @@ export default function AdminDashboard() {
                                     </td>
                                     <td>
                                       {pay.bukti_pembayaran ? (
-                                        <a
-                                          href={`/storage/${pay.bukti_pembayaran}`}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          style={{ color: 'var(--primary)', fontWeight: 'bold', textDecoration: 'underline' }}
+                                        <button
+                                          type="button"
+                                          onClick={(e) => handleViewBuktiPembayaran(pay.id_pembayaran, e)}
+                                          style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--primary)', fontWeight: 'bold', textDecoration: 'underline' }}
                                         >
                                           Lihat Bukti
-                                        </a>
+                                        </button>
                                       ) : (
                                         '-'
                                       )}

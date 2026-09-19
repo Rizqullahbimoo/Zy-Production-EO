@@ -121,19 +121,24 @@ export default function MouStatusCard({ mou, tipe, id, onUploaded, showToast }) 
     if (selectedFile) setError("");
   };
 
-  /** Path dari relasi mentah (dokumen_mou) belum di-prefix /storage/ — normalkan seperti pola foto galeri/profil di AdminDashboard */
-  const resolveFileUrl = (path) => {
-    if (!path) return null;
-    return path.startsWith('http') || path.startsWith('/storage/') ? path : `/storage/${path}`;
-  };
-
-  /** Buka file di tab baru — hindari React Router intercept dengan window.open */
-  const openFile = (path, e) => {
+  /**
+   * Buka file di tab baru. File MOU disajikan lewat endpoint terautentikasi
+   * (bukan link statis /storage/... lagi — lihat MoUController::downloadFile()),
+   * jadi harus di-fetch lewat axios (bawa Bearer token) lalu dibuka sebagai
+   * blob URL, bukan window.open(url) langsung yang tidak membawa header auth.
+   */
+  const openFile = (url, e) => {
     e.preventDefault();
     e.stopPropagation();
-    const url = resolveFileUrl(path);
     if (!url) return;
-    window.open(url, '_blank', 'noopener,noreferrer');
+    window.axios.get(url, { responseType: 'blob' })
+      .then((res) => {
+        const blobUrl = window.URL.createObjectURL(res.data);
+        window.open(blobUrl, '_blank', 'noopener,noreferrer');
+      })
+      .catch(() => {
+        showToast && showToast('error', 'Gagal membuka file dokumen.');
+      });
   };
 
   const handleUpload = (e) => {
@@ -189,12 +194,12 @@ export default function MouStatusCard({ mou, tipe, id, onUploaded, showToast }) 
             <p style={{ margin: "0 0 12px", color: "var(--color-text-main)" }}>
               Draf dokumen MOU sudah tersedia. Unduh, cetak, tandatangani secara manual, lalu unggah kembali hasil scan/foto di bawah ini.
             </p>
-            {mou?.file_draft && (
+            {mou?.file_draft_url && (
               <button
                 type="button"
                 className="btn btn-outline btn-sm"
                 style={{ marginBottom: "14px", display: "inline-block" }}
-                onClick={(e) => openFile(mou.file_draft, e)}
+                onClick={(e) => openFile(mou.file_draft_url, e)}
               >
                 📄 Unduh Draf MOU
               </button>
@@ -226,11 +231,11 @@ export default function MouStatusCard({ mou, tipe, id, onUploaded, showToast }) 
             <p style={{ margin: "0 0 10px", color: "#16A34A", fontWeight: 600 }}>
               ✅ Dokumen MOU selesai — pembayaran DP kini tersedia.
             </p>
-            {mou?.file_final && (
+            {mou?.file_final_url && (
               <button
                 type="button"
                 className="btn btn-outline btn-sm"
-                onClick={(e) => openFile(mou.file_final, e)}
+                onClick={(e) => openFile(mou.file_final_url, e)}
               >
                 📄 Lihat Dokumen MOU Final
               </button>

@@ -11,6 +11,8 @@ use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PemesananController extends Controller
 {
@@ -138,7 +140,7 @@ class PemesananController extends Controller
         }
 
         $buktiPath = $request->hasFile('bukti_pembayaran')
-            ? $request->file('bukti_pembayaran')->store('pembayaran', 'public')
+            ? $request->file('bukti_pembayaran')->store('pembayaran', 'local')
             : null;
 
         Pembayaran::create([
@@ -245,5 +247,31 @@ class PemesananController extends Controller
             'message' => 'Status pemesanan berhasil diperbarui.',
             'data' => $order->fresh(),
         ]);
+    }
+
+    /**
+     * Sajikan file bukti pembayaran secara privat (admin-only).
+     *
+     * Dipakai bersama oleh bukti pembayaran pemesanan paket bawaan maupun
+     * penawaran custom (keduanya sama-sama baris tabel `pembayaran`) — file
+     * disimpan di disk 'local' sejak temuan audit yang sama seperti dokumen
+     * MOU (lihat MoUController::downloadFile()). Tidak perlu cek kepemilikan
+     * di sini karena route ini sudah digerbangi middleware role.admin, dan
+     * admin memang berwenang melihat semua bukti pembayaran.
+     * GET /admin/pembayaran/{id}/bukti
+     */
+    public function downloadBuktiPembayaran(int $id): StreamedResponse|JsonResponse
+    {
+        $pembayaran = Pembayaran::find($id);
+
+        if (! $pembayaran || ! $pembayaran->bukti_pembayaran) {
+            return response()->json(['status' => 'error', 'message' => 'Bukti pembayaran tidak ditemukan.'], 404);
+        }
+
+        if (! Storage::disk('local')->exists($pembayaran->bukti_pembayaran)) {
+            return response()->json(['status' => 'error', 'message' => 'File tidak ditemukan.'], 404);
+        }
+
+        return Storage::disk('local')->response($pembayaran->bukti_pembayaran);
     }
 }

@@ -66,6 +66,7 @@ Route::middleware(['auth:sanctum', 'role.admin'])->prefix('admin')->group(functi
     Route::get('/pemesanan/{id}', [PemesananController::class, 'show']);
     Route::patch('/pemesanan/{id}/status', [PemesananController::class, 'updateStatus']);
     Route::post('/pemesanan/{id}/pembayaran', [PemesananController::class, 'recordPayment']);
+    Route::get('/pembayaran/{id}/bukti', [PemesananController::class, 'downloadBuktiPembayaran']);
 
     // Kelola Galeri
     Route::apiResource('galeri', GaleriController::class);
@@ -104,6 +105,7 @@ Route::middleware(['auth:sanctum', 'role.admin'])->prefix('admin')->group(functi
     Route::get('/mou/{id_mou}', [MoUController::class, 'show']);
     Route::post('/mou/draft/{tipe}/{id}', [MoUController::class, 'uploadDraft']);
     Route::post('/mou/{id_mou}/final', [MoUController::class, 'uploadFinal']);
+    Route::get('/mou/{id_mou}/file/{type}', [MoUController::class, 'downloadFile']);
 
     // Kelola Admin — multi-admin (semua admin setara, tidak ada tier super-admin)
     Route::get('/kelola-admin', [AdminUserController::class, 'index']);
@@ -147,6 +149,7 @@ Route::middleware(['auth:sanctum', 'role.customer'])->prefix('customer')->group(
     // Dokumen MOU (Customer)
     Route::get('/mou/{id_mou}', [MoUController::class, 'showForCustomer']);
     Route::post('/mou/upload-ttd/{tipe}/{id}', [MoUController::class, 'uploadTtd']);
+    Route::get('/mou/{id_mou}/file/{type}', [MoUController::class, 'downloadFile']);
 });
 
 // ─── MIDTRANS WEBHOOK (public, tanpa auth) ─────────────────────────────────────
